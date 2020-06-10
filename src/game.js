@@ -1,10 +1,12 @@
 const EventEmitter = require('events');
 const readline = require('readline');
 
+const Utils = require('./utils');
 const Shoe = require('./shoe');
 const Dealer = require('./dealer');
 const Player = require('./player');
 const DiscardTray = require('./discard-tray');
+const BasicStrategyChecker = require('./basic-strategy-checker');
 
 module.exports = class Game extends EventEmitter {
   constructor() {
@@ -78,6 +80,7 @@ module.exports = class Game extends EventEmitter {
       question: null,
       handWinner: new Map(),
       focusedHand: null,
+      playCorrection: null,
     };
 
     this.state = new Proxy(this._state, {
@@ -112,7 +115,15 @@ module.exports = class Game extends EventEmitter {
     }
 
     while (hand.cardTotal < 21) {
+      this.state.playCorrection = '';
+
       const input = await this.getPlayerMoveInput(hand);
+
+      const playCorrection = BasicStrategyChecker.check(this, input);
+      if (playCorrection) {
+        this.state.playCorrection = playCorrection;
+      }
+
       if (input === 'stand') {
         break;
       }

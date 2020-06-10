@@ -22,11 +22,13 @@ class CLIRenderer extends Renderer {
     // Creates space for further output during rendering.
     console.log();
     console.log();
+    console.log();
   }
 
   render() {
     this.renderDealerCards();
     this.renderPlayerCards();
+    this.renderPlayCorrection();
     this.renderQuestion();
   }
 
@@ -37,22 +39,26 @@ class CLIRenderer extends Renderer {
   }
 
   renderDealerCards() {
-    this._renderPlayerLine(this.game.dealer, 'Dealer', 2);
+    this._renderPlayerLine(this.game.dealer, 'Dealer', 3);
   }
 
   renderPlayerCards() {
-    this._renderPlayerLine(this.game.player, 'Player', 1);
+    this._renderPlayerLine(this.game.player, 'Player', 2);
+  }
+
+  renderPlayCorrection() {
+    this._renderLine(this.game.state.playCorrection, 1);
   }
 
   renderQuestion() {
-    if (!this.game.state.question) {
-      return;
-    }
-
     this._renderLine(this.game.state.question, 0);
   }
 
   _renderLine(text, yPosBottom = 0) {
+    if (text == null) {
+      return;
+    }
+
     readline.cursorTo(process.stdout, 0, process.stdout.rows - yPosBottom - 1);
     readline.clearLine(process.stdout, 0);
 
