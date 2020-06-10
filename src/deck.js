@@ -14,7 +14,6 @@ module.exports = class Deck extends GameObject {
     ['hearts', 'tiles', 'clovers', 'pikes'].forEach((suit) =>
       [
         'A',
-        '1',
         '2',
         '3',
         '4',

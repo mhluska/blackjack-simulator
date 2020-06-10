@@ -1,6 +1,6 @@
 module.exports = class Utils {
   static arraySum(array) {
-    return array.map((c) => c.value).reduce((acc, current) => acc + current, 0);
+    return array.reduce((acc, current) => acc + current, 0);
   }
 
   // Fisher–Yates shuffle algorithm.

@@ -29,47 +29,45 @@ class CLIRenderer extends Renderer {
   render() {
     this.renderDealerCards();
     this.renderPlayerCards();
-    this.renderWinner();
     this.renderQuestion();
   }
 
-  renderDealerCards() {
-    const cardRow = this.game.dealer.cards
+  cardRow(player) {
+    return player.cards
       .map((card) => (card.visible ? card.rank : '?'))
       .join(' ');
-    this._renderLine(`Dealer: ${cardRow}`, 2);
+  }
+
+  renderDealerCards() {
+    this._renderPlayerLine(this.game.dealer, 'Dealer', 2);
   }
 
   renderPlayerCards() {
-    const cardRow = this.game.player.cards
-      .map((card) => (card.visible ? card.rank : '?'))
-      .join(' ');
-    this._renderLine(`Player: ${cardRow}`, 1);
-  }
-
-  renderWinner() {
-    if (!this.game.winner) {
-      return;
-    }
-
-    if (this.game.winner === 'player') {
-      this._renderLine('Player wins');
-    } else {
-      this._renderLine('Dealer wins');
-    }
+    this._renderPlayerLine(this.game.player, 'Player', 1);
   }
 
   renderQuestion() {
-    if (!this.game.question) {
+    if (!this.game.state.question) {
       return;
     }
 
-    this._renderLine(this.game.question, 0);
+    this._renderLine(this.game.state.question, 0);
   }
 
   _renderLine(text, yPosBottom = 0) {
     readline.cursorTo(process.stdout, 0, process.stdout.rows - yPosBottom - 1);
+    readline.clearLine(process.stdout, 0);
+
     this.cli.write(text);
+  }
+
+  _renderPlayerLine(player, type, row) {
+    const padding = player.cardTotal < 10 ? ' ' : '';
+
+    this._renderLine(
+      `${type} (total ${player.cardTotal}): ${padding}${this.cardRow(player)}`,
+      row
+    );
   }
 }
 

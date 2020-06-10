@@ -9,8 +9,48 @@ module.exports = class Game extends EventEmitter {
   constructor() {
     super();
 
-    // Game state
-    // TODO: Rerender whenever game state changes instead of calling render.
+    this.resetState();
+    this.setupCliInput();
+  }
+
+  getPlayerMoveInput() {
+    this.state.question =
+      'H (hit), S (stand), D (double), P (split), R (surrender)? ';
+
+    return this._getPlayerInput(
+      (str) =>
+        ({
+          h: 'hit',
+          s: 'stand',
+          d: 'double',
+          p: 'split',
+          r: 'surrender',
+        }[str.toLowerCase()])
+    );
+  }
+
+  getPlayerNewGameInput() {
+    if (!this.state.winner) {
+      return;
+    }
+
+    const gameResult = () => {
+      switch (this.state.winner) {
+        case 'player':
+          return 'Player wins';
+        case 'dealer':
+          return 'Dealer wins';
+        case 'push':
+          return 'Push';
+      }
+    };
+
+    this.state.question = `${gameResult()} (press any key for next hand)`;
+
+    return this._getPlayerInput((str) => true);
+  }
+
+  resetState() {
     this.shoe = new Shoe();
     this.shoe.on('change', () => this.emit('change', { caller: 'shoe' }));
 
@@ -20,70 +60,59 @@ module.exports = class Game extends EventEmitter {
     this.player = new Player();
     this.player.on('change', () => this.emit('change', { caller: 'player' }));
 
-    this.question = null;
-    this.winner = null;
+    this._state = {
+      question: null,
+      winner: null,
+    };
 
-    // TODO: Use this if we get more local state like `this.winner`.
-    // new Proxy(this, {
-    //   set: function (target, key, value) {
-    //     console.log(`RENDER? ${key} set to ${value}`);
-    //     target[key] = value;
-    //     return true;
-    //   }
-    // });
+    this.state = new Proxy(this._state, {
+      set: (target, key, value) => {
+        target[key] = value;
+        this.emit('change', { caller: 'game' });
+        return true;
+      },
+    });
+  }
 
+  setupCliInput() {
     // Allows collecting keypress events in `getPlayerMoveInput`.
     readline.emitKeypressEvents(process.stdin);
+
     if (process.stdin.isTTY) {
       process.stdin.setRawMode(true);
     }
   }
 
-  getPlayerMoveInput() {
-    this.question =
-      'H (hit), S (stand), D (double), P (split), R (surrender)? ';
-    this.emit('change', { caller: 'game' });
-
-    return new Promise((resolve, reject) => {
-      // TODO: Make backspace not mess up the display.
-      const handler = (str, key) => {
-        if (key && key.ctrl && key.name === 'c') {
-          process.stdin.pause();
-          return;
-        }
-
-        const result = {
-          h: 'hit',
-          s: 'stand',
-          d: 'double',
-          p: 'split',
-          r: 'surrender',
-        }[str.toLowerCase()];
-
-        if (result) {
-          process.stdin.off('keypress', handler);
-          resolve(result);
-        }
-      };
-
-      process.stdin.on('keypress', handler);
-    });
+  async finishGame({ winner }) {
+    this.state.winner = winner;
+    await this.getPlayerNewGameInput();
+    this.resetState();
   }
 
   async start() {
-    // 1. Draw card for player face up (upcard).
+    // Draw card for player face up (upcard).
     this.player.takeCard(this.shoe.drawCard());
 
-    // 2. Draw card for dealer face up.
+    // Draw card for dealer face up.
     this.dealer.takeCard(this.shoe.drawCard());
 
-    // 3. Draw card for player face up.
+    // Draw card for player face up.
     this.player.takeCard(this.shoe.drawCard());
 
-    // 4. Draw card for dealer face down (hole card).
+    // Draw card for dealer face down (hole card).
     this.dealer.takeCard(this.shoe.drawCard({ showingFace: false }));
 
-    while (!this.player.busted()) {
+    // TODO: Handle Ace upcard, ask insurance
+
+    if (this.dealer.blackjack && this.player.blackjack) {
+      return await this.finishGame({ winner: 'push' });
+    } else if (this.dealer.blackjack) {
+      return await this.finishGame({ winner: 'dealer' });
+    } else if (this.player.blackjack) {
+      return await this.finishGame({ winner: 'player' });
+    }
+
+    while (this.player.cardTotal < 21) {
       const input = await this.getPlayerMoveInput();
       if (input === 'stand') {
         break;
@@ -93,33 +122,55 @@ module.exports = class Game extends EventEmitter {
         this.player.takeCard(this.shoe.drawCard());
       }
 
-      this.player.move(input);
+      if (input === 'double') {
+        this.player.takeCard(this.shoe.drawCard());
+
+        // TODO: Double the bet here once betting is supported.
+
+        break;
+      }
     }
 
-    if (this.player.busted()) {
-      this.winner = 'dealer';
-      this.emit('change', { caller: 'game' });
-      return;
+    if (this.player.cardTotal === 21) {
+      return await this.finishGame({ winner: 'player' });
     }
 
-    // TODO: Handle Ace upcard, ask insurance
+    if (this.player.busted) {
+      return await this.finishGame({ winner: 'dealer' });
+    }
 
     this.dealer.cards[1].flip();
 
-    // TODO: Magic number.
+    // Dealer draws cards until they reach 17.
     while (this.dealer.cardTotal < 17) {
-      this.dealer.move();
+      this.dealer.takeCard(this.shoe.drawCard());
     }
 
-    if (this.dealer.busted()) {
+    if (this.dealer.busted) {
+      await this.finishGame({ winner: 'player' });
+    } else if (this.dealer.cardTotal > this.player.cardTotal) {
+      await this.finishGame({ winner: 'dealer' });
+    } else if (this.player.cardTotal > this.dealer.cardTotal) {
+      await this.finishGame({ winner: 'player' });
     } else {
+      await this.finishGame({ winner: 'push' });
     }
+  }
 
-    // TODO: Magic number.
-    if (this.dealer.cardTotal > 21 && !this.player.busted()) {
-      this.winner = 'player';
-      this.emit('change', { caller: 'game' });
-      return;
-    }
+  _getPlayerInput(resultCallback) {
+    return new Promise((resolve, reject) => {
+      process.stdin.once('keypress', (str, key) => {
+        if (key && key.ctrl && key.name === 'c') {
+          process.stdin.pause();
+          return;
+        }
+
+        const result = resultCallback(str);
+
+        if (result) {
+          resolve(result);
+        }
+      });
+    });
   }
 };
