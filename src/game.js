@@ -4,6 +4,8 @@ const readline = require('readline');
 const Shoe = require('./shoe');
 const Dealer = require('./dealer');
 const Player = require('./player');
+const DiscardTray = require('./discard-tray');
+const Utils = require('./utils');
 
 module.exports = class Game extends EventEmitter {
   constructor() {
@@ -54,6 +56,11 @@ module.exports = class Game extends EventEmitter {
     this.shoe = new Shoe();
     this.shoe.on('change', () => this.emit('change', { caller: 'shoe' }));
 
+    this.discardTray = new DiscardTray();
+    this.discardTray.on('change', () =>
+      this.emit('change', { caller: 'discard-tray' })
+    );
+
     this.dealer = new Dealer();
     this.dealer.on('change', () => this.emit('change', { caller: 'dealer' }));
 
@@ -85,8 +92,19 @@ module.exports = class Game extends EventEmitter {
 
   async finishGame({ winner }) {
     this.state.winner = winner;
+
     await this.getPlayerNewGameInput();
-    this.resetState();
+
+    this.discardTray.addCards(this.player.removeCards());
+    this.discardTray.addCards(this.dealer.removeCards());
+
+    if (this.shoe.needsReset) {
+      this.shoe.addCards(
+        Utils.arrayShuffle(
+          this.discardTray.removeCards().concat(this.shoe.removeCards())
+        )
+      );
+    }
   }
 
   async start() {
@@ -128,6 +146,14 @@ module.exports = class Game extends EventEmitter {
         // TODO: Double the bet here once betting is supported.
 
         break;
+      }
+
+      // TODO: Handle this ase.
+      if (input === 'split') {
+      }
+
+      if (input === 'surrender') {
+        return await this.finishGame({ winner: 'dealer' });
       }
     }
 

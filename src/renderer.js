@@ -19,8 +19,6 @@ class CLIRenderer extends Renderer {
   constructor(game) {
     super(game);
 
-    this.cli = readline.createInterface(process.stdin, process.stdout);
-
     // Creates space for further output during rendering.
     console.log();
     console.log();
@@ -58,7 +56,7 @@ class CLIRenderer extends Renderer {
     readline.cursorTo(process.stdout, 0, process.stdout.rows - yPosBottom - 1);
     readline.clearLine(process.stdout, 0);
 
-    this.cli.write(text);
+    process.stdout.write(text);
   }
 
   _renderPlayerLine(player, type, row) {

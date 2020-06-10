@@ -12,6 +12,12 @@ module.exports = class Player extends GameObject {
     this.emit('change');
   }
 
+  removeCards() {
+    const cards = this.cards.slice();
+    this.cards = [];
+    return cards;
+  }
+
   get visibleCards() {
     return this.cards.filter((c) => c.visible);
   }
