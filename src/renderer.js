@@ -60,12 +60,18 @@ class CLIRenderer extends Renderer {
   }
 
   _renderPlayerLine(player, type, row) {
-    const padding = player.cardTotal < 10 ? ' ' : '';
+    const line = player.hands
+      .map((hand) => {
+        const padding = hand.cardTotal < 10 ? ' ' : '';
+        const handFocus = this.game.state.focusedHand === hand ? '>' : ' ';
 
-    this._renderLine(
-      `${type} (total ${player.cardTotal}): ${padding}${this.cardRow(player)}`,
-      row
-    );
+        return `${handFocus} (total ${
+          hand.cardTotal
+        }): ${padding}${this.cardRow(hand)}`;
+      })
+      .join('   ');
+
+    this._renderLine(`${type} ${line}`, row);
   }
 }
 

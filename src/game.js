@@ -5,7 +5,6 @@ const Shoe = require('./shoe');
 const Dealer = require('./dealer');
 const Player = require('./player');
 const DiscardTray = require('./discard-tray');
-const Utils = require('./utils');
 
 module.exports = class Game extends EventEmitter {
   constructor() {
@@ -15,9 +14,16 @@ module.exports = class Game extends EventEmitter {
     this.setupCliInput();
   }
 
-  getPlayerMoveInput() {
-    this.state.question =
-      'H (hit), S (stand), D (double), P (split), R (surrender)? ';
+  getPlayerMoveInput(hand) {
+    let question = 'H (hit), S (stand), D (double), R (surrender)';
+
+    if (hand.hasPairs) {
+      question += ', P (split)';
+    }
+
+    question += '? ';
+
+    this.state.question = question;
 
     return this._getPlayerInput(
       (str) =>
@@ -32,12 +38,8 @@ module.exports = class Game extends EventEmitter {
   }
 
   getPlayerNewGameInput() {
-    if (!this.state.winner) {
-      return;
-    }
-
-    const gameResult = () => {
-      switch (this.state.winner) {
+    const getGameResult = (hand) => {
+      switch (this.state.handWinner.get(hand)) {
         case 'player':
           return 'Player wins';
         case 'dealer':
@@ -47,7 +49,12 @@ module.exports = class Game extends EventEmitter {
       }
     };
 
-    this.state.question = `${gameResult()} (press any key for next hand)`;
+    // TODO: Align these results with the hands above.
+    const result = this.player.hands
+      .map((hand) => getGameResult(hand))
+      .join(', ');
+
+    this.state.question = `${result} (press any key for next hand)`;
 
     return this._getPlayerInput((str) => true);
   }
@@ -69,7 +76,8 @@ module.exports = class Game extends EventEmitter {
 
     this._state = {
       question: null,
-      winner: null,
+      handWinner: new Map(),
+      focusedHand: null,
     };
 
     this.state = new Proxy(this._state, {
@@ -90,20 +98,58 @@ module.exports = class Game extends EventEmitter {
     }
   }
 
-  async finishGame({ winner }) {
-    this.state.winner = winner;
+  setHandWinner({ winner, hand }) {
+    this.state.handWinner.set(hand, winner);
+  }
 
-    await this.getPlayerNewGameInput();
+  async playHand(hand) {
+    if (this.dealer.blackjack && hand.blackjack) {
+      return this.setHandWinner({ winner: 'push', hand });
+    } else if (this.dealer.blackjack) {
+      return this.setHandWinner({ winner: 'dealer', hand });
+    } else if (hand.blackjack) {
+      return this.setHandWinner({ winner: 'player', hand });
+    }
 
-    this.discardTray.addCards(this.player.removeCards());
-    this.discardTray.addCards(this.dealer.removeCards());
+    while (hand.cardTotal < 21) {
+      const input = await this.getPlayerMoveInput(hand);
+      if (input === 'stand') {
+        break;
+      }
 
-    if (this.shoe.needsReset) {
-      this.shoe.addCards(
-        Utils.arrayShuffle(
-          this.discardTray.removeCards().concat(this.shoe.removeCards())
-        )
-      );
+      if (input === 'hit') {
+        this.player.takeCard(this.shoe.drawCard(), { hand });
+      }
+
+      // TODO: Double the bet here once betting is supported.
+      if (input === 'double') {
+        this.player.takeCard(this.shoe.drawCard(), { hand });
+        break;
+      }
+
+      // TODO: Allow max x number of splits (4 splits?).
+      if (input === 'split') {
+        if (!hand.hasPairs) {
+          continue;
+        }
+
+        const newHand = this.player.addHand([hand.cards.pop()]);
+
+        this.player.takeCard(this.shoe.drawCard(), { hand });
+        this.player.takeCard(this.shoe.drawCard(), { newHand });
+      }
+
+      if (input === 'surrender') {
+        return this.setHandWinner({ winner: 'dealer', hand });
+      }
+    }
+
+    if (hand.cardTotal === 21) {
+      return this.setHandWinner({ winner: 'player', hand });
+    }
+
+    if (hand.busted) {
+      return this.setHandWinner({ winner: 'dealer', hand });
     }
   }
 
@@ -122,47 +168,9 @@ module.exports = class Game extends EventEmitter {
 
     // TODO: Handle Ace upcard, ask insurance
 
-    if (this.dealer.blackjack && this.player.blackjack) {
-      return await this.finishGame({ winner: 'push' });
-    } else if (this.dealer.blackjack) {
-      return await this.finishGame({ winner: 'dealer' });
-    } else if (this.player.blackjack) {
-      return await this.finishGame({ winner: 'player' });
-    }
-
-    while (this.player.cardTotal < 21) {
-      const input = await this.getPlayerMoveInput();
-      if (input === 'stand') {
-        break;
-      }
-
-      if (input === 'hit') {
-        this.player.takeCard(this.shoe.drawCard());
-      }
-
-      if (input === 'double') {
-        this.player.takeCard(this.shoe.drawCard());
-
-        // TODO: Double the bet here once betting is supported.
-
-        break;
-      }
-
-      // TODO: Handle this ase.
-      if (input === 'split') {
-      }
-
-      if (input === 'surrender') {
-        return await this.finishGame({ winner: 'dealer' });
-      }
-    }
-
-    if (this.player.cardTotal === 21) {
-      return await this.finishGame({ winner: 'player' });
-    }
-
-    if (this.player.busted) {
-      return await this.finishGame({ winner: 'dealer' });
+    for (let hand of this.player.hands) {
+      this.state.focusedHand = hand;
+      await this.playHand(hand);
     }
 
     this.dealer.cards[1].flip();
@@ -172,14 +180,33 @@ module.exports = class Game extends EventEmitter {
       this.dealer.takeCard(this.shoe.drawCard());
     }
 
-    if (this.dealer.busted) {
-      await this.finishGame({ winner: 'player' });
-    } else if (this.dealer.cardTotal > this.player.cardTotal) {
-      await this.finishGame({ winner: 'dealer' });
-    } else if (this.player.cardTotal > this.dealer.cardTotal) {
-      await this.finishGame({ winner: 'player' });
-    } else {
-      await this.finishGame({ winner: 'push' });
+    for (let hand of this.player.hands) {
+      if (this.state.handWinner.get(hand)) {
+        continue;
+      }
+
+      if (this.dealer.busted) {
+        this.setHandWinner({ winner: 'player', hand });
+      } else if (this.dealer.cardTotal > hand.cardTotal) {
+        this.setHandWinner({ winner: 'dealer', hand });
+      } else if (hand.cardTotal > this.dealer.cardTotal) {
+        this.setHandWinner({ winner: 'player', hand });
+      } else {
+        this.setHandWinner({ winner: 'push', hand });
+      }
+    }
+
+    await this.getPlayerNewGameInput();
+
+    this.discardTray.addCards(this.player.removeCards());
+    this.discardTray.addCards(this.dealer.removeCards());
+
+    if (this.shoe.needsReset) {
+      this.shoe.addCards(
+        Utils.arrayShuffle(
+          this.discardTray.removeCards().concat(this.shoe.removeCards())
+        )
+      );
     }
   }
 

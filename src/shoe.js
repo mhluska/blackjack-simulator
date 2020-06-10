@@ -2,6 +2,7 @@ const Utils = require('./utils');
 const Deck = require('./deck');
 const GameObject = require('./game-object');
 const DiscardTray = require('./discard-tray');
+const Card = require('./card');
 
 // When there are less than 20% cards in the shoe, a shuffle + reset is needed.
 const RESET_THRESHOLD = 0.2;
