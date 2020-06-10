@@ -1,0 +1,43 @@
+{
+  "name": "blackjack",
+  "version": "0.0.1",
+  "description": "Blackjack basic strategy trainer",
+  "main": "src/index.js",
+  "scripts": {
+    "start": "node src/index.js",
+    "test": "echo \"Error: no test specified\" && exit 1",
+    "lint": "eslint --fix ."
+  },
+  "repository": {
+    "type": "git",
+    "url": "git+https://github.com/mhluska/blackjack.js.git"
+  },
+  "keywords": [
+    "blackjack",
+    "basic",
+    "strategy",
+    "trainer"
+  ],
+  "author": "Maros Hluska <mhluska@gmail.com>",
+  "license": "MIT",
+  "bugs": {
+    "url": "https://github.com/mhluska/blackjack.js/issues"
+  },
+  "homepage": "https://github.com/mhluska/blackjack.js#readme",
+  "devDependencies": {
+    "eslint": "^7.2.0",
+    "eslint-config-prettier": "^6.11.0",
+    "eslint-plugin-prettier": "^3.1.3",
+    "husky": "^4.2.5",
+    "lint-staged": "^10.2.9",
+    "prettier": "2.0.5"
+  },
+  "husky": {
+    "hooks": {
+      "pre-commit": "lint-staged"
+    }
+  },
+  "lint-staged": {
+    "*.js": "eslint --cache --fix"
+  }
+}
