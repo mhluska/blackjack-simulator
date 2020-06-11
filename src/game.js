@@ -7,6 +7,7 @@ const Dealer = require('./dealer');
 const Player = require('./player');
 const DiscardTray = require('./discard-tray');
 const BasicStrategyChecker = require('./basic-strategy-checker');
+const Storage = require('./storage');
 
 module.exports = class Game extends EventEmitter {
   constructor() {
@@ -121,9 +122,21 @@ module.exports = class Game extends EventEmitter {
 
       const input = await this.getPlayerMoveInput(hand);
 
-      const playCorrection = BasicStrategyChecker.check(this, input);
+      const {
+        code: playCorrectionCode,
+        hint: playCorrection,
+      } = BasicStrategyChecker.check(this, input);
+
       if (playCorrection) {
         this.state.playCorrection = playCorrection;
+
+        Storage.createRecord('wrong-move', {
+          createdAt: Date.now(),
+          dealerHand: this.dealer.hands[0].serialize({ showHidden: true }),
+          playerHand: this.state.focusedHand.serialize(),
+          move: input,
+          correction: playCorrectionCode,
+        });
       }
 
       if (input === 'stand') {

@@ -137,7 +137,15 @@ module.exports = class BasicStrategyChecker {
     }
 
     if (hint) {
-      return `Last play should have been ${hint}!`;
+      return {
+        code: correctMove,
+        hint: `Last play should have been ${hint}!`,
+      };
+    } else {
+      return {
+        code: null,
+        hint: null,
+      };
     }
   }
 };

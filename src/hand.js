@@ -19,6 +19,12 @@ module.exports = class Hand extends GameObject {
     return cards;
   }
 
+  serialize({ showHidden = false } = {}) {
+    return this.cards
+      .map((card) => (card.visible || showHidden ? card.rank : '?'))
+      .join(' ');
+  }
+
   get visibleCards() {
     return this.cards.filter((c) => c.visible);
   }

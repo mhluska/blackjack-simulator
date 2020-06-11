@@ -32,12 +32,6 @@ class CLIRenderer extends Renderer {
     this.renderQuestion();
   }
 
-  cardRow(player) {
-    return player.cards
-      .map((card) => (card.visible ? card.rank : '?'))
-      .join(' ');
-  }
-
   renderDealerCards() {
     this._renderPlayerLine(this.game.dealer, 'Dealer', 3);
   }
@@ -73,7 +67,7 @@ class CLIRenderer extends Renderer {
 
         return `${handFocus} (total ${
           hand.cardTotal
-        }): ${padding}${this.cardRow(hand)}`;
+        }): ${padding}${hand.serialize()}`;
       })
       .join('   ');
 
