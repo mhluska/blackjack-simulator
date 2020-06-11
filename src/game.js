@@ -41,11 +41,13 @@ module.exports = class Game extends EventEmitter {
 
   getPlayerNewGameInput() {
     const getGameResult = (hand) => {
+      const blackjack = hand.blackjack ? 'Blackjack! ' : '';
+
       switch (this.state.handWinner.get(hand)) {
         case 'player':
-          return 'Player wins';
+          return `${blackjack}Player wins`;
         case 'dealer':
-          return 'Dealer wins';
+          return `${blackjack}Dealer wins`;
         case 'push':
           return 'Push';
       }
@@ -209,6 +211,7 @@ module.exports = class Game extends EventEmitter {
 
     await this.getPlayerNewGameInput();
 
+    this.state.playCorrection = '';
     this.discardTray.addCards(this.player.removeCards());
     this.discardTray.addCards(this.dealer.removeCards());
 

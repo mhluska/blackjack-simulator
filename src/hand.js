@@ -31,15 +31,23 @@ module.exports = class Hand extends GameObject {
     return this.cards.length === 2 && this.cardTotal === 21;
   }
 
+  get hardTotal() {
+    return Utils.arraySum(this.visibleCards.map((c) => c.value));
+  }
+
+  get acesCount() {
+    return this.cards.filter((c) => c.rank === 'A').length;
+  }
+
   get cardTotal() {
-    let total = Utils.arraySum(this.visibleCards.map((c) => c.value));
-    let acesCount = this.cards.filter((c) => c.rank === 'A').length;
+    let total = this.hardTotal;
+    let aCount = this.acesCount;
 
     // Aces can count as 1 or 11. Assume the smaller value until we run out of
     // aces or the total goes below 22.
-    while (total > 21 && acesCount > 0) {
+    while (total > 21 && aCount > 0) {
       total -= 10;
-      acesCount -= 1;
+      aCount -= 1;
     }
 
     return total;
@@ -47,5 +55,9 @@ module.exports = class Hand extends GameObject {
 
   get hasPairs() {
     return this.cards.length === 2 && this.cards[0].rank === this.cards[1].rank;
+  }
+
+  get isSoft() {
+    return this.hardTotal < 21 && this.acesCount > 0;
   }
 };
