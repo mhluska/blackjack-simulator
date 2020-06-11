@@ -65,6 +65,8 @@ module.exports = class Game extends EventEmitter {
   }
 
   resetState() {
+    this.gameId = null;
+
     this.shoe = new Shoe();
     this.shoe.on('change', () => this.emit('change', { caller: 'shoe' }));
 
@@ -106,6 +108,14 @@ module.exports = class Game extends EventEmitter {
 
   setHandWinner({ winner, hand }) {
     this.state.handWinner.set(hand, winner);
+
+    Storage.createRecord('hand-result', {
+      createdAt: Date.now(),
+      gameId: this.gameId,
+      dealerHand: this.dealer.hands[0].serialize({ showHidden: true }),
+      playerHand: hand.serialize(),
+      winner: winner,
+    });
   }
 
   async playHand(hand) {
@@ -134,6 +144,7 @@ module.exports = class Game extends EventEmitter {
 
         Storage.createRecord('wrong-move', {
           createdAt: Date.now(),
+          gameId: this.gameId,
           dealerHand: this.dealer.hands[0].serialize({ showHidden: true }),
           playerHand: this.state.focusedHand.serialize(),
           move: input,
@@ -184,6 +195,10 @@ module.exports = class Game extends EventEmitter {
   }
 
   async start() {
+    // We assign a random ID to each game so that we can link hand results with
+    // wrong moves in the database.
+    this.gameId = Utils.randomId();
+
     // Draw card for player face up (upcard).
     this.player.takeCard(this.shoe.drawCard());
 

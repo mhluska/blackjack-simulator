@@ -1,3 +1,5 @@
+const crypto = require('crypto');
+
 module.exports = class Utils {
   static arraySum(array) {
     return array.reduce((acc, current) => acc + current, 0);
@@ -12,5 +14,9 @@ module.exports = class Utils {
     }
 
     return array;
+  }
+
+  static randomId() {
+    return crypto.randomBytes(16).toString('hex');
   }
 };
