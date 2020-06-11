@@ -61,7 +61,7 @@ module.exports = class Game extends EventEmitter {
 
     this.state.question = `${result} (press any key for next hand)`;
 
-    return this._getPlayerInput((str) => true);
+    return this._getPlayerInput();
   }
 
   resetState() {
@@ -120,6 +120,10 @@ module.exports = class Game extends EventEmitter {
     while (hand.cardTotal < 21) {
       const input = await this.getPlayerMoveInput(hand);
 
+      if (!input) {
+        continue;
+      }
+
       const {
         code: playCorrectionCode,
         hint: playCorrection,
@@ -162,7 +166,7 @@ module.exports = class Game extends EventEmitter {
         const newHand = this.player.addHand([hand.cards.pop()]);
 
         this.player.takeCard(this.shoe.drawCard(), { hand });
-        this.player.takeCard(this.shoe.drawCard(), { newHand });
+        this.player.takeCard(this.shoe.drawCard(), { hand: newHand });
       }
 
       if (input === 'surrender') {
@@ -237,7 +241,7 @@ module.exports = class Game extends EventEmitter {
     }
   }
 
-  _getPlayerInput(resultCallback) {
+  _getPlayerInput(resultCallback = () => {}) {
     return new Promise((resolve, reject) => {
       process.stdin.once('keypress', (str, key) => {
         if (key && key.ctrl && key.name === 'c') {
@@ -245,11 +249,7 @@ module.exports = class Game extends EventEmitter {
           return;
         }
 
-        const result = resultCallback(str);
-
-        if (result) {
-          resolve(result);
-        }
+        resolve(resultCallback(str));
       });
     });
   }
