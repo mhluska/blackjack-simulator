@@ -67,11 +67,19 @@ class CLIRenderer extends Renderer {
 
         return `${handFocus} (total ${
           hand.cardTotal
-        }): ${padding}${hand.serialize()}`;
+        }): ${padding}${this._colorizeHand(hand.serialize())}`;
       })
       .join('   ');
 
     this._renderLine(`${type} ${line}`, row);
+  }
+
+  // Alters the text with ANSI escape codes. For example, bold ace cards.
+  _colorizeHand(serializedHand) {
+    const boldEscape = '\u001b[1m';
+    const resetEscape = '\u001b[0m';
+
+    return serializedHand.replace(/A/g, `${boldEscape}A${resetEscape}`);
   }
 }
 

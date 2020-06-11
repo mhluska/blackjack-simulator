@@ -118,8 +118,6 @@ module.exports = class Game extends EventEmitter {
     }
 
     while (hand.cardTotal < 21) {
-      this.state.playCorrection = '';
-
       const input = await this.getPlayerMoveInput(hand);
 
       const {
@@ -137,6 +135,8 @@ module.exports = class Game extends EventEmitter {
           move: input,
           correction: playCorrectionCode,
         });
+      } else {
+        this.state.playCorrection = '';
       }
 
       if (input === 'stand') {
