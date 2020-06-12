@@ -1,5 +1,5 @@
 {
-  "name": "blackjack",
+  "name": "@blackjackjs/engine",
   "version": "0.0.1",
   "description": "Blackjack basic strategy trainer",
   "private": true,
