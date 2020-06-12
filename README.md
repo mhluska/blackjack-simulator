@@ -1,18 +1,16 @@
-Blackjack.js
-------------
+# Blackjack.js (engine)
 
-CLI-based Blackjack basic strategy trainer.
+Core game logic for a Blackjack basic strategy trainer. Includes a simple CLI game display.
 
-Goals
-=====
+## Goals
 
 * Easy to play many hands quickly with hints for correct basic strategy plays (with justification)
 * Support for most common game modes
 * Card counting hints
 * No package dependencies
+* Runs in Node or browser
 
-Build
-=====
+## Build
 
 ```sh
 npm install
@@ -20,4 +18,5 @@ NODE_ENV=development npm run build
 ```
 
 Run in browser: `npm start`
+
 Run in Node: `npm run node`

@@ -1,7 +1,7 @@
 {
   "name": "@blackjackjs/engine",
-  "version": "0.0.1",
-  "description": "Blackjack basic strategy trainer",
+  "version": "0.1.0",
+  "description": "Core game logic for a Blackjack basic strategy trainer (includes a simple CLI game display)",
   "private": true,
   "main": "src/index.js",
   "scripts": {
