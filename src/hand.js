@@ -1,7 +1,7 @@
-const GameObject = require('./game-object');
-const Utils = require('./utils');
+import GameObject from './game-object.js';
+import Utils from './utils.js';
 
-module.exports = class Hand extends GameObject {
+export default class Hand extends GameObject {
   constructor(cards = []) {
     super();
     // We assign a random ID to each hand so that we can link hand results with
@@ -78,4 +78,4 @@ module.exports = class Hand extends GameObject {
   get isSoft() {
     return this.acesCount > 0 && this.lowTotal <= 11;
   }
-};
+}

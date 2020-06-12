@@ -1,20 +1,19 @@
-const EventEmitter = require('events');
-const readline = require('readline');
+import Storage from 'storage';
 
-const Utils = require('./utils');
-const Shoe = require('./shoe');
-const Dealer = require('./dealer');
-const Player = require('./player');
-const DiscardTray = require('./discard-tray');
-const BasicStrategyChecker = require('./basic-strategy-checker');
-const Storage = require('./storage');
+import PlayerInput from 'player-input';
+import EventEmitter from './event-emitter.js';
+import Utils from './utils.js';
+import Shoe from './shoe.js';
+import Dealer from './dealer.js';
+import Player from './player.js';
+import DiscardTray from './discard-tray.js';
+import BasicStrategyChecker from './basic-strategy-checker.js';
 
-module.exports = class Game extends EventEmitter {
+export default class Game extends EventEmitter {
   constructor() {
     super();
 
     this.resetState();
-    this.setupCliInput();
   }
 
   getPlayerMoveInput(hand) {
@@ -28,7 +27,7 @@ module.exports = class Game extends EventEmitter {
 
     this.state.question = question;
 
-    return this._getPlayerInput(
+    return PlayerInput.readKeypress(
       (str) =>
         ({
           h: 'hit',
@@ -61,7 +60,7 @@ module.exports = class Game extends EventEmitter {
 
     this.state.question = `${result} (press any key for next hand)`;
 
-    return this._getPlayerInput();
+    return PlayerInput.readKeypress();
   }
 
   resetState() {
@@ -95,15 +94,6 @@ module.exports = class Game extends EventEmitter {
         return true;
       },
     });
-  }
-
-  setupCliInput() {
-    // Allows collecting keypress events in `getPlayerMoveInput`.
-    readline.emitKeypressEvents(process.stdin);
-
-    if (process.stdin.isTTY) {
-      process.stdin.setRawMode(true);
-    }
   }
 
   setHandWinner({ winner, hand }) {
@@ -255,17 +245,4 @@ module.exports = class Game extends EventEmitter {
       );
     }
   }
-
-  _getPlayerInput(resultCallback = () => {}) {
-    return new Promise((resolve, reject) => {
-      process.stdin.once('keypress', (str, key) => {
-        if (key && key.ctrl && key.name === 'c') {
-          process.stdin.pause();
-          return;
-        }
-
-        resolve(resultCallback(str));
-      });
-    });
-  }
-};
+}

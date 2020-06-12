@@ -1,13 +1,13 @@
-const Utils = require('./utils');
-const Deck = require('./deck');
-const GameObject = require('./game-object');
-const DiscardTray = require('./discard-tray');
-const Card = require('./card');
+import Utils from './utils.js';
+import Deck from './deck.js';
+import GameObject from './game-object.js';
+import DiscardTray from './discard-tray.js';
+import Card from './card.js';
 
 // When there are less than 20% cards in the shoe, a shuffle + reset is needed.
 const RESET_THRESHOLD = 0.2;
 
-module.exports = class Shoe extends DiscardTray {
+export default class Shoe extends DiscardTray {
   constructor() {
     super();
 
@@ -48,4 +48,4 @@ module.exports = class Shoe extends DiscardTray {
   get needsReset() {
     return this.cards.length / this.maxCards < RESET_THRESHOLD;
   }
-};
+}

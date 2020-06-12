@@ -62,7 +62,7 @@ const CHARTS = {
   }
 }
 
-module.exports = class BasicStrategyChecker {
+export default class BasicStrategyChecker {
   static getChartType(hand) {
     if (hand.hasPairs) {
       return 'splits';
@@ -148,4 +148,4 @@ module.exports = class BasicStrategyChecker {
       };
     }
   }
-};
+}

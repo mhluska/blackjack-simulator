@@ -1,10 +1,9 @@
-const assert = require('assert');
-const GameObject = require('./game-object');
+import GameObject from './game-object.js';
 
-module.exports = class Card extends GameObject {
+export default class Card extends GameObject {
   constructor(suit, rank) {
-    assert(suit, 'Need to initialize Card with suit');
-    assert(rank, 'Need to initialize Card with rank');
+    console.assert(suit, 'Need to initialize Card with suit');
+    console.assert(rank, 'Need to initialize Card with rank');
 
     super();
 
@@ -33,4 +32,4 @@ module.exports = class Card extends GameObject {
         return parseInt(this.rank);
     }
   }
-};
+}

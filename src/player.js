@@ -1,10 +1,8 @@
-const assert = require('assert');
+import Utils from './utils.js';
+import GameObject from './game-object.js';
+import Hand from './hand.js';
 
-const Utils = require('./utils');
-const GameObject = require('./game-object');
-const Hand = require('./hand');
-
-module.exports = class Player extends GameObject {
+export default class Player extends GameObject {
   constructor() {
     super();
 
@@ -26,7 +24,7 @@ module.exports = class Player extends GameObject {
 
   takeCard(card, { hand } = {}) {
     if (hand) {
-      assert(this.hands.includes(hand), 'Hand must belong to player');
+      console.assert(this.hands.includes(hand), 'Hand must belong to player');
     }
 
     const targetHand = hand || this.hands[0];
@@ -74,4 +72,4 @@ module.exports = class Player extends GameObject {
   get hasPairs() {
     return this.hands[0].hasPairs;
   }
-};
+}

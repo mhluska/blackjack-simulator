@@ -1,8 +1,8 @@
-const { CLIRenderer } = require('./renderer');
-const Game = require('./game');
+import Renderer from 'renderer';
+import Game from './game.js';
 
 const game = new Game();
-const renderer = new CLIRenderer(game);
+const renderer = new Renderer(game);
 game.on('change', () => renderer.render());
 
 (async function () {

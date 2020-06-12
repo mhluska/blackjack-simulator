@@ -1,8 +1,8 @@
-const Utils = require('./utils');
-const Deck = require('./deck');
-const GameObject = require('./game-object');
+import Utils from './utils.js';
+import Deck from './deck.js';
+import GameObject from './game-object.js';
 
-module.exports = class DiscardTray extends GameObject {
+export default class DiscardTray extends GameObject {
   constructor() {
     super();
     this.cards = [];
@@ -25,4 +25,4 @@ module.exports = class DiscardTray extends GameObject {
     this.cards = [];
     return cards;
   }
-};
+}

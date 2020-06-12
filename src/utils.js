@@ -1,6 +1,4 @@
-const crypto = require('crypto');
-
-module.exports = class Utils {
+export default class Utils {
   static arraySum(array) {
     return array.reduce((acc, current) => acc + current, 0);
   }
@@ -17,6 +15,8 @@ module.exports = class Utils {
   }
 
   static randomId() {
-    return crypto.randomBytes(16).toString('hex');
+    // TODO: Make the backend generate this.
+    // return crypto.randomBytes(16).toString('hex');
+    return Math.random().toString(36).substring(2);
   }
-};
+}
