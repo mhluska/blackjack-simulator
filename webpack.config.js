@@ -3,7 +3,6 @@ const merge = require('webpack-merge');
 
 const common = {
   mode: process.env.NODE_ENV || 'production',
-  entry: './src/index.js',
   output: {
     path: path.resolve(__dirname, 'dist'),
   },
@@ -24,6 +23,7 @@ function resolutions(target) {
   return {
     alias: {
       storage: path.resolve(__dirname, 'src', target, 'storage.js'),
+      // TODO: Remove the browser renderer. Handled by the web repo.
       renderer: path.resolve(__dirname, 'src', target, 'renderer.js'),
       'player-input': path.resolve(__dirname, 'src', target, 'player-input.js'),
     },
@@ -31,6 +31,7 @@ function resolutions(target) {
 }
 
 const serverConfig = merge(common, {
+  entry: './src/node/index.js',
   target: 'node',
   output: {
     filename: 'main.node.js',
@@ -39,8 +40,11 @@ const serverConfig = merge(common, {
 });
 
 const clientConfig = merge(common, {
+  entry: './src/browser/index.js',
   output: {
     filename: 'main.js',
+    library: 'BlackjackEngine',
+    libraryTarget: 'umd',
   },
   resolve: resolutions('browser'),
   devServer: {

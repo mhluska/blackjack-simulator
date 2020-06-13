@@ -3,7 +3,7 @@
   "version": "0.1.0",
   "description": "Core game logic for a Blackjack basic strategy trainer (includes a simple CLI game display)",
   "private": true,
-  "main": "src/index.js",
+  "main": "dist/main.js",
   "scripts": {
     "start": "webpack-dev-server --open",
     "node": "APP_ROOT=$(npm prefix) node dist/main.node.js",

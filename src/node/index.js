@@ -1,5 +1,5 @@
 import Renderer from 'renderer';
-import Game from './game.js';
+import Game from '../game.js';
 
 const game = new Game();
 const renderer = new Renderer(game);
