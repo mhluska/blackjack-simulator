@@ -16,6 +16,14 @@ export default class Card extends GameObject {
     this.showingFace = !this.showingFace;
   }
 
+  attributes() {
+    return {
+      suit: this.suit,
+      rank: this.rank,
+      showingFace: this.showingFace,
+    };
+  }
+
   get visible() {
     return this.showingFace;
   }

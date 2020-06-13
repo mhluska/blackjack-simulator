@@ -4,8 +4,6 @@ import Utils from './utils.js';
 export default class Hand extends GameObject {
   constructor(cards = []) {
     super();
-    // We assign a random ID to each hand so that we can link hand results with
-    // wrong moves in the database.
     this.id = Utils.randomId();
     this.cards = cards;
   }
@@ -26,6 +24,15 @@ export default class Hand extends GameObject {
     return this.cards
       .map((card) => (card.visible || showHidden ? card.rank : '?'))
       .join(' ');
+  }
+
+  attributes() {
+    return {
+      id: this.id,
+      cards: this.cards.map((card) => card.attributes()),
+      cardTotal: this.cardTotal,
+      blackjack: this.blackjack,
+    };
   }
 
   get visibleCards() {

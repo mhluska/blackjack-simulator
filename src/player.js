@@ -43,6 +43,12 @@ export default class Player extends GameObject {
     }
   }
 
+  attributes() {
+    return {
+      hands: this.hands.map((hand) => hand.attributes()),
+    };
+  }
+
   // TODO: Consider using `Proxy`.
   get cards() {
     return this.hands[0].cards;

@@ -55,7 +55,7 @@ export default class Game extends EventEmitter {
     this.player.on('change', () => this.emit('change', { caller: 'player' }));
 
     this._state = {
-      handWinner: new Map(),
+      handWinner: {},
       focusedHand: null,
       playCorrection: null,
     };
@@ -70,7 +70,7 @@ export default class Game extends EventEmitter {
   }
 
   setHandWinner({ winner, hand }) {
-    this.state.handWinner.set(hand, winner);
+    this.state.handWinner[hand.id] = winner;
 
     Storage.createRecord('hand-result', {
       createdAt: Date.now(),
@@ -189,7 +189,7 @@ export default class Game extends EventEmitter {
     }
 
     for (let hand of this.player.hands) {
-      if (this.state.handWinner.get(hand)) {
+      if (this.state.handWinner[hand.id]) {
         continue;
       }
 

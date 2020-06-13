@@ -59,7 +59,7 @@ export default class CLIRenderer extends Renderer {
       const getGameResult = (hand) => {
         const blackjack = hand.blackjack ? 'Blackjack! ' : '';
 
-        switch (this.game.state.handWinner.get(hand)) {
+        switch (this.game.state.handWinner[hand.id]) {
           case 'player':
             return `${blackjack}Player wins`;
           case 'dealer':
