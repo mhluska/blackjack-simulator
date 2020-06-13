@@ -17,15 +17,7 @@ export default class Game extends EventEmitter {
   }
 
   getPlayerMoveInput(hand) {
-    let question = 'H (hit), S (stand), D (double), R (surrender)';
-
-    if (hand.hasPairs) {
-      question += ', P (split)';
-    }
-
-    question += '? ';
-
-    this.state.question = question;
+    this.state.step = 'waiting-for-move';
 
     return PlayerInput.readKeypress(
       (str) =>
@@ -40,25 +32,7 @@ export default class Game extends EventEmitter {
   }
 
   getPlayerNewGameInput() {
-    const getGameResult = (hand) => {
-      const blackjack = hand.blackjack ? 'Blackjack! ' : '';
-
-      switch (this.state.handWinner.get(hand)) {
-        case 'player':
-          return `${blackjack}Player wins`;
-        case 'dealer':
-          return `${blackjack}Dealer wins`;
-        case 'push':
-          return 'Push';
-      }
-    };
-
-    // TODO: Align these results with the hands above.
-    const result = this.player.hands
-      .map((hand) => getGameResult(hand))
-      .join(', ');
-
-    this.state.question = `${result} (press any key for next hand)`;
+    this.state.step = 'game-result';
 
     return PlayerInput.readKeypress();
   }
@@ -81,7 +55,6 @@ export default class Game extends EventEmitter {
     this.player.on('change', () => this.emit('change', { caller: 'player' }));
 
     this._state = {
-      question: null,
       handWinner: new Map(),
       focusedHand: null,
       playCorrection: null,

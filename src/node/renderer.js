@@ -44,7 +44,40 @@ export default class CLIRenderer extends Renderer {
   }
 
   _renderQuestion() {
-    this._renderLine(this.game.state.question, 0);
+    let question;
+
+    if (this.game.state.step === 'waiting-for-move') {
+      question = 'H (hit), S (stand), D (double), R (surrender)';
+
+      // TODO: Use optional chaining here. Seems like eslint doesn't like it.
+      if (this.game.state.focusedHand && this.game.state.focusedHand.hasPairs) {
+        question += ', P (split)';
+      }
+
+      question += '? ';
+    } else {
+      const getGameResult = (hand) => {
+        const blackjack = hand.blackjack ? 'Blackjack! ' : '';
+
+        switch (this.game.state.handWinner.get(hand)) {
+          case 'player':
+            return `${blackjack}Player wins`;
+          case 'dealer':
+            return `${blackjack}Dealer wins`;
+          case 'push':
+            return 'Push';
+        }
+      };
+
+      // TODO: Align these results with the hands above.
+      const result = this.game.player.hands
+        .map((hand) => getGameResult(hand))
+        .join(', ');
+
+      question = `${result} (press any key for next hand)`;
+    }
+
+    this._renderLine(question, 0);
   }
 
   _renderLine(text, yPosBottom = 0) {
