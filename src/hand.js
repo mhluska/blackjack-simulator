@@ -30,6 +30,7 @@ export default class Hand extends GameObject {
     return {
       id: this.id,
       cards: this.cards.map((card) => card.attributes()),
+      hasPairs: this.hasPairs,
       cardTotal: this.cardTotal,
       blackjack: this.blackjack,
     };

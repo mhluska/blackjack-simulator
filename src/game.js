@@ -103,6 +103,11 @@ export default class Game extends EventEmitter {
         continue;
       }
 
+      // TODO: Allow max x number of splits (4 splits?).
+      if (input === 'split' && !hand.hasPairs) {
+        continue;
+      }
+
       // TODO: Only allow double on first move?
       const {
         code: playCorrectionCode,
@@ -141,10 +146,6 @@ export default class Game extends EventEmitter {
 
       // TODO: Allow max x number of splits (4 splits?).
       if (input === 'split') {
-        if (!hand.hasPairs) {
-          continue;
-        }
-
         const newHand = this.player.addHand([hand.cards.pop()]);
 
         this.player.takeCard(this.shoe.drawCard(), { hand });
