@@ -1,7 +1,7 @@
 import PlayerInput from '../player-input.js';
 
 export default class CLIPlayerInput extends PlayerInput {
-  static readKeypress(resultCallback = () => {}) {
+  static readInput({ keypress = () => {}, click = () => {} } = {}) {
     return new Promise((resolve, reject) => {
       process.stdin.once('keypress', (str, key) => {
         if (key && key.ctrl && key.name === 'c') {
@@ -9,7 +9,7 @@ export default class CLIPlayerInput extends PlayerInput {
           return;
         }
 
-        resolve(resultCallback(str));
+        resolve(keypress(str));
       });
     });
   }

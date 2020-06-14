@@ -19,22 +19,28 @@ export default class Game extends EventEmitter {
   getPlayerMoveInput(hand) {
     this.state.step = 'waiting-for-move';
 
-    return PlayerInput.readKeypress(
-      (str) =>
-        ({
-          h: 'hit',
-          s: 'stand',
-          d: 'double',
-          p: 'split',
-          r: 'surrender',
-        }[str.toLowerCase()])
-    );
+    const inputHandler = (str) =>
+      ({
+        h: 'hit',
+        s: 'stand',
+        d: 'double',
+        p: 'split',
+        r: 'surrender',
+      }[str.toLowerCase()]);
+
+    return PlayerInput.readInput({
+      keypress: inputHandler,
+      click: inputHandler,
+    });
   }
 
   getPlayerNewGameInput() {
     this.state.step = 'game-result';
 
-    return PlayerInput.readKeypress();
+    return PlayerInput.readInput({
+      keypress: () => true,
+      click: (str) => str.toLowerCase() === 'd',
+    });
   }
 
   resetState() {
@@ -97,6 +103,7 @@ export default class Game extends EventEmitter {
         continue;
       }
 
+      // TODO: Only allow double on first move?
       const {
         code: playCorrectionCode,
         hint: playCorrection,
@@ -126,6 +133,7 @@ export default class Game extends EventEmitter {
       }
 
       // TODO: Double the bet here once betting is supported.
+      // TODO: Only allow double on first move?
       if (input === 'double') {
         this.player.takeCard(this.shoe.drawCard(), { hand });
         break;

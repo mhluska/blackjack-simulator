@@ -13,6 +13,7 @@ export default class Player extends GameObject {
     const hand = new Hand(cards);
     hand.on('change', () => this.emit('change'));
     this.hands.push(hand);
+    this.emit('change');
 
     return hand;
   }

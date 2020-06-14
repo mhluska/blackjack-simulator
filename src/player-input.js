@@ -1,5 +1,5 @@
 export default class PlayerInput {
-  static readKeypress(resultCallback = () => {}) {
+  static readInput({ keypress = () => {}, click = () => {} } = {}) {
     throw new Error('Implement this');
   }
 }
