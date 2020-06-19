@@ -7,12 +7,12 @@ import Card from './card.js';
 // When there are less than 20% cards in the shoe, a shuffle + reset is needed.
 const RESET_THRESHOLD = 0.2;
 
+// TODO: Make this mix in functionality from `DiscardTray` instead of extending.
 export default class Shoe extends DiscardTray {
-  constructor() {
+  constructor({ deckCount } = {}) {
     super();
 
-    // TODO: Support more decks.
-    this.deckCount = 1;
+    this.deckCount = deckCount;
     this.cards = this.setupCards();
   }
 

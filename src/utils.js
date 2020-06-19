@@ -19,4 +19,16 @@ export default class Utils {
     // return crypto.randomBytes(16).toString('hex');
     return Math.random().toString(36).substring(2);
   }
+
+  static sleep(ms) {
+    if (ms <= 0) {
+      return Promise.resolve();
+    }
+
+    return new Promise((resolve) => setTimeout(resolve, ms));
+  }
+
+  static clamp(number, min, max) {
+    return Math.max(Math.min(number, max), min);
+  }
 }

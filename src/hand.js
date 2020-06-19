@@ -5,14 +5,17 @@ export default class Hand extends GameObject {
   constructor(cards = []) {
     super();
     this.id = Utils.randomId();
-    this.cards = cards;
+    this.cards = [];
+    cards.forEach((card) => this.takeCard(card));
   }
 
   takeCard(card) {
+    card.on('change', () => this.emit('change'));
     this.cards.push(card);
     this.emit('change');
   }
 
+  // TODO: Remove change handler when removing cards.
   removeCards() {
     const cards = this.cards.slice();
     this.cards = [];

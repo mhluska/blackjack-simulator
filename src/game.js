@@ -1,6 +1,6 @@
 import Storage from 'storage';
 
-import PlayerInput from 'player-input';
+import PlayerInputReader from 'player-input-reader';
 import EventEmitter from './event-emitter.js';
 import Utils from './utils.js';
 import Shoe from './shoe.js';
@@ -9,44 +9,104 @@ import Player from './player.js';
 import DiscardTray from './discard-tray.js';
 import BasicStrategyChecker from './basic-strategy-checker.js';
 
+const SETTINGS_DEFAULTS = {
+  animationDelay: 200,
+  deckCount: 2,
+};
+
 export default class Game extends EventEmitter {
-  constructor() {
+  constructor(settings = {}) {
     super();
 
-    this.resetState();
+    this.playerInputReader = new PlayerInputReader(this);
+    this.updateSettings(Object.assign(SETTINGS_DEFAULTS, settings));
+    this._setupState();
   }
 
-  getPlayerMoveInput(hand) {
-    this.state.step = 'waiting-for-move';
-
-    const inputHandler = (str) =>
-      ({
-        h: 'hit',
-        s: 'stand',
-        d: 'double',
-        p: 'split',
-        r: 'surrender',
-      }[str.toLowerCase()]);
-
-    return PlayerInput.readInput({
-      keypress: inputHandler,
-      click: inputHandler,
-    });
-  }
-
-  getPlayerNewGameInput() {
-    this.state.step = 'game-result';
-
-    return PlayerInput.readInput({
-      keypress: () => true,
-      click: (str) => str.toLowerCase() === 'd',
-    });
+  updateSettings(settings) {
+    this.settings = settings;
   }
 
   resetState() {
-    this.gameId = null;
+    this._setupState();
 
-    this.shoe = new Shoe();
+    this.state.step = 'resetting';
+    this.emit('resetState');
+  }
+
+  async start() {
+    // We assign a random ID to each game so that we can link hand results with
+    // wrong moves in the database.
+    this.gameId = Utils.randomId();
+
+    // Draw card for player face up (upcard).
+    this.player.takeCard(this.shoe.drawCard());
+
+    // Draw card for dealer face up.
+    this.dealer.takeCard(this.shoe.drawCard());
+
+    // Draw card for player face up.
+    this.player.takeCard(this.shoe.drawCard());
+
+    // Draw card for dealer face down (hole card).
+    this.dealer.takeCard(this.shoe.drawCard({ showingFace: false }));
+
+    // TODO: Handle Ace upcard, ask insurance
+
+    for (let hand of this.player.hands) {
+      this.state.focusedHand = hand;
+      await this._playHand(hand);
+    }
+
+    // These moves introduce a card so add a delay to make the UI less jarring.
+    if (this.lastInput === 'hit' || this.lastInput === 'double') {
+      await Utils.sleep(this.settings.animationDelay);
+    }
+
+    this.dealer.cards[1].flip();
+
+    // Dealer draws cards until they reach 17.
+    while (this.dealer.cardTotal < 17) {
+      await Utils.sleep(this.settings.animationDelay);
+      this.dealer.takeCard(this.shoe.drawCard());
+    }
+
+    for (let hand of this.player.hands) {
+      if (this.state.handWinner[hand.id]) {
+        continue;
+      }
+
+      if (this.dealer.busted) {
+        this._setHandWinner({ winner: 'player', hand });
+      } else if (this.dealer.cardTotal > hand.cardTotal) {
+        this._setHandWinner({ winner: 'dealer', hand });
+      } else if (hand.cardTotal > this.dealer.cardTotal) {
+        this._setHandWinner({ winner: 'player', hand });
+      } else {
+        this._setHandWinner({ winner: 'push', hand });
+      }
+    }
+
+    await this._getPlayerNewGameInput();
+
+    this.state.playCorrection = '';
+    this.discardTray.addCards(this.player.removeCards());
+    this.discardTray.addCards(this.dealer.removeCards());
+
+    if (this.shoe.needsReset) {
+      this.shoe.addCards(
+        Utils.arrayShuffle(
+          this.discardTray.removeCards().concat(this.shoe.removeCards())
+        )
+      );
+    }
+  }
+
+  _setupState() {
+    this.gameId = null;
+    this.lastInput = null;
+
+    this.shoe = new Shoe({ deckCount: this.settings.deckCount });
     this.shoe.on('change', () => this.emit('change', { caller: 'shoe' }));
 
     this.discardTray = new DiscardTray();
@@ -75,7 +135,34 @@ export default class Game extends EventEmitter {
     });
   }
 
-  setHandWinner({ winner, hand }) {
+  _getPlayerMoveInput(hand) {
+    this.state.step = 'waiting-for-move';
+
+    const inputHandler = (str) =>
+      ({
+        h: 'hit',
+        s: 'stand',
+        d: 'double',
+        p: 'split',
+        r: 'surrender',
+      }[str.toLowerCase()]);
+
+    return this.playerInputReader.readInput({
+      keypress: inputHandler,
+      click: inputHandler,
+    });
+  }
+
+  _getPlayerNewGameInput() {
+    this.state.step = 'game-result';
+
+    return this.playerInputReader.readInput({
+      keypress: () => true,
+      click: (str) => str.toLowerCase() === 'd',
+    });
+  }
+
+  _setHandWinner({ winner, hand }) {
     this.state.handWinner[hand.id] = winner;
 
     Storage.createRecord('hand-result', {
@@ -87,17 +174,17 @@ export default class Game extends EventEmitter {
     });
   }
 
-  async playHand(hand) {
+  async _playHand(hand) {
     if (this.dealer.blackjack && hand.blackjack) {
-      return this.setHandWinner({ winner: 'push', hand });
+      return this._setHandWinner({ winner: 'push', hand });
     } else if (this.dealer.blackjack) {
-      return this.setHandWinner({ winner: 'dealer', hand });
+      return this._setHandWinner({ winner: 'dealer', hand });
     } else if (hand.blackjack) {
-      return this.setHandWinner({ winner: 'player', hand });
+      return this._setHandWinner({ winner: 'player', hand });
     }
 
     while (hand.cardTotal < 21) {
-      const input = await this.getPlayerMoveInput(hand);
+      const input = await this._getPlayerMoveInput(hand);
 
       if (!input) {
         continue;
@@ -107,6 +194,8 @@ export default class Game extends EventEmitter {
       if (input === 'split' && !hand.hasPairs) {
         continue;
       }
+
+      this.lastInput = input;
 
       // TODO: Only allow double on first move?
       const {
@@ -153,78 +242,16 @@ export default class Game extends EventEmitter {
       }
 
       if (input === 'surrender') {
-        return this.setHandWinner({ winner: 'dealer', hand });
+        return this._setHandWinner({ winner: 'dealer', hand });
       }
     }
 
     if (hand.cardTotal === 21) {
-      return this.setHandWinner({ winner: 'player', hand });
+      return this._setHandWinner({ winner: 'player', hand });
     }
 
     if (hand.busted) {
-      return this.setHandWinner({ winner: 'dealer', hand });
-    }
-  }
-
-  async start() {
-    // We assign a random ID to each game so that we can link hand results with
-    // wrong moves in the database.
-    this.gameId = Utils.randomId();
-
-    // Draw card for player face up (upcard).
-    this.player.takeCard(this.shoe.drawCard());
-
-    // Draw card for dealer face up.
-    this.dealer.takeCard(this.shoe.drawCard());
-
-    // Draw card for player face up.
-    this.player.takeCard(this.shoe.drawCard());
-
-    // Draw card for dealer face down (hole card).
-    this.dealer.takeCard(this.shoe.drawCard({ showingFace: false }));
-
-    // TODO: Handle Ace upcard, ask insurance
-
-    for (let hand of this.player.hands) {
-      this.state.focusedHand = hand;
-      await this.playHand(hand);
-    }
-
-    this.dealer.cards[1].flip();
-
-    // Dealer draws cards until they reach 17.
-    while (this.dealer.cardTotal < 17) {
-      this.dealer.takeCard(this.shoe.drawCard());
-    }
-
-    for (let hand of this.player.hands) {
-      if (this.state.handWinner[hand.id]) {
-        continue;
-      }
-
-      if (this.dealer.busted) {
-        this.setHandWinner({ winner: 'player', hand });
-      } else if (this.dealer.cardTotal > hand.cardTotal) {
-        this.setHandWinner({ winner: 'dealer', hand });
-      } else if (hand.cardTotal > this.dealer.cardTotal) {
-        this.setHandWinner({ winner: 'player', hand });
-      } else {
-        this.setHandWinner({ winner: 'push', hand });
-      }
-    }
-
-    await this.getPlayerNewGameInput();
-
-    this.state.playCorrection = '';
-    this.discardTray.addCards(this.player.removeCards());
-    this.discardTray.addCards(this.dealer.removeCards());
-
-    if (this.shoe.needsReset) {
-      this.shoe.addCards(
-        Utils.arrayShuffle(
-          this.discardTray.removeCards().concat(this.shoe.removeCards())
-        )
-      );
+      return this._setHandWinner({ winner: 'dealer', hand });
     }
   }
 }

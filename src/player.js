@@ -9,7 +9,7 @@ export default class Player extends GameObject {
     this.resetHands();
   }
 
-  addHand(cards) {
+  addHand(cards = []) {
     const hand = new Hand(cards);
     hand.on('change', () => this.emit('change'));
     this.hands.push(hand);
@@ -29,7 +29,7 @@ export default class Player extends GameObject {
     }
 
     const targetHand = hand || this.hands[0];
-    targetHand.cards.push(card);
+    targetHand.takeCard(card);
     this.emit('change');
   }
 

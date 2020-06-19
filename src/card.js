@@ -14,6 +14,7 @@ export default class Card extends GameObject {
 
   flip() {
     this.showingFace = !this.showingFace;
+    this.emit('change');
   }
 
   attributes() {

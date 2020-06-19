@@ -1,7 +1,7 @@
-import PlayerInput from '../player-input.js';
+import PlayerInputReader from '../player-input-reader.js';
 
-export default class CLIPlayerInput extends PlayerInput {
-  static readInput({ keypress = () => {}, click = () => {} } = {}) {
+export default class CLIPlayerInputReader extends PlayerInputReader {
+  readInput({ keypress = () => {}, click = () => {} } = {}) {
     return new Promise((resolve, reject) => {
       process.stdin.once('keypress', (str, key) => {
         if (key && key.ctrl && key.name === 'c') {

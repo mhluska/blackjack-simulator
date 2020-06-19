@@ -1,8 +1,16 @@
-import PlayerInput from '../player-input.js';
+import PlayerInputReader from '../player-input-reader.js';
 
-export default class DOMPlayerInput extends PlayerInput {
-  static readInput({ keypress = () => {}, click = () => {} } = {}) {
+export default class DOMPlayerInputReader extends PlayerInputReader {
+  readInput({ keypress = () => {}, click = () => {} } = {}) {
+    // HACK: Advance the game without making a move.
+    // if (this.game.state.step === 'resetting') {
+    //   return Promise.resolve(true);
+    // }
+
     return new Promise((resolve, reject) => {
+      // HACK: Advance the game without making a move.
+      this.game.on('resetState', () => reject(new Error('Game reset')));
+
       document.body.addEventListener(
         'keypress',
         (event) => {
