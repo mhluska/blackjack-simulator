@@ -1,7 +1,7 @@
 {
   "name": "@blackjacktrainer/blackjackjs-engine",
   "version": "0.1.0",
-  "description": "Core game logic for a Blackjack basic strategy trainer (includes a simple CLI game display)",
+  "description": "Core game logic for a Blackjack basic strategy trainer",
   "main": "dist/main.js",
   "scripts": {
     "start": "webpack-dev-server --open",

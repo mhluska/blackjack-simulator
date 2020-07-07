@@ -2,6 +2,8 @@
 
 Core game logic for a Blackjack basic strategy trainer. Includes a simple CLI game display.
 
+![CLI output preview](preview.gif)
+
 ## Goals
 
 * Easy to play many hands quickly with hints for correct basic strategy plays (with justification)
