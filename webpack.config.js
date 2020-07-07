@@ -22,7 +22,6 @@ const common = {
 function resolutions(target) {
   return {
     alias: {
-      storage: path.resolve(__dirname, 'src', target, 'storage.js'),
       // TODO: Remove the browser renderer. Handled by the web repo.
       renderer: path.resolve(__dirname, 'src', target, 'renderer.js'),
       'player-input-reader': path.resolve(

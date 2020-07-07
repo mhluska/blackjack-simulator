@@ -1,5 +1,3 @@
-import Storage from 'storage';
-
 import PlayerInputReader from 'player-input-reader';
 import EventEmitter from './event-emitter.js';
 import Utils from './utils.js';
@@ -175,7 +173,7 @@ export default class Game extends EventEmitter {
   _setHandWinner({ winner, hand }) {
     this.state.handWinner[hand.id] = winner;
 
-    Storage.createRecord('hand-result', {
+    this.emit('create-record', 'hand-result', {
       createdAt: Date.now(),
       gameId: this.gameId,
       dealerHand: this.dealer.hands[0].serialize({ showHidden: true }),
@@ -227,18 +225,18 @@ export default class Game extends EventEmitter {
 
       if (playCorrection) {
         this.state.playCorrection = playCorrection;
-
-        Storage.createRecord('wrong-move', {
-          createdAt: Date.now(),
-          gameId: this.gameId,
-          dealerHand: this.dealer.hands[0].serialize({ showHidden: true }),
-          playerHand: this.state.focusedHand.serialize(),
-          move: input,
-          correction: playCorrectionCode,
-        });
       } else {
         this.state.playCorrection = '';
       }
+
+      this.emit('create-record', 'move', {
+        createdAt: Date.now(),
+        gameId: this.gameId,
+        dealerHand: this.dealer.hands[0].serialize({ showHidden: true }),
+        playerHand: this.state.focusedHand.serialize(),
+        move: input,
+        correction: playCorrectionCode,
+      });
 
       if (input === 'stand') {
         break;
