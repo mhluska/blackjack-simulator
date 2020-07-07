@@ -1,6 +1,6 @@
 import fs from 'fs';
 import path from 'path';
-import Storage from '../storage.js';
+import Storage from './storage.js';
 
 console.assert(process.env.APP_ROOT, 'APP_ROOT env variable is not defined');
 

@@ -9,6 +9,10 @@ export default class DOMPlayerInputReader extends PlayerInputReader {
       document.body.addEventListener(
         'keypress',
         (event) => {
+          if (!document.querySelector(this.game.settings.element)) {
+            return;
+          }
+
           resolve(keypress(event.key));
         },
         { once: true }
