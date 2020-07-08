@@ -16,6 +16,7 @@ export default class Shoe extends DiscardTray {
     console.assert(deckCount, 'Need to initialize Shoe with deckCount');
     console.assert(gameMode, 'Need to initialize Shoe with gameMode');
 
+    this.hiLoRunningCount = 0;
     this.deckCount = deckCount;
     this.gameMode = gameMode;
     this.cards = this._setupCards();
@@ -51,15 +52,64 @@ export default class Shoe extends DiscardTray {
     const card = this.cards.pop();
     card.showingFace = showingFace;
 
+    if (showingFace) {
+      this.hiLoRunningCount += card.hiLoValue;
+    }
+
     this.emit('change');
 
     return card;
   }
 
+  addCards(cards) {
+    super.addCards(cards);
+
+    this.hiLoRunningCount -= cards.reduce(
+      (acc, card) => acc + card.hiLoValue,
+      0
+    );
+  }
+
+  attributes() {
+    return Object.assign({}, super.attributes(), {
+      penetration: Utils.round(this.penetration, 2),
+      hiLoRunningCount: this.hiLoRunningCount,
+      hiLoTrueCount: Utils.round(this.hiLoTrueCount, 2),
+    });
+  }
+
+  get maxCards() {
+    return this.deckCount * 52;
+  }
+
+  get needsReset() {
+    if (this.gameMode === 'pairs' || this.gameMode === 'uncommon') {
+      return true;
+    }
+
+    return this.cards.length / this.maxCards < RESET_THRESHOLD;
+  }
+
+  get cardsRemaining() {
+    return this.cards.length / this.maxCards;
+  }
+
+  get penetration() {
+    return (1 - this.cardsRemaining) * 100;
+  }
+
+  get decksRemaining() {
+    return this.cardsRemaining * this.deckCount;
+  }
+
+  get hiLoTrueCount() {
+    return this.hiLoRunningCount / this.decksRemaining;
+  }
+
   _setupCards() {
     const decks = [];
     for (let i = 0; i < this.deckCount; i += 1) {
-      decks.push(new Deck());
+      decks.push(new Deck(this));
     }
 
     let cards = [];
@@ -114,17 +164,5 @@ export default class Shoe extends DiscardTray {
     if (chartType === 'splits') {
       return [total, total];
     }
-  }
-
-  get maxCards() {
-    return this.deckCount * 52;
-  }
-
-  get needsReset() {
-    if (this.gameMode === 'pairs' || this.gameMode === 'uncommon') {
-      return true;
-    }
-
-    return this.cards.length / this.maxCards < RESET_THRESHOLD;
   }
 }
