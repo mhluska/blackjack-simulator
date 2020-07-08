@@ -48,4 +48,13 @@ export default class Utils {
   static clamp(number, min, max) {
     return Math.max(Math.min(number, max), min);
   }
+
+  // See https://stackoverflow.com/a/43532829
+  static round(value, digits = 2) {
+    value = value * Math.pow(10, digits);
+    value = Math.round(value);
+    value = value / Math.pow(10, digits);
+
+    return value;
+  }
 }

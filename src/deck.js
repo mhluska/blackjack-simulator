@@ -28,8 +28,12 @@ export default class Deck extends GameObject {
     return Utils.arraySample(ranks);
   }
 
-  constructor() {
+  constructor(shoe) {
+    console.assert(shoe, 'Need to initialize Deck with shoe');
+
     super();
+
+    this.shoe = shoe;
     this.cards = this.setupCards();
   }
 
@@ -37,7 +41,7 @@ export default class Deck extends GameObject {
     const cards = [];
 
     suits.forEach((suit) =>
-      ranks.forEach((rank) => cards.push(new Card(suit, rank)))
+      ranks.forEach((rank) => cards.push(new Card(suit, rank, this.shoe)))
     );
 
     Utils.arrayShuffle(cards);
