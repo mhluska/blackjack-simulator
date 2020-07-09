@@ -6,13 +6,14 @@ import Dealer from './dealer.js';
 import Player from './player.js';
 import DiscardTray from './discard-tray.js';
 import BasicStrategyChecker from './basic-strategy-checker.js';
+import HiLoDeviationChecker from './hi-lo-deviation-checker.js';
 
 const SETTINGS_DEFAULTS = {
   animationDelay: 200,
   deckCount: 2,
   allowSurrender: false,
   allowLateSurrender: false,
-  // Can be one of 'default', 'pairs', 'uncommon'.
+  // Can be one of 'default', 'pairs', 'uncommon', 'illustrious18'.
   gameMode: 'default',
 };
 
@@ -217,11 +218,9 @@ export default class Game extends EventEmitter {
 
       this.lastInput = input;
 
-      // TODO: Only allow double on first move?
-      const {
-        code: playCorrectionCode,
-        hint: playCorrection,
-      } = BasicStrategyChecker.check(this, input);
+      const { code: playCorrectionCode, hint: playCorrection } =
+        HiLoDeviationChecker.check(this, input) ||
+        BasicStrategyChecker.check(this, input);
 
       if (playCorrection) {
         this.state.playCorrection = playCorrection;

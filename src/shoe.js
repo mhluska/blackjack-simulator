@@ -4,6 +4,7 @@ import GameObject from './game-object.js';
 import DiscardTray from './discard-tray.js';
 import Card from './card.js';
 import BasicStrategyChecker from './basic-strategy-checker.js';
+import { illustrious18Deviations } from './hi-lo-deviation-checker.js';
 
 // When there are less than 20% cards in the shoe, a shuffle + reset is needed.
 const RESET_THRESHOLD = 0.2;
@@ -35,16 +36,41 @@ export default class Shoe extends DiscardTray {
       const [chartType, chart] = Utils.arraySample(
         Object.entries(BasicStrategyChecker.uncommonHands(this.deckCount))
       );
-      const [playerTotal, dealerUpcardRanks] = Utils.arraySample(
+      const [playerTotal, dealerUpcardValues] = Utils.arraySample(
         Object.entries(chart)
       );
-      const dealerUpcardRank = Utils.arraySample(dealerUpcardRanks);
+      const dealerUpcardValue = Utils.arraySample(dealerUpcardValues);
       const [rank1, rank2] = this._twoRandomRanksFromTotal(
         playerTotal,
         chartType
       );
 
-      this._moveCardsToFront(rank1, rank2, dealerUpcardRank);
+      this._moveCardsToFront(rank1, rank2, dealerUpcardValue);
+    }
+
+    if (this.gameMode === 'illustrious18') {
+      const {
+        playerTotal,
+        dealersCard,
+        index,
+        direction,
+        pair,
+      } = Utils.arraySample(illustrious18Deviations);
+
+      const [rank1, rank2] = this._twoRandomRanksFromTotal(
+        pair ? playerTotal / 2 : playerTotal,
+        pair ? 'splits' : 'hard'
+      );
+
+      this._moveCardsToFront(rank1, rank2, dealersCard);
+
+      // Include all face up cards in the count from the opening hand.
+      const i1 = this.cards[this.cards.length - 1].hiLoValue;
+      const i2 = this.cards[this.cards.length - 2].hiLoValue;
+      const i3 = this.cards[this.cards.length - 3].hiLoValue;
+
+      this.hiLoRunningCount =
+        (index - i1 - i2 - i3 + direction) * this.decksRemaining;
     }
   }
 
@@ -83,7 +109,7 @@ export default class Shoe extends DiscardTray {
   }
 
   get needsReset() {
-    if (this.gameMode === 'pairs' || this.gameMode === 'uncommon') {
+    if (this.gameMode !== 'default') {
       return true;
     }
 
@@ -120,7 +146,7 @@ export default class Shoe extends DiscardTray {
     return cards;
   }
 
-  _moveCardsToFront(playerRank1, playerRank2, dealerUpcardRank) {
+  _moveCardsToFront(playerRank1, playerRank2, dealerUpcardValue) {
     // Move the first two cards to the 0th and 2nd spot so they are dealt to the
     // player at the start of the game.
     Utils.arrayMove(
@@ -129,10 +155,10 @@ export default class Shoe extends DiscardTray {
       this.cards.length - 1
     );
 
-    if (dealerUpcardRank) {
+    if (dealerUpcardValue) {
       Utils.arrayMove(
         this.cards,
-        this.cards.findIndex((card, i) => card.rank === dealerUpcardRank),
+        this.cards.findIndex((card, i) => card.value === dealerUpcardValue),
         this.cards.length - 1 - 1
       );
     }
