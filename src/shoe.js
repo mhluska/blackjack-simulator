@@ -69,8 +69,24 @@ export default class Shoe extends DiscardTray {
       const i2 = this.cards[this.cards.length - 2].hiLoValue;
       const i3 = this.cards[this.cards.length - 3].hiLoValue;
 
-      this.hiLoRunningCount =
-        (index - i1 - i2 - i3 + direction) * this.decksRemaining;
+      // We artificially set the running count so that the true count works out
+      // to what is required to act on the current illustrious 18 deviation. We
+      // use the formula `true_count = running_count / decks_remaining`. We are
+      // careful to subtract the next 3 cards from the running count since they
+      // are about to be drawn by the dealer.
+      let runningCount =
+        index * (((this.maxCards - 3) * this.deckCount) / this.maxCards) -
+        i1 -
+        i2 -
+        i3;
+
+      // Since we forced the true count to a nice number, the running count will
+      // be an ugly decimal. We round it up or down depending on whether the
+      // illustrious 18 deviation acts on indices going further negative or
+      // positive.
+      runningCount = Math[direction > 0 ? 'ceil' : 'floor'](runningCount);
+
+      this.hiLoRunningCount = runningCount;
     }
   }
 
