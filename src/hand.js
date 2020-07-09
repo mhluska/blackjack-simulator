@@ -85,7 +85,9 @@ export default class Hand extends GameObject {
   }
 
   get hasPairs() {
-    return this.cards.length === 2 && this.cards[0].rank === this.cards[1].rank;
+    return (
+      this.cards.length === 2 && this.cards[0].value === this.cards[1].value
+    );
   }
 
   // A hand is "soft" if there is an ace and the next card will not bust:
