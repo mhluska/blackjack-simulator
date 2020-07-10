@@ -1,5 +1,5 @@
 import readline from 'readline';
-import Renderer from '../renderer.js';
+import Renderer from './renderer.js';
 
 // Renders the game state to the terminal.
 // TODO: Make this draw ascii-based cards. For now just basic text output.
