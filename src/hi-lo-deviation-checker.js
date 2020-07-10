@@ -2,26 +2,29 @@ import Utils from './utils.js';
 
 // prettier-ignore
 // Referenced from the book `Blackjack Attack`.
-// `index` means for this true count or lower/higher (based on `direction`), inclusive.
+// `index` refers to true count.
+//
+// TODO: Consider different deviations for deck counts and s17.
+// TODO: Add the insurance deviation once it is supported in the game.
 export const illustrious18Deviations = [
-  // { insurance: true, dealersCard: 11, correctMove: 'Y', index: 3 }, // TODO: Add this once insurance is supported.
-  { playerTotal: 16, dealersCard: 10, correctMove: 'S', index: 0,  direction: 1  },
-  { playerTotal: 15, dealersCard: 10, correctMove: 'S', index: 4,  direction: 1  },
-  { playerTotal: 20, dealersCard: 5,  correctMove: 'P', index: 5,  direction: 1, pair: true },
-  { playerTotal: 20, dealersCard: 6,  correctMove: 'P', index: 4,  direction: 1, pair: true },
-  { playerTotal: 10, dealersCard: 10, correctMove: 'D', index: 4,  direction: 1  },
-  { playerTotal: 12, dealersCard: 3,  correctMove: 'S', index: 2,  direction: 1  },
-  { playerTotal: 12, dealersCard: 2,  correctMove: 'S', index: 3,  direction: 1  },
-  { playerTotal: 11, dealersCard: 11, correctMove: 'D', index: 1,  direction: 1  }, // TODO: Use index -1 for s17?
-  { playerTotal: 9,  dealersCard: 2,  correctMove: 'D', index: 1,  direction: 1  },
-  { playerTotal: 10, dealersCard: 11, correctMove: 'D', index: 3,  direction: 1  }, // TODO: Use index +4 for s17?
-  { playerTotal: 9,  dealersCard: 7,  correctMove: 'D', index: 3,  direction: 1  },
-  { playerTotal: 16, dealersCard: 9,  correctMove: 'S', index: 5,  direction: 1  },
-  { playerTotal: 13, dealersCard: 2,  correctMove: 'H', index: -2, direction: -1 },
-  { playerTotal: 12, dealersCard: 4,  correctMove: 'H', index: -1, direction: -1 },
-  { playerTotal: 12, dealersCard: 5,  correctMove: 'H', index: -2, direction: -1 },
-  { playerTotal: 12, dealersCard: 6,  correctMove: 'H', index: -4, direction: -1 }, // TODO: Use index -1 for s17?
-  { playerTotal: 13, dealersCard: 3,  correctMove: 'H', index: -3, direction: -1 },
+  // { insurance: true, dealersCard: 11, correctMove: 'Y', index: '>= 3' },
+  { playerTotal: 16, dealersCard: 10, correctMove: 'S', index: '>= 0' },
+  { playerTotal: 15, dealersCard: 10, correctMove: 'S', index: '>= 4' },
+  { playerTotal: 20, dealersCard: 5,  correctMove: 'P', index: '>= 5', pair: true },
+  { playerTotal: 20, dealersCard: 6,  correctMove: 'P', index: '>= 4', pair: true },
+  { playerTotal: 10, dealersCard: 10, correctMove: 'D', index: '>= 4' },
+  { playerTotal: 12, dealersCard: 3,  correctMove: 'S', index: '>= 2' },
+  { playerTotal: 12, dealersCard: 2,  correctMove: 'S', index: '>= 3' },
+  { playerTotal: 11, dealersCard: 11, correctMove: 'H', index: '< 1'  },
+  { playerTotal: 9,  dealersCard: 2,  correctMove: 'H', index: '< 1'  },
+  { playerTotal: 10, dealersCard: 11, correctMove: 'D', index: '>= 4' },
+  { playerTotal: 9,  dealersCard: 7,  correctMove: 'D', index: '>= 3' },
+  { playerTotal: 16, dealersCard: 9,  correctMove: 'S', index: '>= 5' },
+  { playerTotal: 13, dealersCard: 2,  correctMove: 'H', index: '< -1' },
+  { playerTotal: 12, dealersCard: 4,  correctMove: 'H', index: '< 0'  },
+  { playerTotal: 12, dealersCard: 5,  correctMove: 'H', index: '< -2' },
+  { playerTotal: 12, dealersCard: 6,  correctMove: 'H', index: '< -1' },
+  { playerTotal: 13, dealersCard: 3,  correctMove: 'H', index: '< -2' },
 ];
 
 export default class HiLoDeviationChecker {
@@ -36,7 +39,7 @@ export default class HiLoDeviationChecker {
         d.playerTotal === playerTotal &&
         d.dealersCard === dealersCard &&
         hand.hasPairs === !!d.pair &&
-        (d.direction > 0 ? trueCount >= d.index : trueCount <= d.index)
+        Utils.compareRange(trueCount, d.index)
     );
 
     if (!deviation) {

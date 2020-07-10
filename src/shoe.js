@@ -49,13 +49,9 @@ export default class Shoe extends DiscardTray {
     }
 
     if (this.gameMode === 'illustrious18') {
-      const {
-        playerTotal,
-        dealersCard,
-        index,
-        direction,
-        pair,
-      } = Utils.arraySample(illustrious18Deviations);
+      const { playerTotal, dealersCard, index, pair } = Utils.arraySample(
+        illustrious18Deviations
+      );
 
       const [rank1, rank2] = this._twoRandomRanksFromTotal(
         pair ? playerTotal / 2 : playerTotal,
@@ -75,7 +71,8 @@ export default class Shoe extends DiscardTray {
       // careful to subtract the next 3 cards from the running count since they
       // are about to be drawn by the dealer.
       let runningCount =
-        index * (((this.maxCards - 3) * this.deckCount) / this.maxCards) -
+        Utils.rangeBoundary(index) *
+          (((this.maxCards - 3) * this.deckCount) / this.maxCards) -
         i1 -
         i2 -
         i3;
@@ -84,7 +81,9 @@ export default class Shoe extends DiscardTray {
       // be an ugly decimal. We round it up or down depending on whether the
       // illustrious 18 deviation acts on indices going further negative or
       // positive.
-      runningCount = Math[direction > 0 ? 'ceil' : 'floor'](runningCount);
+      runningCount = Math[index.includes('>=') ? 'ceil' : 'floor'](
+        runningCount
+      );
 
       this.hiLoRunningCount = runningCount;
     }
