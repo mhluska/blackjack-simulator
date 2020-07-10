@@ -4,8 +4,8 @@
   "description": "Core game logic for a Blackjack basic strategy trainer",
   "main": "dist/main.js",
   "scripts": {
-    "start": "webpack-dev-server --open",
-    "node": "APP_ROOT=$(npm prefix) node dist/main.node.js",
+    "browser": "webpack-dev-server --open",
+    "start": "APP_ROOT=$(npm prefix) node dist/main.node.js",
     "test": "echo \"Error: no test specified\" && exit 1",
     "lint": "eslint --fix .",
     "build": "webpack"
