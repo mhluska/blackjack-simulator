@@ -57,4 +57,14 @@ export default class Utils {
 
     return value;
   }
+
+  // Range will be either `>= x` or `< x` for an integer `x`.
+  static rangeBoundary(range) {
+    return parseInt(range.split(' ').pop());
+  }
+
+  static compareRange(number, range) {
+    const boundary = this.rangeBoundary(range);
+    return range.includes('>=') ? number >= boundary : number < boundary;
+  }
 }
