@@ -135,6 +135,8 @@ export default class Game extends EventEmitter {
       handWinner: {},
       focusedHand: null,
       playCorrection: null,
+      sessionMovesTotal: 0,
+      sessionMovesCorrect: 0,
     };
 
     this.state = new Proxy(this._state, {
@@ -224,7 +226,13 @@ export default class Game extends EventEmitter {
         HiLoDeviationChecker.check(this, input) ||
         BasicStrategyChecker.check(this, input);
 
-      this.state.playCorrection = checkerResult?.hint;
+      if (checkerResult?.hint) {
+        this.state.playCorrection = checkerResult.hint;
+      } else {
+        this.state.sessionMovesCorrect += 1;
+      }
+
+      this.state.sessionMovesTotal += 1;
 
       this.emit('create-record', 'move', {
         createdAt: Date.now(),
