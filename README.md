@@ -33,6 +33,7 @@ const settings = {
   deckCount: 2,
   allowSurrender: false,
   allowLateSurrender: false,
+  checkDeviations: false,
   // Can be one of 'default', 'pairs', 'uncommon', 'illustrious18'.
   gameMode: 'default',
 };
