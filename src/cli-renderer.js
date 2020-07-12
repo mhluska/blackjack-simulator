@@ -49,8 +49,7 @@ export default class CLIRenderer extends Renderer {
     if (this.game.state.step === 'waiting-for-move') {
       question = 'H (hit), S (stand), D (double), R (surrender)';
 
-      // TODO: Use optional chaining here. Seems like eslint doesn't like it.
-      if (this.game.state.focusedHand && this.game.state.focusedHand.hasPairs) {
+      if (this.game.state.focusedHand?.hasPairs) {
         question += ', P (split)';
       }
 

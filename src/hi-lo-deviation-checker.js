@@ -28,7 +28,17 @@ export const illustrious18Deviations = [
 ];
 
 export default class HiLoDeviationChecker {
+  // Returns undefined if an Illustrious 18 deviation was not present given the
+  // current hand.
+  // Returns an object with a `correctMove` code and a `hint` otherwise.
   static check(game, input) {
+    if (
+      !game.settings.checkDeviations &&
+      game.settings.gameMode !== 'illustrious18'
+    ) {
+      return;
+    }
+
     const trueCount = game.shoe.hiLoTrueCount;
     const hand = game.state.focusedHand;
     const playerTotal = hand.cardTotal;
@@ -43,7 +53,7 @@ export default class HiLoDeviationChecker {
     );
 
     if (deviationIndex === -1) {
-      return false;
+      return;
     }
 
     const deviation = illustrious18Deviations[deviationIndex];
@@ -63,10 +73,7 @@ export default class HiLoDeviationChecker {
     }
 
     if (!hint) {
-      return {
-        code: null,
-        hint: null,
-      };
+      return;
     }
 
     return {
