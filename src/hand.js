@@ -2,9 +2,10 @@ import GameObject from './game-object.js';
 import Utils from './utils.js';
 
 export default class Hand extends GameObject {
-  constructor(cards = []) {
+  constructor(cards = [], { fromSplit = false } = {}) {
     super();
     this.id = Utils.randomId();
+    this.fromSplit = fromSplit;
     this.cards = [];
     cards.forEach((card) => this.takeCard(card));
   }
@@ -53,7 +54,7 @@ export default class Hand extends GameObject {
   }
 
   get blackjack() {
-    return this.cards.length === 2 && this.cardTotal === 21;
+    return this.cards.length === 2 && this.cardTotal === 21 && !this.fromSplit;
   }
 
   get acesCount() {

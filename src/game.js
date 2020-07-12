@@ -262,6 +262,8 @@ export default class Game extends EventEmitter {
       if (input === 'split') {
         const newHand = this.player.addHand([hand.cards.pop()]);
 
+        hand.fromSplit = true;
+
         this.player.takeCard(this.shoe.drawCard(), { hand });
         this.player.takeCard(this.shoe.drawCard(), { hand: newHand });
       }
