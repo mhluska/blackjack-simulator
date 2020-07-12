@@ -7,7 +7,7 @@ import Utils from './utils.js';
 // TODO: Consider different deviations for deck counts and s17.
 // TODO: Add the insurance deviation once it is supported in the game.
 export const illustrious18Deviations = [
-  // { insurance: true, dealersCard: 11, correctMove: 'Y', index: '>= 3' },
+  { insurance: true, dealersCard: 11, correctMove: 'Y', index: '>= 3' },
   { playerTotal: 16, dealersCard: 10, correctMove: 'S', index: '>= 0' },
   { playerTotal: 15, dealersCard: 10, correctMove: 'S', index: '>= 4' },
   { playerTotal: 20, dealersCard: 5,  correctMove: 'P', index: '>= 5', pair: true },
@@ -34,7 +34,7 @@ export default class HiLoDeviationChecker {
     const playerTotal = hand.cardTotal;
     const dealersCard = game.dealer.upcard.value;
 
-    const deviation = illustrious18Deviations.find(
+    const deviationIndex = illustrious18Deviations.findIndex(
       (d) =>
         d.playerTotal === playerTotal &&
         d.dealersCard === dealersCard &&
@@ -42,10 +42,11 @@ export default class HiLoDeviationChecker {
         Utils.compareRange(trueCount, d.index)
     );
 
-    if (!deviation) {
+    if (deviationIndex === -1) {
       return false;
     }
 
+    const deviation = illustrious18Deviations[deviationIndex];
     const correctMove = deviation.correctMove;
     let hint;
 
@@ -70,7 +71,11 @@ export default class HiLoDeviationChecker {
 
     return {
       code: correctMove,
-      hint: `Illustrious 18 deviation: last play should have been ${hint}!`,
+      hint: `Illustrious 18 deviation #${
+        deviationIndex + 1
+      }: last play should have been ${hint} for true counts ${
+        deviation.index
+      }!`,
     };
   }
 }
