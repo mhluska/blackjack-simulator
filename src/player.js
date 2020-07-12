@@ -10,7 +10,7 @@ export default class Player extends GameObject {
   }
 
   addHand(cards = []) {
-    const hand = new Hand(cards);
+    const hand = new Hand(cards, { fromSplit: true });
     hand.on('change', () => this.emit('change'));
     this.hands.push(hand);
     this.emit('change');
