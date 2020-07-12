@@ -13,7 +13,9 @@ const SETTINGS_DEFAULTS = {
   deckCount: 2,
   allowSurrender: false,
   allowLateSurrender: false,
-  // Can be one of 'default', 'pairs', 'uncommon', 'illustrious18'.
+  checkDeviations: false,
+  // Can be one of 'default', 'pairs', 'uncommon', 'illustrious18'. If the mode
+  // is set to 'illustrious18', `checkDeviations` will be forced to true.
   gameMode: 'default',
 };
 
@@ -218,15 +220,11 @@ export default class Game extends EventEmitter {
 
       this.lastInput = input;
 
-      const { code: playCorrectionCode, hint: playCorrection } =
+      const checkerResult =
         HiLoDeviationChecker.check(this, input) ||
         BasicStrategyChecker.check(this, input);
 
-      if (playCorrection) {
-        this.state.playCorrection = playCorrection;
-      } else {
-        this.state.playCorrection = '';
-      }
+      this.state.playCorrection = checkerResult?.hint;
 
       this.emit('create-record', 'move', {
         createdAt: Date.now(),
@@ -234,7 +232,7 @@ export default class Game extends EventEmitter {
         dealerHand: this.dealer.hands[0].serialize({ showHidden: true }),
         playerHand: this.state.focusedHand.serialize(),
         move: input,
-        correction: playCorrectionCode,
+        correction: checkerResult?.code,
       });
 
       if (input === 'stand') {

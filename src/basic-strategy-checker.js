@@ -14,6 +14,8 @@ export default class BasicStrategyChecker {
     return this._chartData(deckCount).uncommon;
   }
 
+  // Returns undefined if basic strategy was followed correctly.
+  // Returns an object with a `correctMove` code and a `hint` otherwise.
   static check(game, input) {
     const hand = game.state.focusedHand;
     const chartGroup = this._chartGroup(game.settings.deckCount);
@@ -32,10 +34,10 @@ export default class BasicStrategyChecker {
     const dealersCard = game.dealer.upcard.value;
     const dealerHints = chart[playerTotal];
 
-    // NOTE: This should never happen but just in case.
-    if (!dealerHints) {
-      return `Warning: unable to find hint for ${playerTotal} vs ${dealersCard}`;
-    }
+    console.assert(
+      dealerHints,
+      `Warning: unable to find hint for ${playerTotal} vs ${dealersCard}`
+    );
 
     const correctMove = dealerHints[dealersCard];
 
@@ -104,17 +106,14 @@ export default class BasicStrategyChecker {
       }
     }
 
-    if (hint) {
-      return {
-        code: correctMove,
-        hint: `Last play should have been ${hint}!`,
-      };
-    } else {
-      return {
-        code: null,
-        hint: null,
-      };
+    if (!hint) {
+      return;
     }
+
+    return {
+      code: correctMove,
+      hint: `Last play should have been ${hint}!`,
+    };
   }
 
   static _allowSurrender(hand, settings) {
