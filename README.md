@@ -49,6 +49,8 @@ game.on('change', () => {
     state.focusedHandId = game.state.focusedHand.id;
   }
 
+  state.sessionMovesCorrect = game.state.sessionMovesCorrect;
+  state.sessionMovesTotal = game.state.sessionMovesTotal;
   state.playCorrection = game.state.playCorrection;
   state.step = game.state.step;
   state.gameInternalSettings = game.settings;

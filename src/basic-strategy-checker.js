@@ -14,7 +14,7 @@ export default class BasicStrategyChecker {
     return this._chartData(deckCount).uncommon;
   }
 
-  // Returns undefined if basic strategy was followed correctly.
+  // Returns true if basic strategy was followed correctly.
   // Returns an object with a `correctMove` code and a `hint` otherwise.
   static check(game, input) {
     const hand = game.state.focusedHand;
@@ -107,7 +107,7 @@ export default class BasicStrategyChecker {
     }
 
     if (!hint) {
-      return;
+      return true;
     }
 
     return {
