@@ -52,6 +52,20 @@ export default class BasicStrategyChecker {
       hint = 'stand';
     }
 
+    if (correctMove === 'Dh' || correctMove === 'Ds') {
+      if (hand.firstMove && input !== 'double') {
+        hint = 'double';
+      } else {
+        if (correctMove === 'Dh' && input !== 'hit') {
+          hint = 'hit';
+        }
+
+        if (correctMove === 'Ds' && input !== 'stand') {
+          hint = 'stand';
+        }
+      }
+    }
+
     if (hand.firstMove) {
       if (correctMove === 'Dh' && input !== 'double') {
         hint = 'double (or hit if not allowed)';
