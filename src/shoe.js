@@ -28,64 +28,15 @@ export default class Shoe extends DiscardTray {
     Utils.arrayShuffle(this.cards);
 
     if (this.gameMode === 'pairs') {
-      const rank = Deck.randomRank();
-      this._moveCardsToFront(rank, rank, null);
+      this._setupPairsMode();
     }
 
     if (this.gameMode === 'uncommon') {
-      const [chartType, chart] = Utils.arraySample(
-        Object.entries(BasicStrategyChecker.uncommonHands(this.deckCount))
-      );
-      const [playerTotal, dealerUpcardValues] = Utils.arraySample(
-        Object.entries(chart)
-      );
-      const dealerUpcardValue = Utils.arraySample(dealerUpcardValues);
-      const [rank1, rank2] = this._twoRandomRanksFromTotal(
-        playerTotal,
-        chartType
-      );
-
-      this._moveCardsToFront(rank1, rank2, dealerUpcardValue);
+      this._setupUncommonMode();
     }
 
     if (this.gameMode === 'illustrious18') {
-      const { playerTotal, dealersCard, index, pair } = Utils.arraySample(
-        illustrious18Deviations
-      );
-
-      const [rank1, rank2] = this._twoRandomRanksFromTotal(
-        pair ? playerTotal / 2 : playerTotal,
-        pair ? 'splits' : 'hard'
-      );
-
-      this._moveCardsToFront(rank1, rank2, dealersCard);
-
-      // Include all face up cards in the count from the opening hand.
-      const i1 = this.cards[this.cards.length - 1].hiLoValue;
-      const i2 = this.cards[this.cards.length - 2].hiLoValue;
-      const i3 = this.cards[this.cards.length - 3].hiLoValue;
-
-      // We artificially set the running count so that the true count works out
-      // to what is required to act on the current illustrious 18 deviation. We
-      // use the formula `true_count = running_count / decks_remaining`. We are
-      // careful to subtract the next 3 cards from the running count since they
-      // are about to be drawn by the dealer.
-      let runningCount =
-        Utils.rangeBoundary(index) *
-          (((this.maxCards - 3) * this.deckCount) / this.maxCards) -
-        i1 -
-        i2 -
-        i3;
-
-      // Since we forced the true count to a nice number, the running count will
-      // be an ugly decimal. We round it up or down depending on whether the
-      // illustrious 18 deviation acts on indices going further negative or
-      // positive.
-      runningCount = Math[index.includes('>=') ? 'ceil' : 'floor'](
-        runningCount
-      );
-
-      this.hiLoRunningCount = runningCount;
+      this._setupIllustrious18Mode();
     }
   }
 
@@ -205,5 +156,81 @@ export default class Shoe extends DiscardTray {
     if (chartType === 'splits') {
       return [total, total];
     }
+  }
+
+  _setupPairsMode() {
+    const rank = Deck.randomRank();
+    this._moveCardsToFront(rank, rank, null);
+  }
+
+  _setupUncommonMode() {
+    const [chartType, chart] = Utils.arraySample(
+      Object.entries(BasicStrategyChecker.uncommonHands(this.deckCount))
+    );
+    const [playerTotal, dealerUpcardValues] = Utils.arraySample(
+      Object.entries(chart)
+    );
+    const dealerUpcardValue = Utils.arraySample(dealerUpcardValues);
+    const [rank1, rank2] = this._twoRandomRanksFromTotal(
+      playerTotal,
+      chartType
+    );
+
+    this._moveCardsToFront(rank1, rank2, dealerUpcardValue);
+  }
+
+  _setupIllustrious18Mode() {
+    const {
+      insurance,
+      playerTotal,
+      dealersCard,
+      index,
+      pair,
+    } = Utils.arraySample(illustrious18Deviations);
+
+    const total = insurance ? Utils.random(2, 20) : playerTotal;
+    const [rank1, rank2] = this._twoRandomRanksFromTotal(
+      pair ? total / 2 : total,
+      pair ? 'splits' : 'hard'
+    );
+
+    this._moveCardsToFront(rank1, rank2, dealersCard);
+
+    // Include all face up cards in the count from the opening hand.
+    const i1 = this.cards[this.cards.length - 1].hiLoValue;
+    const i2 = this.cards[this.cards.length - 2].hiLoValue;
+    const i3 = this.cards[this.cards.length - 3].hiLoValue;
+
+    // We artificially set the running count so that the true count works out
+    // to what is required to act on the current illustrious 18 deviation. We
+    // use the formula `true_count = running_count / decks_remaining`. We are
+    // careful to subtract the next 3 cards from the running count since they
+    // are about to be drawn by the dealer.
+    let runningCount =
+      Utils.rangeBoundary(index) *
+        (((this.maxCards - 3) * this.deckCount) / this.maxCards) -
+      i1 -
+      i2 -
+      i3;
+
+    // Since we forced the true count to a nice number, the running count will
+    // be an ugly decimal. We round it up or down depending on whether the
+    // illustrious 18 deviation acts on indices going further negative or
+    // positive.
+    runningCount = Math[index.includes('<') ? 'floor' : 'ceil'](runningCount);
+
+    // Force the true count one point less for the '<' comparison since it
+    // is an exclusive equality check.
+    if (index.includes('<')) {
+      runningCount -= this.decksRemaining;
+    }
+
+    // Half time time we randomly alter the running count to something
+    // incorrect to be able to test the users knowledge.
+    if (Utils.random(0, 1) === 0) {
+      runningCount += this.decksRemaining * (index.includes('<') ? 1 : -1);
+    }
+
+    this.hiLoRunningCount = runningCount;
   }
 }
