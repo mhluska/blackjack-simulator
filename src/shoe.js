@@ -11,15 +11,15 @@ const RESET_THRESHOLD = 0.2;
 
 // TODO: Make this mix in functionality from `DiscardTray` instead of extending.
 export default class Shoe extends DiscardTray {
-  constructor({ deckCount, gameMode } = {}) {
+  constructor(game) {
     super();
 
-    console.assert(deckCount, 'Need to initialize Shoe with deckCount');
-    console.assert(gameMode, 'Need to initialize Shoe with gameMode');
+    console.assert(game, 'Need to initialize Shoe with game');
 
     this.hiLoRunningCount = 0;
-    this.deckCount = deckCount;
-    this.gameMode = gameMode;
+    this.deckCount = game.settings.deckCount;
+    this.gameMode = game.settings.gameMode;
+    this.checkTopNDeviations = game.settings.checkTopNDeviations;
     this.cards = this._setupCards();
     this.shuffle();
   }
@@ -186,7 +186,9 @@ export default class Shoe extends DiscardTray {
       dealersCard,
       index,
       pair,
-    } = Utils.arraySample(illustrious18Deviations);
+    } = Utils.arraySample(
+      illustrious18Deviations.slice(0, this.checkTopNDeviations)
+    );
 
     const total = insurance ? Utils.random(2, 20) : playerTotal;
     const [rank1, rank2] = this._twoRandomRanksFromTotal(

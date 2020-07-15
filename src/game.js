@@ -14,6 +14,7 @@ const SETTINGS_DEFAULTS = {
   allowSurrender: false,
   allowLateSurrender: false,
   checkDeviations: false,
+  checkTopNDeviations: 18,
   // Can be one of 'default', 'pairs', 'uncommon', 'illustrious18'. If the mode
   // is set to 'illustrious18', `checkDeviations` will be forced to true.
   gameMode: 'default',
@@ -114,10 +115,7 @@ export default class Game extends EventEmitter {
     this.gameId = null;
     this.lastInput = null;
 
-    this.shoe = new Shoe({
-      deckCount: this.settings.deckCount,
-      gameMode: this.settings.gameMode,
-    });
+    this.shoe = new Shoe(this);
     this.shoe.on('change', () => this.emit('change', { caller: 'shoe' }));
 
     this.discardTray = new DiscardTray();

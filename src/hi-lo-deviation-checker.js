@@ -45,7 +45,8 @@ export default class HiLoDeviationChecker {
     const dealersCard = game.dealer.upcard.value;
 
     const deviationIndex = illustrious18Deviations.findIndex(
-      (d) =>
+      (d, index) =>
+        index < game.settings.checkTopNDeviations &&
         d.playerTotal === playerTotal &&
         d.dealersCard === dealersCard &&
         hand.hasPairs === !!d.pair &&
