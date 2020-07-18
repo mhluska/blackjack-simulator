@@ -52,9 +52,12 @@ export default class BasicStrategyChecker {
       hint = 'stand';
     }
 
+    const allowDouble = hand.firstMove;
     if (correctMove === 'Dh' || correctMove === 'Ds') {
-      if (hand.firstMove && input !== 'double') {
-        hint = 'double';
+      if (allowDouble) {
+        if (input !== 'double') {
+          hint = 'double';
+        }
       } else {
         if (correctMove === 'Dh' && input !== 'hit') {
           hint = 'hit';
@@ -63,16 +66,6 @@ export default class BasicStrategyChecker {
         if (correctMove === 'Ds' && input !== 'stand') {
           hint = 'stand';
         }
-      }
-    }
-
-    if (hand.firstMove) {
-      if (correctMove === 'Dh' && input !== 'double') {
-        hint = 'double (or hit if not allowed)';
-      }
-
-      if (correctMove === 'Ds' && input !== 'double') {
-        hint = 'double (or stand if not allowed)';
       }
     }
 
