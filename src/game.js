@@ -11,6 +11,7 @@ import HiLoDeviationChecker from './hi-lo-deviation-checker.js';
 const SETTINGS_DEFAULTS = {
   animationDelay: 200,
   deckCount: 2,
+  maxHandsAllowed: 4,
   allowSurrender: false,
   allowLateSurrender: false,
   checkDeviations: false,
@@ -250,14 +251,15 @@ export default class Game extends EventEmitter {
       }
 
       // TODO: Double the bet here once betting is supported.
-      // TODO: Only allow double on first move?
-      if (input === 'double') {
+      if (input === 'double' && hand.firstMove) {
         this.player.takeCard(this.shoe.drawCard(), { hand });
         break;
       }
 
-      // TODO: Allow max x number of splits (4 splits?).
-      if (input === 'split') {
+      if (
+        input === 'split' &&
+        this.player.hands.length < this.settings.maxHandsAllowed
+      ) {
         const newHand = this.player.addHand([hand.cards.pop()]);
 
         hand.fromSplit = true;
