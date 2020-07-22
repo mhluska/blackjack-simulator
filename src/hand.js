@@ -97,4 +97,8 @@ export default class Hand extends GameObject {
   get isSoft() {
     return this.acesCount > 0 && this.lowTotal <= 11;
   }
+
+  get isHard() {
+    return !this.isSoft;
+  }
 }
