@@ -47,13 +47,22 @@ export default class CLIRenderer extends Renderer {
     let question;
 
     if (this.game.state.step === 'waiting-for-move') {
-      question = 'H (hit), S (stand), D (double), R (surrender)';
+      const choices = ['H (hit)', 'S (stand)'];
 
-      if (this.game.state.focusedHand?.hasPairs) {
-        question += ', P (split)';
+      if (this.game.state.focusedHand.firstMove) {
+        choices.push('D (double)');
       }
 
-      question += '? ';
+      if (
+        this.game.state.focusedHand?.hasPairs &&
+        this.game.player.hands.length < this.game.settings.maxHandsAllowed
+      ) {
+        choices.push('P (split');
+      }
+
+      choices.push('R (surrender)');
+
+      question = choices.join(', ') + '? ';
     } else {
       const getGameResult = (hand) => {
         const blackjack = hand.blackjack ? 'Blackjack! ' : '';
