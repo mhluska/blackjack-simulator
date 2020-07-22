@@ -50,6 +50,7 @@ export default class HiLoDeviationChecker {
         d.playerTotal === playerTotal &&
         d.dealersCard === dealersCard &&
         hand.hasPairs === !!d.pair &&
+        hand.isHard &&
         Utils.compareRange(trueCount, d.index)
     );
 
