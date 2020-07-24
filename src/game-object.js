@@ -1,3 +1,3 @@
 import EventEmitter from './event-emitter.js';
 
-export default class Object extends EventEmitter {}
+export default class GameObject extends EventEmitter {}

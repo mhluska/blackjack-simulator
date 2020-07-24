@@ -54,12 +54,13 @@ export default class Shoe extends DiscardTray {
   }
 
   addCards(cards) {
+    this.hiLoRunningCount -= Utils.hiLoValue(cards);
     super.addCards(cards);
+  }
 
-    this.hiLoRunningCount -= cards.reduce(
-      (acc, card) => acc + card.hiLoValue,
-      0
-    );
+  removeCards() {
+    this.hiLoRunningCount += Utils.hiLoValue(this.cards);
+    return super.removeCards();
   }
 
   attributes() {
