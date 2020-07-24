@@ -67,4 +67,8 @@ export default class Utils {
     const boundary = this.rangeBoundary(range);
     return range.includes('>=') ? number >= boundary : number < boundary;
   }
+
+  static hiLoValue(cards) {
+    return cards.reduce((acc, card) => acc + card.hiLoValue, 0);
+  }
 }
