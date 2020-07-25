@@ -11,11 +11,13 @@ describe('Game', function () {
     sinon
       .stub(game.playerInputReader, 'readInput')
       .callsFake(({ keypress }) => {
-        if (game.state.step === 'game-result') {
-          return Promise.resolve(keypress(true));
-        } else {
-          return Promise.resolve(keypress('h'));
-        }
+        return Promise.resolve(
+          {
+            'game-result': true,
+            'waiting-for-move': 'hit',
+            'ask-insurance': 'no-insurance',
+          }[game.state.step]
+        );
       });
   });
 
