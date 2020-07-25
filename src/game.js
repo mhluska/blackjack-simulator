@@ -58,8 +58,30 @@ export default class Game extends EventEmitter {
       prepend: true,
     });
 
-    // TODO: Handle Ace upcard, ask insurance
+    // Dealer peeks at the hole card if the upcard is 10 to check blackjack.
+    if (this.dealer.upcard.value === 10 && this.dealer.holeCard.value === 11) {
+      this._setHandWinner({ winner: 'dealer' });
+    }
+
+    // Dealer peeks at the hole card if the upcard is ace to ask insurance.
+    if (this.dealer.upcard.value === 11) {
+      let input;
+      while (!input?.includes('insurance')) {
+        input = await this._getPlayerInsuranceInput();
+      }
+
+      this._validateInput(input);
+
+      if (this.dealer.holeCard.value === 10) {
+        this._setHandWinner({ winner: 'dealer' });
+      }
+    }
+
     for (let hand of this.player.hands) {
+      if (this.state.handWinner[hand.id]) {
+        continue;
+      }
+
       this.state.focusedHand = hand;
       await this._playHand(hand);
     }
@@ -132,7 +154,7 @@ export default class Game extends EventEmitter {
 
     this._state = {
       handWinner: {},
-      focusedHand: null,
+      focusedHand: this.player.hands[0],
       playCorrection: null,
       sessionMovesTotal: 0,
       sessionMovesCorrect: 0,
@@ -174,7 +196,22 @@ export default class Game extends EventEmitter {
     });
   }
 
-  _setHandWinner({ winner, hand }) {
+  _getPlayerInsuranceInput() {
+    this.state.step = 'ask-insurance';
+
+    const inputHandler = (str) =>
+      ({
+        n: 'no-insurance',
+        y: 'buy-insurance',
+      }[str.toLowerCase()]);
+
+    return this.playerInputReader.readInput({
+      keypress: inputHandler,
+      click: inputHandler,
+    });
+  }
+
+  _setHandWinner({ winner, hand = this.player.hands[0] }) {
     this.state.handWinner[hand.id] = winner;
 
     this.emit('create-record', 'hand-result', {
@@ -188,6 +225,31 @@ export default class Game extends EventEmitter {
 
   _allPlayerHandsBusted() {
     return this.player.hands.every((hand) => hand.busted);
+  }
+
+  _validateInput(input) {
+    this.lastInput = input;
+
+    const checkerResult =
+      HiLoDeviationChecker.check(this, input) ||
+      BasicStrategyChecker.check(this, input);
+
+    if (checkerResult?.hint) {
+      this.state.playCorrection = checkerResult.hint;
+    } else {
+      this.state.sessionMovesCorrect += 1;
+    }
+
+    this.state.sessionMovesTotal += 1;
+
+    this.emit('create-record', 'move', {
+      createdAt: Date.now(),
+      gameId: this.gameId,
+      dealerHand: this.dealer.hands[0].serialize({ showHidden: true }),
+      playerHand: this.state.focusedHand.serialize(),
+      move: input,
+      correction: checkerResult?.code,
+    });
   }
 
   async _playHand(hand) {
@@ -214,33 +276,11 @@ export default class Game extends EventEmitter {
         continue;
       }
 
-      // TODO: Allow max x number of splits (4 splits?).
       if (input === 'split' && !hand.hasPairs) {
         continue;
       }
 
-      this.lastInput = input;
-
-      const checkerResult =
-        HiLoDeviationChecker.check(this, input) ||
-        BasicStrategyChecker.check(this, input);
-
-      if (checkerResult?.hint) {
-        this.state.playCorrection = checkerResult.hint;
-      } else {
-        this.state.sessionMovesCorrect += 1;
-      }
-
-      this.state.sessionMovesTotal += 1;
-
-      this.emit('create-record', 'move', {
-        createdAt: Date.now(),
-        gameId: this.gameId,
-        dealerHand: this.dealer.hands[0].serialize({ showHidden: true }),
-        playerHand: this.state.focusedHand.serialize(),
-        move: input,
-        correction: checkerResult?.code,
-      });
+      this._validateInput(input);
 
       if (input === 'stand') {
         break;

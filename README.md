@@ -109,6 +109,9 @@ for user interaction:
   <button data-action="d">Double (D)</button>
   <button data-action="r">Surrender (R)</button>
   <button data-action="p">Split (P)</button>
+<template v-else-if="step === 'ask-insurance'">
+  <button data-action="n">No (N)</button>
+  <button data-action="y">Yes (Y)</button>
 </template>
 <template v-else>
   <button data-action="d">Deal (press any key)</button>

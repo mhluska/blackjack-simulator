@@ -63,6 +63,8 @@ export default class CLIRenderer extends Renderer {
       choices.push('R (surrender)');
 
       question = choices.join(', ') + '? ';
+    } else if (this.game.state.step === 'ask-insurance') {
+      question = 'Y (buy insurance), N (no insurance)? ';
     } else {
       const getGameResult = (hand) => {
         const blackjack = hand.blackjack ? 'Blackjack! ' : '';

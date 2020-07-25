@@ -5,7 +5,6 @@ import Utils from './utils.js';
 // `index` refers to true count.
 //
 // TODO: Consider different deviations for deck counts and s17.
-// TODO: Add the insurance deviation once it is supported in the game.
 export const illustrious18Deviations = [
   { insurance: true, dealersCard: 11, correctMove: 'Y', index: '>= 3' },
   { playerTotal: 16, dealersCard: 10, correctMove: 'S', index: '>= 0' },
@@ -39,20 +38,29 @@ export default class HiLoDeviationChecker {
       return false;
     }
 
-    const trueCount = game.shoe.hiLoTrueCount;
-    const hand = game.state.focusedHand;
-    const playerTotal = hand.cardTotal;
-    const dealersCard = game.dealer.upcard.value;
+    let deviationIndex;
 
-    const deviationIndex = illustrious18Deviations.findIndex(
-      (d, index) =>
-        index < game.settings.checkTopNDeviations &&
-        d.playerTotal === playerTotal &&
-        d.dealersCard === dealersCard &&
-        hand.hasPairs === !!d.pair &&
-        hand.isHard &&
-        Utils.compareRange(trueCount, d.index)
-    );
+    const trueCount = game.shoe.hiLoTrueCount;
+
+    if (input.includes('insurance')) {
+      deviationIndex = illustrious18Deviations.findIndex(
+        (d) => d.insurance && Utils.compareRange(trueCount, d.index)
+      );
+    } else {
+      const hand = game.state.focusedHand;
+      const playerTotal = hand.cardTotal;
+      const dealersCard = game.dealer.upcard.value;
+
+      deviationIndex = illustrious18Deviations.findIndex(
+        (d, index) =>
+          index < game.settings.checkTopNDeviations &&
+          d.playerTotal === playerTotal &&
+          d.dealersCard === dealersCard &&
+          hand.hasPairs === !!d.pair &&
+          hand.isHard &&
+          Utils.compareRange(trueCount, d.index)
+      );
+    }
 
     if (deviationIndex === -1) {
       return false;
@@ -61,6 +69,10 @@ export default class HiLoDeviationChecker {
     const deviation = illustrious18Deviations[deviationIndex];
     const correctMove = deviation.correctMove;
     let hint;
+
+    if (correctMove === 'Y' && input !== 'buy-insurance') {
+      hint = 'buy insurance';
+    }
 
     if (correctMove === 'H' && input !== 'hit') {
       hint = 'hit';

@@ -17,6 +17,14 @@ export default class BasicStrategyChecker {
   // Returns true if basic strategy was followed correctly.
   // Returns an object with a `correctMove` code and a `hint` otherwise.
   static check(game, input) {
+    if (input === 'buy-insurance') {
+      return this._makeHintResult(null, 'deny insurance');
+    }
+
+    if (input === 'no-insurance') {
+      return true;
+    }
+
     const hand = game.state.focusedHand;
     const chartGroup = this._chartGroup(game.settings.deckCount);
     const chartType = this._chartType(hand);
@@ -117,9 +125,13 @@ export default class BasicStrategyChecker {
       return true;
     }
 
+    return this._makeHintResult(correctMove, hint);
+  }
+
+  static _makeHintResult(code, hint) {
     return {
-      code: correctMove,
-      hint: `Last play should have been ${hint}!`,
+      code,
+      hint: `Basic strategy: last play should have been ${hint}!`,
     };
   }
 
