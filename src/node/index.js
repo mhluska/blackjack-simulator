@@ -9,7 +9,7 @@ game.on('create-record', FileStorage.createRecord);
 
 (async function () {
   while (true) {
-    await game.start();
+    await game.step();
     renderer.render();
   }
 })();

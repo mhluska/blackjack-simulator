@@ -25,7 +25,7 @@ describe('Game', function () {
     game.playerInputReader.readInput.restore();
   });
 
-  describe('#start()', function () {
+  describe('#step()', function () {
     context('when the shoe needs to be reset', function () {
       let cardsBefore;
 
@@ -35,7 +35,7 @@ describe('Game', function () {
         let shuffled = false;
         game.on('shuffle', () => (shuffled = true));
         while (!shuffled) {
-          await game.start();
+          await game.step();
         }
       });
 

@@ -84,7 +84,7 @@ game.on('create-record', (entityName, data) => {
 async function startGame(game) {
   while (true) {
     try {
-      await game.start();
+      await game.step();
     } catch (error) {
       if (error.message === 'Game reset') {
         continue;
