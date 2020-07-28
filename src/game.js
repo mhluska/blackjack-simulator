@@ -39,7 +39,7 @@ export default class Game extends EventEmitter {
     this.emit('resetState');
   }
 
-  async start() {
+  async step() {
     // We assign a random ID to each game so that we can link hand results with
     // wrong moves in the database.
     this.gameId = Utils.randomId();
