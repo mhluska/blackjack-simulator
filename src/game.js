@@ -39,7 +39,9 @@ export default class Game extends EventEmitter {
     this.emit('resetState');
   }
 
-  async step() {
+  async step({ betAmount = 0 } = {}) {
+    this.player.useChips(betAmount);
+
     // We assign a random ID to each game so that we can link hand results with
     // wrong moves in the database.
     this.gameId = Utils.randomId();
@@ -74,6 +76,10 @@ export default class Game extends EventEmitter {
 
       if (this.dealer.holeCard.value === 10) {
         this._setHandWinner({ winner: 'dealer' });
+
+        // TODO: Make insurance amount configurable. Currently uses half the
+        // bet size as insurance to recover full bet amount.
+        this.player.addChips(betAmount);
       }
     }
 
@@ -83,7 +89,7 @@ export default class Game extends EventEmitter {
       }
 
       this.state.focusedHand = hand;
-      await this._playHand(hand);
+      await this._playHand(hand, betAmount);
     }
 
     // These moves introduce a card so add a delay to make the UI less jarring.
@@ -214,6 +220,12 @@ export default class Game extends EventEmitter {
   _setHandWinner({ winner, hand = this.player.hands[0] }) {
     this.state.handWinner[hand.id] = winner;
 
+    if (winner === 'player') {
+      this.player.addChips(hand.betAmount * 2);
+    } else if (winner === 'push') {
+      this.player.addChips(hand.betAmount);
+    }
+
     this.emit('create-record', 'hand-result', {
       createdAt: Date.now(),
       gameId: this.gameId,
@@ -252,7 +264,7 @@ export default class Game extends EventEmitter {
     });
   }
 
-  async _playHand(hand) {
+  async _playHand(hand, betAmount) {
     if (this.dealer.blackjack && hand.blackjack) {
       return this._setHandWinner({ winner: 'push', hand });
     } else if (this.dealer.blackjack) {
@@ -290,8 +302,8 @@ export default class Game extends EventEmitter {
         this.player.takeCard(this.shoe.drawCard(), { hand });
       }
 
-      // TODO: Double the bet here once betting is supported.
       if (input === 'double' && hand.firstMove) {
+        this.player.useChips(betAmount, { hand });
         this.player.takeCard(this.shoe.drawCard(), { hand });
         break;
       }
@@ -300,7 +312,7 @@ export default class Game extends EventEmitter {
         input === 'split' &&
         this.player.hands.length < this.settings.maxHandsAllowed
       ) {
-        const newHand = this.player.addHand([hand.cards.pop()]);
+        const newHand = this.player.addHand([hand.cards.pop()], betAmount);
 
         hand.fromSplit = true;
 

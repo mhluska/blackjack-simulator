@@ -84,7 +84,8 @@ game.on('create-record', (entityName, data) => {
 async function startGame(game) {
   while (true) {
     try {
-      await game.step();
+      // `betAmount` is a cent value.
+      await game.step({ betAmount: 100 * 100 });
     } catch (error) {
       if (error.message === 'Game reset') {
         continue;

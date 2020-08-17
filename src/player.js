@@ -3,16 +3,20 @@ import GameObject from './game-object.js';
 import Hand from './hand.js';
 
 export default class Player extends GameObject {
-  constructor() {
+  constructor({ balance = 10000 * 100 } = {}) {
     super();
 
+    this.balance = balance;
     this.resetHands();
   }
 
-  addHand(cards = []) {
+  addHand(cards = [], betAmount = 0) {
     const hand = new Hand(cards, { fromSplit: true });
     hand.on('change', () => this.emit('change'));
+
     this.hands.push(hand);
+    this.useChips(betAmount, { hand });
+
     this.emit('change');
 
     return hand;
@@ -46,8 +50,31 @@ export default class Player extends GameObject {
 
   attributes() {
     return {
+      balance: this.balance,
       hands: this.hands.map((hand) => hand.attributes()),
     };
+  }
+
+  useChips(betAmount, { hand } = {}) {
+    if (hand) {
+      console.assert(this.hands.includes(hand), 'Hand must belong to player');
+    } else {
+      hand = this.hands[0];
+    }
+
+    if (this.balance < betAmount) {
+      // TODO: Format cents.
+      throw new Error(
+        `Insufficient player balance: ${this.balance} < ${betAmount}`
+      );
+    }
+
+    this.balance -= betAmount;
+    hand.betAmount = betAmount;
+  }
+
+  addChips(betAmount) {
+    this.balance += betAmount;
   }
 
   // TODO: Consider using `Proxy`.

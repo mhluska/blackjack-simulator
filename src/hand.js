@@ -4,9 +4,12 @@ import Utils from './utils.js';
 export default class Hand extends GameObject {
   constructor(cards = [], { fromSplit = false } = {}) {
     super();
+
     this.id = Utils.randomId();
     this.fromSplit = fromSplit;
+    this.betAmount = 0;
     this.cards = [];
+
     cards.forEach((card) => this.takeCard(card));
   }
 
