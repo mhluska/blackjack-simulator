@@ -1,10 +1,11 @@
 <p align="center">
   <a href="https://blackjacktrainer.app/" target="_blank">
-    <img src="https://github.com/blackjacktrainer/blackjackjs-engine/raw/master/preview.gif" alt="Preview" />
+    <img width="450" src="https://github.com/blackjacktrainer/blackjackjs-engine/raw/master/preview.gif" alt="Preview" />
   </a>
 </p>
 
 <p align="center">
+  <a href="https://github.com/blackjacktrainer/blackjackjs-engine/actions"><img src="https://github.com/blackjacktrainer/blackjackjs-engine/workflows/Tests/badge.svg?branch=master" alt="Build Status" /></a>
   <a href="https://github.com/blackjacktrainer/blackjackjs-engine/blob/master/LICENSE"><img src="https://img.shields.io/github/license/blackjacktrainer/blackjackjs-engine" alt="License"></a>
 </p>
 
@@ -22,7 +23,7 @@ npm install
 npm run build
 ```
 
-## Run game in CLI mode
+## Run in CLI mode
 
 ```sh
 npm start
@@ -31,7 +32,7 @@ npm start
 ## Use as a library in the browser
 
 ```js
-// The following are default game settings:
+// The following are default settings:
 const settings = {
   animationDelay: 200,
   deckCount: 2,
