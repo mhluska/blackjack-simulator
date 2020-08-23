@@ -1,8 +1,12 @@
-# Blackjack.js (engine)
+<p align="center">
+  <a href="https://blackjacktrainer.app/" target="_blank">
+    <img src="https://github.com/blackjacktrainer/blackjackjs-engine/raw/master/preview.gif" alt="Preview" />
+  </a>
+</p>
 
-Core game logic for a Blackjack basic strategy trainer. Includes a simple CLI game display.
-
-![CLI output preview](preview.gif)
+<p align="center">
+  <a href="https://github.com/blackjacktrainer/blackjackjs-engine/blob/master/LICENSE"><img src="https://img.shields.io/github/license/blackjacktrainer/blackjackjs-engine" alt="License"></a>
+</p>
 
 ## Goals
 
