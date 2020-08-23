@@ -41,7 +41,9 @@ export default class Player extends GameObject {
     if (hand) {
       return hand.removeCards();
     } else {
-      const cards = this.hands.map((hand) => hand.removeCards()).flat();
+      const cards = Utils.arrayFlatten(
+        this.hands.map((hand) => hand.removeCards())
+      );
       this.resetHands();
       this.emit('change');
       return cards;

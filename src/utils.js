@@ -24,6 +24,10 @@ export default class Utils {
     array.splice(toIndex, 0, element);
   }
 
+  static arrayFlatten(array) {
+    return array.reduce((flatten, arr) => [...flatten, ...arr]);
+  }
+
   static random(min, max) {
     min = Math.ceil(min);
     max = Math.floor(max);
