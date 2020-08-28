@@ -1,12 +1,12 @@
 <p align="center">
   <a href="https://blackjacktrainer.app/" target="_blank">
-    <img width="450" src="https://github.com/blackjacktrainer/blackjackjs-engine/raw/master/preview.gif" alt="Preview" />
+    <img width="450" src="https://github.com/mhluska/blackjack-engine/raw/master/preview.gif" alt="Preview" />
   </a>
 </p>
 
 <p align="center">
-  <a href="https://github.com/blackjacktrainer/blackjackjs-engine/actions"><img src="https://github.com/blackjacktrainer/blackjackjs-engine/workflows/Tests/badge.svg?branch=master" alt="Build Status" /></a>
-  <a href="https://github.com/blackjacktrainer/blackjackjs-engine/blob/master/LICENSE"><img src="https://img.shields.io/github/license/blackjacktrainer/blackjackjs-engine" alt="License"></a>
+  <a href="https://github.com/mhluska/blackjack-engine/actions"><img src="https://github.com/mhluska/blackjack-engine/workflows/Tests/badge.svg?branch=master" alt="Build Status" /></a>
+  <a href="https://github.com/mhluska/blackjack-engine/blob/master/LICENSE"><img src="https://img.shields.io/github/license/mhluska/blackjack-engine" alt="License"></a>
 </p>
 
 ## Goals
