@@ -32,6 +32,8 @@ npm start
 ## Use as a library in the browser
 
 ```js
+import BlackjackEngine from '@blackjackjs/engine';
+
 // The following are default settings:
 const settings = {
   animationDelay: 200,
