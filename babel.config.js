@@ -5,6 +5,7 @@ module.exports = (api) => {
     plugins: [
       '@babel/plugin-proposal-nullish-coalescing-operator',
       '@babel/plugin-proposal-optional-chaining',
+      '@babel/plugin-proposal-class-properties',
       ...(isNode ? [] : ['@babel/transform-runtime']),
     ],
     presets: [

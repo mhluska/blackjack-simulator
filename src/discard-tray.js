@@ -3,6 +3,8 @@ import Deck from './deck.js';
 import GameObject from './game-object.js';
 
 export default class DiscardTray extends GameObject {
+  static entityName = 'discardTray';
+
   constructor() {
     super();
     this.cards = [];
@@ -14,6 +16,7 @@ export default class DiscardTray extends GameObject {
     }
 
     this.cards.push(card);
+    this.emitChange();
   }
 
   addCards(cards) {
@@ -23,6 +26,7 @@ export default class DiscardTray extends GameObject {
   removeCards() {
     const cards = this.cards.slice();
     this.cards = [];
+    this.emitChange();
     return cards;
   }
 

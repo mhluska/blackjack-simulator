@@ -48,24 +48,20 @@ const game = new BlackjackEngine(settings);
 // In a real app, this will likely be a React-redux store or a Vuex store.
 const state = {};
 
-// Called when any game state changes. Update your app's UI based on the
-// following game state:
-game.on('change', () => {
-  if (game.state.focusedHand) {
-    state.focusedHandId = game.state.focusedHand.id;
-  }
-
-  state.sessionMovesCorrect = game.state.sessionMovesCorrect;
-  state.sessionMovesTotal = game.state.sessionMovesTotal;
-  state.playCorrection = game.state.playCorrection;
-  state.step = game.state.step;
-  state.gameInternalSettings = game.settings;
-
-  state.shoe = game.shoe.attributes();
-  state.discardTray = game.discardTray.attributes();
-  state.dealer = game.dealer.attributes();
-  state.player = game.player.attributes();
-  state.handWinner = game.state.handWinner;
+// Called when any game state changes. `name` will be one of the following:
+//
+// - focusedHand
+// - sessionMovesCorrect
+// - sessionMovesTotal
+// - playCorrection
+// - step
+// - shoe
+// - discardTray
+// - dealer
+// - player
+// - handWinner
+game.on('change', (name, value) => {
+  state[name] = value;
 });
 
 game.on('shuffle', () => {

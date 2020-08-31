@@ -20,6 +20,8 @@ const ranks = [
 ];
 
 export default class Deck extends GameObject {
+  static entityName = 'deck';
+
   static randomSuit() {
     return Utils.arraySample(suits);
   }

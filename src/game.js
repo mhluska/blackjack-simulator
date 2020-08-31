@@ -140,23 +140,19 @@ export default class Game extends EventEmitter {
     }
   }
 
+  _chainEmitChange(object) {
+    object.on('change', (name, value) => this.emit('change', name, value));
+    return object;
+  }
+
   _setupState() {
     this.gameId = null;
     this.lastInput = null;
 
-    this.shoe = new Shoe(this);
-    this.shoe.on('change', () => this.emit('change', { caller: 'shoe' }));
-
-    this.discardTray = new DiscardTray();
-    this.discardTray.on('change', () =>
-      this.emit('change', { caller: 'discard-tray' })
-    );
-
-    this.dealer = new Dealer();
-    this.dealer.on('change', () => this.emit('change', { caller: 'dealer' }));
-
-    this.player = new Player();
-    this.player.on('change', () => this.emit('change', { caller: 'player' }));
+    this.shoe = this._chainEmitChange(new Shoe(this));
+    this.discardTray = this._chainEmitChange(new DiscardTray());
+    this.dealer = this._chainEmitChange(new Dealer());
+    this.player = this._chainEmitChange(new Player());
 
     this._state = {
       handWinner: {},
@@ -169,7 +165,7 @@ export default class Game extends EventEmitter {
     this.state = new Proxy(this._state, {
       set: (target, key, value) => {
         target[key] = value;
-        this.emit('change', { caller: 'game' });
+        this.emit('change', key, value.attributes?.() ?? value);
         return true;
       },
     });
@@ -218,7 +214,8 @@ export default class Game extends EventEmitter {
   }
 
   _setHandWinner({ winner, hand = this.player.hands[0] }) {
-    this.state.handWinner[hand.id] = winner;
+    // NOTE: We overwrite the entire object to trigger a change with `Proxy`.
+    this.state.handWinner = { ...this.state.handWinner, [hand.id]: winner };
 
     if (winner === 'player') {
       this.player.addChips(hand.betAmount * 2);

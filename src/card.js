@@ -2,6 +2,8 @@ import GameObject from './game-object.js';
 import Utils from './utils.js';
 
 export default class Card extends GameObject {
+  static entityName = 'card';
+
   constructor(suit, rank, shoe) {
     console.assert(suit, 'Need to initialize Card with suit');
     console.assert(rank, 'Need to initialize Card with rank');
@@ -21,7 +23,7 @@ export default class Card extends GameObject {
 
     this.shoe.hiLoRunningCount += (this.showingFace ? 1 : -1) * this.hiLoValue;
 
-    this.emit('change');
+    this.emitChange();
   }
 
   attributes() {

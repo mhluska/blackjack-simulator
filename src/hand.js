@@ -2,6 +2,8 @@ import GameObject from './game-object.js';
 import Utils from './utils.js';
 
 export default class Hand extends GameObject {
+  static entity = 'hand';
+
   constructor(cards = [], { fromSplit = false } = {}) {
     super();
 
@@ -14,16 +16,16 @@ export default class Hand extends GameObject {
   }
 
   takeCard(card, { prepend = false } = {}) {
-    card.on('change', () => this.emit('change'));
+    card.on('change', () => this.emitChange());
     this.cards[prepend ? 'unshift' : 'push'](card);
-    this.emit('change');
+    this.emitChange();
   }
 
   // TODO: Remove change handler when removing cards.
   removeCards() {
     const cards = this.cards.slice();
     this.cards = [];
-    this.emit('change');
+    this.emitChange();
     return cards;
   }
 

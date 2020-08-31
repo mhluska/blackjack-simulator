@@ -11,6 +11,8 @@ const RESET_THRESHOLD = 0.2;
 
 // TODO: Make this mix in functionality from `DiscardTray` instead of extending.
 export default class Shoe extends DiscardTray {
+  static entityName = 'shoe';
+
   constructor(game) {
     super();
 
@@ -48,7 +50,7 @@ export default class Shoe extends DiscardTray {
       this.hiLoRunningCount += card.hiLoValue;
     }
 
-    this.emit('change');
+    this.emitChange();
 
     return card;
   }

@@ -3,6 +3,8 @@ import GameObject from './game-object.js';
 import Hand from './hand.js';
 
 export default class Player extends GameObject {
+  static entityName = 'player';
+
   constructor({ balance = 10000 * 100 } = {}) {
     super();
 
@@ -12,12 +14,12 @@ export default class Player extends GameObject {
 
   addHand(cards = [], betAmount = 0) {
     const hand = new Hand(cards, { fromSplit: true });
-    hand.on('change', () => this.emit('change'));
+    hand.on('change', () => this.emitChange());
 
     this.hands.push(hand);
     this.useChips(betAmount, { hand });
 
-    this.emit('change');
+    this.emitChange();
 
     return hand;
   }
@@ -34,7 +36,8 @@ export default class Player extends GameObject {
 
     const targetHand = hand || this.hands[0];
     targetHand.takeCard(card, { prepend });
-    this.emit('change');
+
+    this.emitChange();
   }
 
   removeCards({ hand } = {}) {
@@ -45,7 +48,7 @@ export default class Player extends GameObject {
         this.hands.map((hand) => hand.removeCards())
       );
       this.resetHands();
-      this.emit('change');
+      this.emitChange();
       return cards;
     }
   }
