@@ -21,6 +21,12 @@
 * No package dependencies
 * Runs in Node or browser
 
+## Install
+
+```sh
+npx @blackjacktrainer/blackjack-engine
+```
+
 ## Build
 
 ```sh

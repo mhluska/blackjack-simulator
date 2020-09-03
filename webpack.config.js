@@ -38,6 +38,10 @@ const serverConfig = merge(common, {
   output: {
     filename: 'main.node.js',
   },
+  node: {
+    __dirname: false,
+    __filename: false,
+  },
   resolve: resolutions('node'),
 });
 

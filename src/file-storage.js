@@ -2,9 +2,7 @@ import fs from 'fs';
 import path from 'path';
 import Storage from './storage.js';
 
-console.assert(process.env.APP_ROOT, 'APP_ROOT env variable is not defined');
-
-const DATABASE_DIR = path.join(process.env.APP_ROOT, 'db');
+const DATABASE_DIR = path.join(__dirname, '..', 'db');
 
 export default class FileStorage extends Storage {
   static createRecord(recordName, data) {
