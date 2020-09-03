@@ -11,7 +11,8 @@
     "start": "node dist/main.node.js",
     "test": "NODE_PATH=./src mocha --require @babel/register",
     "lint": "eslint --fix .",
-    "build": "webpack"
+    "build": "webpack",
+    "prepare": "npm run build"
   },
   "repository": {
     "type": "git",
