@@ -5,8 +5,13 @@
 </p>
 
 <p align="center">
-  <a href="https://github.com/mhluska/blackjack-engine/actions"><img src="https://github.com/mhluska/blackjack-engine/workflows/Tests/badge.svg?branch=master" alt="Build Status" /></a>
+  <a href="https://github.com/mhluska/blackjack-engine/actions"><img src="https://github.com/mhluska/blackjack-engine/workflows/tests/badge.svg?branch=master" alt="Build Status" /></a>
+  <a href="https://www.npmjs.com/package/@blackjacktrainer/blackjack-engine"><img src="https://img.shields.io/npm/v/@blackjacktrainer/blackjack-engine.svg" alt="Version"></a>
   <a href="https://github.com/mhluska/blackjack-engine/blob/master/LICENSE"><img src="https://img.shields.io/github/license/mhluska/blackjack-engine" alt="License"></a>
+</p>
+
+<p align="center">
+  Core game logic for a Blackjack basic strategy and card counting trainer.
 </p>
 
 ## Goals
