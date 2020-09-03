@@ -21,7 +21,7 @@
 * No package dependencies
 * Runs in Node or browser
 
-## Install
+## Run
 
 ```sh
 npx @blackjacktrainer/blackjack-engine
@@ -38,7 +38,7 @@ npm start
 ## Use as a library in the browser
 
 ```js
-import BlackjackEngine from '@blackjackjs/engine';
+import BlackjackEngine from '@blackjacktrainer/blackjack-engine';
 
 // The following are default settings:
 const settings = {
