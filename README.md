@@ -27,16 +27,11 @@
 npx @blackjacktrainer/blackjack-engine
 ```
 
-## Build
+## Build and run locally
 
 ```sh
 npm install
 npm run build
-```
-
-## Run in CLI mode
-
-```sh
 npm start
 ```
 
