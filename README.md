@@ -11,7 +11,7 @@
 </p>
 
 <p align="center">
-  Core game logic for a Blackjack basic strategy and card counting trainer.
+  Core game logic for a Blackjack basic strategy and card counting trainer
 </p>
 
 ## Goals
