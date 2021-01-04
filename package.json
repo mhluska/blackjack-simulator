@@ -1,6 +1,6 @@
 {
   "name": "@blackjacktrainer/blackjack-engine",
-  "version": "0.7.3",
+  "version": "0.8.0",
   "description": "Core game logic for a Blackjack basic strategy and card counting trainer",
   "main": "dist/main.js",
   "bin": {
