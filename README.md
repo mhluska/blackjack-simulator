@@ -49,6 +49,7 @@ const settings = {
   checkDeviations: false,
   // Can be one of 'default', 'pairs', 'uncommon', 'illustrious18'.
   gameMode: 'default',
+  autoDeclineInsurance: false,
 };
 
 const game = new BlackjackEngine(settings);

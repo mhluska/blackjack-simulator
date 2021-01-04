@@ -3,27 +3,56 @@ import assert from 'assert';
 import Game from '../src/game.js';
 import Card from '../src/card.js';
 
-describe('Game', function () {
-  let game;
+function setupGame(options = {}) {
+  const defaultOptions = {
+    gameOptions: { animationDelay: 0 },
+    resolvePlayerInput: true,
+    cards: '',
+  };
 
-  before(function () {
-    game = new Game({ animationDelay: 0 });
+  const gameOptions = Object.assign(
+    {},
+    defaultOptions.gameOptions,
+    options.gameOptions
+  );
 
-    sinon
-      .stub(game.playerInputReader, 'readInput')
-      .callsFake(({ keypress }) => {
-        return Promise.resolve(
+  Object.assign(defaultOptions, options);
+
+  const game = new Game(gameOptions);
+
+  const readInputCallback = defaultOptions.resolvePlayerInput
+    ? ({ keypress }) =>
+        Promise.resolve(
           {
             'game-result': true,
             'waiting-for-move': 'hit',
             'ask-insurance': 'no-insurance',
           }[game.state.step]
-        );
-      });
+        )
+    : () => new Promise(() => {});
+
+  const hand = game.player.hands[0];
+  const length = game.shoe.cards.length;
+
+  defaultOptions.cards.split('').forEach((cardRank, index) => {
+    game.shoe.cards[length - index - 1] = new Card(
+      'hearts',
+      // If the input is `?`, the rank is irrelevant. We arbitrarily pick `2`.
+      cardRank === '?' ? '2' : cardRank,
+      game.shoe
+    );
   });
 
-  after(function () {
-    game.playerInputReader.readInput.restore();
+  sinon.stub(game.playerInputReader, 'readInput').callsFake(readInputCallback);
+
+  return game;
+}
+
+describe('Game', function () {
+  let game;
+
+  before(function () {
+    game = setupGame();
   });
 
   describe('#step()', function () {
@@ -51,25 +80,41 @@ describe('Game', function () {
 
     context('when the player bets and wins', function () {
       let playerBalanceBefore;
+
       const betAmount = 100;
+
+      const game = setupGame({
+        // Force a winning hand for the player (Blackjack with A-J).
+        cards: 'A?J?',
+      });
 
       before(async function () {
         playerBalanceBefore = game.player.balance;
-
-        // Force a winning hand for the player (Blackjack with A-J).
-        const hand = game.player.hands[0];
-        const length = game.shoe.cards.length;
-
-        game.shoe.cards[length - 1] = new Card('hearts', 'A', hand);
-        game.shoe.cards[length - 2] = new Card('hearts', '2', hand);
-        game.shoe.cards[length - 3] = new Card('hearts', 'J', hand);
-        game.shoe.cards[length - 4] = new Card('hearts', '3', hand);
 
         await game.step({ betAmount });
       });
 
       it('should increase the player balance', function () {
         assert.equal(game.player.balance, playerBalanceBefore + betAmount);
+      });
+    });
+
+    context('when autoDeclineInsurance is enabled', function () {
+      let game;
+
+      before(function () {
+        game = setupGame({
+          gameOptions: { autoDeclineInsurance: true },
+          resolvePlayerInput: false,
+          // Force a hand that prompts for insurance (dealer Ace).
+          cards: '?A',
+        });
+
+        game.step();
+      });
+
+      it('should not pause for player input', function () {
+        assert.notEqual(game.state.step, 'ask-insurance');
       });
     });
   });

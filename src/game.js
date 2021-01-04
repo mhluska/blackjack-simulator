@@ -19,6 +19,7 @@ const SETTINGS_DEFAULTS = {
   // Can be one of 'default', 'pairs', 'uncommon', 'illustrious18'. If the mode
   // is set to 'illustrious18', `checkDeviations` will be forced to true.
   gameMode: 'default',
+  autoDeclineInsurance: false,
 };
 
 export default class Game extends EventEmitter {
@@ -65,23 +66,7 @@ export default class Game extends EventEmitter {
       this._setHandWinner({ winner: 'dealer' });
     }
 
-    // Dealer peeks at the hole card if the upcard is ace to ask insurance.
-    if (this.dealer.upcard.value === 11) {
-      let input;
-      while (!input?.includes('insurance')) {
-        input = await this._getPlayerInsuranceInput();
-      }
-
-      this._validateInput(input);
-
-      if (this.dealer.holeCard.value === 10) {
-        this._setHandWinner({ winner: 'dealer' });
-
-        // TODO: Make insurance amount configurable. Currently uses half the
-        // bet size as insurance to recover full bet amount.
-        this.player.addChips(betAmount);
-      }
-    }
+    await this._handleInsurance(betAmount);
 
     for (let hand of this.player.hands) {
       if (this.state.handWinner[hand.id]) {
@@ -137,6 +122,37 @@ export default class Game extends EventEmitter {
       this.shoe.shuffle();
 
       this.emit('shuffle');
+    }
+  }
+
+  async _handleInsurance(betAmount) {
+    if (this.dealer.upcard.value !== 11) {
+      return;
+    }
+
+    let input;
+
+    if (this.settings.autoDeclineInsurance) {
+      input = 'no-insurance';
+    } else {
+      while (!input?.includes('insurance')) {
+        input = await this._getPlayerInsuranceInput();
+      }
+
+      this._validateInput(input);
+    }
+
+    // Dealer peeks at the hole card if the upcard is ace to ask insurance.
+    if (this.dealer.holeCard.value !== 10) {
+      return;
+    }
+
+    this._setHandWinner({ winner: 'dealer' });
+
+    // TODO: Make insurance amount configurable. Currently uses half the
+    // bet size as insurance to recover full bet amount.
+    if (input === 'buy-insurance') {
+      this.player.addChips(betAmount);
     }
   }
 
