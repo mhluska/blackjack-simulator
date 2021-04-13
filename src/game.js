@@ -171,6 +171,8 @@ export default class Game extends EventEmitter {
 
     this._state = {
       handWinner: {},
+      // TODO: Fix this state not updating. Each time a card is taken, an event
+      // should be emitted because `focusedHand.firstMove` should be updated.
       focusedHand: this.player.hands[0],
       playCorrection: null,
       sessionMovesTotal: 0,
