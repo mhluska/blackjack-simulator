@@ -51,6 +51,10 @@ export default class CLIRenderer extends Renderer {
 
       if (this.game.state.focusedHand.firstMove) {
         choices.push('D (double)');
+
+        if (this.game.settings.allowLateSurrender) {
+          choices.push('R (surrender)');
+        }
       }
 
       if (
@@ -59,8 +63,6 @@ export default class CLIRenderer extends Renderer {
       ) {
         choices.push('P (split)');
       }
-
-      choices.push('R (surrender)');
 
       question = choices.join(', ') + '? ';
     } else if (this.game.state.step === 'ask-insurance') {

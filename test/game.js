@@ -6,7 +6,14 @@ import Card from '../src/card.js';
 function setupGame(options = {}) {
   const defaultOptions = {
     gameOptions: { animationDelay: 0 },
-    resolvePlayerInput: true,
+    repeatPlayerInput: false,
+    playerInput: [
+      {
+        'game-result': true,
+        'waiting-for-move': 'hit',
+        'ask-insurance': 'no-insurance',
+      },
+    ],
     cards: '',
   };
 
@@ -20,17 +27,6 @@ function setupGame(options = {}) {
 
   const game = new Game(gameOptions);
 
-  const readInputCallback = defaultOptions.resolvePlayerInput
-    ? ({ keypress }) =>
-        Promise.resolve(
-          {
-            'game-result': true,
-            'waiting-for-move': 'hit',
-            'ask-insurance': 'no-insurance',
-          }[game.state.step]
-        )
-    : () => new Promise(() => {});
-
   const hand = game.player.hands[0];
   const length = game.shoe.cards.length;
 
@@ -43,7 +39,28 @@ function setupGame(options = {}) {
     );
   });
 
-  sinon.stub(game.playerInputReader, 'readInput').callsFake(readInputCallback);
+  let callCount = 0;
+
+  sinon.stub(game.playerInputReader, 'readInput').callsFake(() => {
+    const promise =
+      defaultOptions.playerInput.length === 0 ||
+      callCount > defaultOptions.playerInput.length - 1
+        ? new Promise(() => {})
+        : Promise.resolve(
+            defaultOptions.playerInput[callCount][game.state.step]
+          );
+
+    if (callCount < defaultOptions.playerInput.length) {
+      if (
+        callCount !== defaultOptions.playerInput.length - 1 ||
+        !defaultOptions.repeatPlayerInput
+      ) {
+        callCount += 1;
+      }
+    }
+
+    return promise;
+  });
 
   return game;
 }
@@ -52,7 +69,9 @@ describe('Game', function () {
   let game;
 
   before(function () {
-    game = setupGame();
+    game = setupGame({
+      repeatPlayerInput: true,
+    });
   });
 
   describe('#step()', function () {
@@ -105,7 +124,7 @@ describe('Game', function () {
       before(function () {
         game = setupGame({
           gameOptions: { autoDeclineInsurance: true },
-          resolvePlayerInput: false,
+          playerInput: [],
           // Force a hand that prompts for insurance (dealer Ace).
           cards: '?A',
         });
@@ -115,6 +134,62 @@ describe('Game', function () {
 
       it('should not pause for player input', function () {
         assert.notEqual(game.state.step, 'ask-insurance');
+      });
+    });
+
+    context('when late surrender is enabled', function () {
+      context('when only two cards are dealt', function () {
+        before(function () {
+          game = setupGame({
+            gameOptions: {
+              allowLateSurrender: true,
+            },
+            playerInput: [
+              {
+                'game-result': true,
+                'waiting-for-move': 'surrender',
+                'ask-insurance': 'no-insurance',
+              },
+            ],
+            cards: '6QJJ',
+          });
+
+          game.step();
+        });
+
+        it('should allow late surrender', function () {
+          assert.equal(game.state.step, 'game-result');
+          assert.equal(Object.values(game.state.handWinner)[0], 'dealer');
+        });
+      });
+
+      context('when more than two cards are dealt', function () {
+        before(function () {
+          game = setupGame({
+            gameOptions: {
+              allowLateSurrender: true,
+            },
+            playerInput: [
+              {
+                'game-result': true,
+                'waiting-for-move': 'hit',
+                'ask-insurance': 'no-insurance',
+              },
+              {
+                'game-result': true,
+                'waiting-for-move': 'surrender',
+                'ask-insurance': 'no-insurance',
+              },
+            ],
+            cards: '6QJJ2',
+          });
+
+          game.step();
+        });
+
+        it('should not allow late surrender', function () {
+          assert.equal(game.state.step, 'waiting-for-move');
+        });
       });
     });
   });

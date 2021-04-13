@@ -12,7 +12,6 @@ const SETTINGS_DEFAULTS = {
   animationDelay: 200,
   deckCount: 2,
   maxHandsAllowed: 4,
-  allowSurrender: false,
   allowLateSurrender: false,
   checkDeviations: false,
   checkTopNDeviations: 18,
@@ -293,10 +292,14 @@ export default class Game extends EventEmitter {
         continue;
       }
 
+      if (input === 'surrender' && !this.settings.allowLateSurrender) {
+        continue;
+      }
+
       if (
         input === 'surrender' &&
-        !hand.firstMove &&
-        !this.settings.allowLateSurrender
+        this.settings.allowLateSurrender &&
+        !hand.firstMove
       ) {
         continue;
       }
