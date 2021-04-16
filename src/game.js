@@ -25,7 +25,9 @@ export default class Game extends EventEmitter {
   constructor(settings = {}) {
     super();
 
-    this.playerInputReader = new PlayerInputReader(this);
+    const InputReader = settings.playerInputReader ?? PlayerInputReader;
+
+    this.playerInputReader = new InputReader(this);
     this.updateSettings(Object.assign({}, SETTINGS_DEFAULTS, settings));
     this._setupState();
   }
