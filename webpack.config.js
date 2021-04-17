@@ -1,6 +1,9 @@
 const path = require('path');
 const merge = require('webpack-merge');
 
+const OUTPUT_NAME = 'main';
+const OUTPUT_NAME_NODE = `${OUTPUT_NAME}.node`;
+
 const common = {
   mode: process.env.NODE_ENV || 'production',
   output: {
@@ -16,6 +19,9 @@ const common = {
         },
       },
     ],
+  },
+  optimization: {
+    minimize: false,
   },
 };
 
@@ -36,7 +42,7 @@ const serverConfig = merge(common, {
   entry: './src/node/index.js',
   target: 'node',
   output: {
-    filename: 'main.node.js',
+    filename: `${OUTPUT_NAME_NODE}.js`,
   },
   node: {
     __dirname: false,
@@ -45,10 +51,19 @@ const serverConfig = merge(common, {
   resolve: resolutions('node'),
 });
 
+const serverMinConfig = merge(serverConfig, {
+  output: {
+    filename: `${OUTPUT_NAME_NODE}.min.js`,
+  },
+  optimization: {
+    minimize: true,
+  },
+});
+
 const clientConfig = merge(common, {
   entry: './src/browser/index.js',
   output: {
-    filename: 'main.js',
+    filename: `${OUTPUT_NAME}.js`,
     library: 'BlackjackEngine',
     libraryTarget: 'umd',
   },
@@ -58,4 +73,13 @@ const clientConfig = merge(common, {
   },
 });
 
-module.exports = [serverConfig, clientConfig];
+const clientMinConfig = merge(clientConfig, {
+  output: {
+    filename: `${OUTPUT_NAME}.min.js`,
+  },
+  optimization: {
+    minimize: true,
+  },
+});
+
+module.exports = [serverConfig, serverMinConfig, clientConfig, clientMinConfig];
