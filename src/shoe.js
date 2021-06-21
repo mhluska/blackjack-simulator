@@ -1,3 +1,5 @@
+import assert from 'assert';
+
 import Utils from './utils.js';
 import Deck from './deck.js';
 import GameObject from './game-object.js';
@@ -16,7 +18,7 @@ export default class Shoe extends DiscardTray {
   constructor(game) {
     super();
 
-    console.assert(game, 'Need to initialize Shoe with game');
+    assert(game, 'Need to initialize Shoe with game');
 
     this.hiLoRunningCount = 0;
     this.deckCount = game.settings.deckCount;

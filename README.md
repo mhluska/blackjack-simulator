@@ -31,7 +31,8 @@ npx @blackjacktrainer/blackjack-engine
 
 ```sh
 npm install
-npm run build
+nvm use --install
+NODE_ENV=development npm run build
 npm start
 ```
 

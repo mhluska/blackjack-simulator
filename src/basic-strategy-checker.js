@@ -1,3 +1,5 @@
+import assert from 'assert';
+
 import Utils from './utils.js';
 import singleDeck from './charts/1-deck';
 import doubleDeck from './charts/2-deck';
@@ -42,7 +44,7 @@ export default class BasicStrategyChecker {
     const dealersCard = game.dealer.upcard.value;
     const dealerHints = chart[playerTotal];
 
-    console.assert(
+    assert(
       dealerHints,
       `Warning: unable to find hint for ${playerTotal} vs ${dealersCard}`
     );

@@ -1,3 +1,5 @@
+import assert from 'assert';
+
 import GameObject from './game-object.js';
 import Utils from './utils.js';
 
@@ -5,9 +7,9 @@ export default class Card extends GameObject {
   static entityName = 'card';
 
   constructor(suit, rank, shoe) {
-    console.assert(suit, 'Need to initialize Card with suit');
-    console.assert(rank, 'Need to initialize Card with rank');
-    console.assert(shoe, 'Need to initialize Card with shoe');
+    assert(suit, 'Need to initialize Card with suit');
+    assert(rank, 'Need to initialize Card with rank');
+    assert(shoe, 'Need to initialize Card with shoe');
 
     super();
 

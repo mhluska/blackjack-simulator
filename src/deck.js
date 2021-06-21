@@ -1,3 +1,5 @@
+import assert from 'assert';
+
 import Card from './card.js';
 import Utils from './utils.js';
 import GameObject from './game-object.js';
@@ -31,7 +33,7 @@ export default class Deck extends GameObject {
   }
 
   constructor(shoe) {
-    console.assert(shoe, 'Need to initialize Deck with shoe');
+    assert(shoe, 'Need to initialize Deck with shoe');
 
     super();
 

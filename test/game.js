@@ -5,7 +5,7 @@ import Card from '../src/card.js';
 
 function setupGame(options = {}) {
   const defaultOptions = {
-    gameOptions: { animationDelay: 0 },
+    gameOptions: { animationDelay: 0, playerCount: 1, playerTablePosition: 1 },
     repeatPlayerInput: false,
     playerInput: [
       {
@@ -100,7 +100,7 @@ describe('Game', function () {
     context('when the player bets and wins', function () {
       let playerBalanceBefore;
 
-      const betAmount = 100;
+      const betAmount = 10 * 100;
 
       const game = setupGame({
         // Force a winning hand for the player (Blackjack with A-J).
@@ -159,7 +159,7 @@ describe('Game', function () {
 
         it('should allow late surrender', function () {
           assert.equal(game.state.step, 'game-result');
-          assert.equal(Object.values(game.state.handWinner)[0], 'dealer');
+          assert.equal(Object.values(game.player.handWinner)[0], 'dealer');
         });
       });
 

@@ -75,4 +75,8 @@ export default class Utils {
   static hiLoValue(cards) {
     return cards.reduce((acc, card) => acc + card.hiLoValue, 0);
   }
+
+  static formatCents(cents) {
+    return `$${(cents / 100).toFixed(2)}`;
+  }
 }

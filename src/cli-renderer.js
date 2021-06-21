@@ -44,6 +44,10 @@ export default class CLIRenderer extends Renderer {
   }
 
   _renderQuestion() {
+    if (!this.game.state.step) {
+      return;
+    }
+
     let question;
 
     if (this.game.state.step === 'waiting-for-move') {
@@ -71,7 +75,7 @@ export default class CLIRenderer extends Renderer {
       const getGameResult = (hand) => {
         const blackjack = hand.blackjack ? 'Blackjack! ' : '';
 
-        switch (this.game.state.handWinner[hand.id]) {
+        switch (this.game.player.handWinner[hand.id]) {
           case 'player':
             return `${blackjack}Player wins`;
           case 'dealer':
@@ -89,7 +93,7 @@ export default class CLIRenderer extends Renderer {
       question = `${result} (press any key for next hand)`;
     }
 
-    this._renderLine(question, 0);
+    this._renderLine(question);
   }
 
   _renderLine(text, yPosBottom = 0) {

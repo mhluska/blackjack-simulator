@@ -1,14 +1,23 @@
+import assert from 'assert';
+
 import Utils from './utils.js';
 import GameObject from './game-object.js';
 import Hand from './hand.js';
 
+export const PLAYER_STRATEGY = {
+  USER_INPUT: 'USER_INPUT',
+  PERFECT_BASIC_STRATEGY: 'PERFECT_BASIC_STRATEGY',
+};
+
 export default class Player extends GameObject {
   static entityName = 'player';
 
-  constructor({ balance = 10000 * 100 } = {}) {
+  constructor({ strategy, balance = 10000 * 100 } = {}) {
     super();
 
+    this.strategy = strategy;
     this.balance = balance;
+    this.handWinner = {};
     this.resetHands();
   }
 
@@ -31,7 +40,7 @@ export default class Player extends GameObject {
 
   takeCard(card, { hand, prepend = false } = {}) {
     if (hand) {
-      console.assert(this.hands.includes(hand), 'Hand must belong to player');
+      assert(this.hands.includes(hand), 'Hand must belong to player');
     }
 
     const targetHand = hand || this.hands[0];
@@ -57,12 +66,13 @@ export default class Player extends GameObject {
     return {
       balance: this.balance,
       hands: this.hands.map((hand) => hand.attributes()),
+      handWinner: this.handWinner,
     };
   }
 
   useChips(betAmount, { hand } = {}) {
     if (hand) {
-      console.assert(this.hands.includes(hand), 'Hand must belong to player');
+      assert(this.hands.includes(hand), 'Hand must belong to player');
     } else {
       hand = this.hands[0];
     }
@@ -80,6 +90,26 @@ export default class Player extends GameObject {
 
   addChips(betAmount) {
     this.balance += betAmount;
+  }
+
+  setHandWinner({ hand = this.hands[0], winner } = {}) {
+    this.handWinner[hand.id] = winner;
+
+    if (winner === 'player') {
+      this.addChips(hand.betAmount * 2);
+    } else if (winner === 'push') {
+      this.addChips(hand.betAmount);
+    }
+
+    this.emit('hand-winner', hand, winner);
+  }
+
+  get isUser() {
+    return this.strategy === PLAYER_STRATEGY.USER_INPUT;
+  }
+
+  get isNPC() {
+    return !this.isUser;
   }
 
   // TODO: Consider using `Proxy`.
