@@ -30,7 +30,7 @@ export default class HiLoDeviationChecker {
   // Returns true if an Illustrious 18 deviation was followed correctly.
   // Returns false if a deviation was not present.
   // Returns an object with a `correctMove` code and a `hint` otherwise.
-  static check(game, input) {
+  static check(game, hand, input) {
     if (
       !game.settings.checkDeviations &&
       game.settings.gameMode !== 'illustrious18'
@@ -47,7 +47,6 @@ export default class HiLoDeviationChecker {
         (d) => d.insurance && Utils.compareRange(trueCount, d.index)
       );
     } else {
-      const hand = game.state.focusedHand;
       const playerTotal = hand.cardTotal;
       const dealersCard = game.dealer.upcard.value;
 

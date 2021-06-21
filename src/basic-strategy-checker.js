@@ -16,44 +16,85 @@ export default class BasicStrategyChecker {
     return this._chartData(deckCount).uncommon;
   }
 
+  static suggest(game, hand) {
+    if (game.state.step === 'ask-insurance') {
+      return 'N';
+    }
+
+    if (game.state.step === 'waiting-for-move') {
+      const chartGroup = this._chartGroup(game.settings.deckCount);
+      const chartType = this._chartType(hand);
+      const chart = chartGroup[chartType];
+
+      const keys = Object.keys(chart).map((key) => parseInt(key));
+      const chartMin = Math.min(...keys);
+      const chartMax = Math.max(...keys);
+      const playerTotal = Utils.clamp(
+        hand.hasPairs ? hand.cards[0].value : hand.cardTotal,
+        chartMin,
+        chartMax
+      );
+
+      const dealersCard = game.dealer.upcard.value;
+      const dealerHints = chart[playerTotal];
+
+      assert(
+        dealerHints,
+        `Warning: unable to find hint for ${playerTotal} vs ${dealersCard}`
+      );
+
+      const correctMove = dealerHints[dealersCard];
+
+      if (correctMove === 'Dh' || correctMove === 'Ds') {
+        const allowDouble = hand.firstMove;
+        if (allowDouble) {
+          return 'D';
+        } else {
+          return correctMove === 'Dh' ? 'H' : 'S';
+        }
+      }
+
+      // TODO: Add this check.
+      const allowDoubleAfterSplit = true;
+
+      if (correctMove === 'Ph' || correctMove === 'Pd') {
+        if (allowDoubleAfterSplit) {
+          return 'P';
+        } else {
+          return correctMove === 'Ph' ? 'H' : 'D';
+        }
+      }
+
+      const allowSurrender = this._allowSurrender(hand, game.settings);
+
+      if (correctMove === 'Rp') {
+        return allowSurrender && allowDoubleAfterSplit ? 'R' : 'P';
+      }
+
+      if (correctMove === 'Rh' || correctMove === 'Rs') {
+        if (allowSurrender) {
+          return 'R';
+        } else {
+          return correctMove == 'Rh' ? 'H' : 'S';
+        }
+      }
+
+      return correctMove;
+    }
+  }
+
   // Returns true if basic strategy was followed correctly.
   // Returns an object with a `correctMove` code and a `hint` otherwise.
-  static check(game, input) {
-    if (input === 'buy-insurance') {
-      return this._makeHintResult(null, 'deny insurance');
-    }
-
-    if (input === 'no-insurance') {
-      return true;
-    }
-
-    const hand = game.state.focusedHand;
-    const chartGroup = this._chartGroup(game.settings.deckCount);
-    const chartType = this._chartType(hand);
-    const chart = chartGroup[chartType];
-
-    const keys = Object.keys(chart).map((key) => parseInt(key));
-    const chartMin = Math.min(...keys);
-    const chartMax = Math.max(...keys);
-    const playerTotal = Utils.clamp(
-      hand.hasPairs ? hand.cards[0].value : hand.cardTotal,
-      chartMin,
-      chartMax
-    );
-
-    const dealersCard = game.dealer.upcard.value;
-    const dealerHints = chart[playerTotal];
-
-    assert(
-      dealerHints,
-      `Warning: unable to find hint for ${playerTotal} vs ${dealersCard}`
-    );
-
-    const correctMove = dealerHints[dealersCard];
+  static check(game, hand, input) {
+    const correctMove = this.suggest(game, hand);
 
     let hint;
 
     // TODO: Add rationale for each hint.
+    if (correctMove === 'N' && input !== 'no-insurance') {
+      hint = 'deny insurance';
+    }
+
     if (correctMove === 'H' && input !== 'hit') {
       hint = 'hit';
     }
@@ -62,72 +103,19 @@ export default class BasicStrategyChecker {
       hint = 'stand';
     }
 
-    const allowDouble = hand.firstMove;
-    if (correctMove === 'Dh' || correctMove === 'Ds') {
-      if (allowDouble) {
-        if (input !== 'double') {
-          hint = 'double';
-        }
-      } else {
-        if (correctMove === 'Dh' && input !== 'hit') {
-          hint = 'hit';
-        }
-
-        if (correctMove === 'Ds' && input !== 'stand') {
-          hint = 'stand';
-        }
-      }
+    if (correctMove === 'D' && input !== 'double') {
+      hint = 'double';
     }
 
     if (correctMove === 'P' && input !== 'split') {
       hint = 'split';
     }
 
-    if (correctMove === 'Ph' && input !== 'split') {
-      hint = 'split (or hit if double after split not allowed)';
+    if (correctMove === 'R' && input !== 'surrender') {
+      hint = 'surrender';
     }
 
-    if (correctMove === 'Pd' && input !== 'split') {
-      hint = 'split (or double if double after split not allowed)';
-    }
-
-    const allowSurrender = this._allowSurrender(hand, game.settings);
-    if (correctMove === 'Rh') {
-      if (
-        (allowSurrender && input !== 'surrender') ||
-        (!allowSurrender && input !== 'hit')
-      ) {
-        hint = 'surrender (or hit if not allowed)';
-      }
-    }
-
-    if (correctMove === 'Rs') {
-      if (
-        (allowSurrender && input !== 'surrender') ||
-        (!allowSurrender && input !== 'stand')
-      ) {
-        hint = 'surrender (or stand if not allowed)';
-      }
-    }
-
-    // TODO: Make this configurable.
-    const doubleAfterSplitAllowed = true;
-    if (correctMove === 'Rp') {
-      if (
-        (doubleAfterSplitAllowed && input !== 'split') ||
-        (allowSurrender && input !== 'surrender') ||
-        (!allowSurrender && input !== 'split')
-      ) {
-        hint =
-          'surrender (or split if not allowed or double after split allowed)';
-      }
-    }
-
-    if (!hint) {
-      return true;
-    }
-
-    return this._makeHintResult(correctMove, hint);
+    return hint ? this._makeHintResult(correctMove, hint) : true;
   }
 
   static _makeHintResult(code, hint) {

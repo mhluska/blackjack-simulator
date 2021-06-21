@@ -3,6 +3,7 @@ import assert from 'assert';
 import Utils from './utils.js';
 import GameObject from './game-object.js';
 import Hand from './hand.js';
+import BasicStrategyChecker from './basic-strategy-checker.js';
 
 export const PLAYER_STRATEGY = {
   USER_INPUT: 'USER_INPUT',
@@ -19,6 +20,25 @@ export default class Player extends GameObject {
     this.balance = balance;
     this.handWinner = {};
     this.resetHands();
+  }
+
+  getNPCInput(game, hand) {
+    let correctMove;
+
+    if (this.strategy === PLAYER_STRATEGY.PERFECT_BASIC_STRATEGY) {
+      correctMove = BasicStrategyChecker.suggest(game, hand);
+    }
+
+    // TODO: Add devations for NPCs.
+
+    return {
+      D: 'double',
+      H: 'hit',
+      N: 'no-insurance',
+      P: 'split',
+      R: 'surrender',
+      S: 'stand',
+    }[correctMove];
   }
 
   addHand(cards = [], betAmount = 0) {

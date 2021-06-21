@@ -93,7 +93,15 @@ export default class Game extends EventEmitter {
       );
     }
 
-    await this._handleInsurance(betAmount);
+    // Dealer peeks at the hole card if the upcard is ace to ask insurance.
+    if (this.dealer.upcard.value === 11) {
+      for (let player of this.players) {
+        await this._handleInsurance(
+          player,
+          player.isUser ? betAmount : this.settings.minimumBet
+        );
+      }
+    }
 
     for (let player of this.players) {
       await this._playHands(
@@ -117,6 +125,8 @@ export default class Game extends EventEmitter {
 
     this.players.forEach((player) => this._setHandResults(player));
 
+    this.state.step = 'game-result';
+
     await this._getPlayerNewGameInput();
 
     this.state.playCorrection = '';
@@ -136,36 +146,35 @@ export default class Game extends EventEmitter {
     }
   }
 
-  async _handleInsurance(betAmount) {
-    if (this.dealer.upcard.value !== 11) {
-      return;
-    }
-
+  async _handleInsurance(player, betAmount) {
     let input;
 
-    if (this.settings.autoDeclineInsurance) {
-      input = 'no-insurance';
-    } else {
-      while (!input?.includes('insurance')) {
-        input = await this._getPlayerInsuranceInput();
-      }
+    this.state.step = 'ask-insurance';
 
-      this._validateInput(input);
+    if (player.isUser) {
+      if (this.settings.autoDeclineInsurance) {
+        input = 'no-insurance';
+      } else {
+        while (!input?.includes('insurance')) {
+          input = await this._getPlayerInsuranceInput();
+        }
+
+        this._validateInput(input, player.hands[0]);
+      }
+    } else {
+      input = player.getNPCInput(this, player.hands[0]);
     }
 
-    // Dealer peeks at the hole card if the upcard is ace to ask insurance.
     if (this.dealer.holeCard.value !== 10) {
       return;
     }
 
-    this.players.forEach((player) =>
-      player.setHandWinner({ winner: 'dealer' })
-    );
+    player.setHandWinner({ winner: 'dealer' });
 
     // TODO: Make insurance amount configurable. Currently uses half the
     // bet size as insurance to recover full bet amount.
     if (input === 'buy-insurance') {
-      this.player.addChips(betAmount);
+      player.addChips(betAmount);
     }
   }
 
@@ -223,8 +232,6 @@ export default class Game extends EventEmitter {
   }
 
   _getPlayerMoveInput(hand) {
-    this.state.step = 'waiting-for-move';
-
     const inputHandler = (str) =>
       ({
         h: 'hit',
@@ -241,8 +248,6 @@ export default class Game extends EventEmitter {
   }
 
   _getPlayerNewGameInput() {
-    this.state.step = 'game-result';
-
     return this.playerInputReader.readInput({
       keypress: () => true,
       click: (str) => str.toLowerCase() === 'd',
@@ -250,8 +255,6 @@ export default class Game extends EventEmitter {
   }
 
   _getPlayerInsuranceInput() {
-    this.state.step = 'ask-insurance';
-
     const inputHandler = (str) =>
       ({
         n: 'no-insurance',
@@ -270,10 +273,10 @@ export default class Game extends EventEmitter {
     );
   }
 
-  _validateInput(input) {
+  _validateInput(input, hand) {
     const checkerResult =
-      HiLoDeviationChecker.check(this, input) ||
-      BasicStrategyChecker.check(this, input);
+      HiLoDeviationChecker.check(this, hand, input) ||
+      BasicStrategyChecker.check(this, hand, input);
 
     if (checkerResult?.hint) {
       this.state.playCorrection = checkerResult.hint;
@@ -291,6 +294,8 @@ export default class Game extends EventEmitter {
       move: input,
       correction: checkerResult?.code,
     });
+
+    return checkerResult;
   }
 
   async _playHands(player, betAmount) {
@@ -319,9 +324,10 @@ export default class Game extends EventEmitter {
     let input;
 
     while (hand.cardTotal < 21) {
-      // TODO: Return optimal basic strategy move.
+      this.state.step = 'waiting-for-move';
+
       input = player.isNPC
-        ? 'hit'
+        ? player.getNPCInput(this, hand)
         : await this._getPlayerMoveInput(player, hand);
 
       // TODO: Skip this validation logic for NPC?
@@ -346,7 +352,7 @@ export default class Game extends EventEmitter {
       }
 
       if (player.isUser) {
-        this._validateInput(input);
+        this._validateInput(input, hand);
       }
 
       if (input === 'stand') {
