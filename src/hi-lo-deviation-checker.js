@@ -27,6 +27,9 @@ export const illustrious18Deviations = [
 ];
 
 export default class HiLoDeviationChecker {
+  // TODO: Implement this similar to `BasicStrategyChecker`
+  static suggest(game, hand) {}
+
   // Returns true if an Illustrious 18 deviation was followed correctly.
   // Returns false if a deviation was not present.
   // Returns an object with a `correctMove` code and a `hint` otherwise.
