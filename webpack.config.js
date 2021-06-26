@@ -1,9 +1,6 @@
 const path = require('path');
 const merge = require('webpack-merge');
 
-const OUTPUT_NAME = 'main';
-const OUTPUT_NAME_NODE = `${OUTPUT_NAME}.node`;
-
 const common = {
   mode: process.env.NODE_ENV || 'production',
   output: {
@@ -23,7 +20,7 @@ const common = {
   optimization: {
     minimize: false,
   },
-  devtool: process.env.NODE_ENV === 'development' ? 'eval-source-map' : false,
+  devtool: process.env.NODE_ENV === 'development' ? 'eval-source-mnap' : false,
 };
 
 function resolutions(target) {
@@ -40,10 +37,13 @@ function resolutions(target) {
 }
 
 const serverConfig = merge(common, {
-  entry: './src/node/index.js',
+  entry: {
+    game: './src/node/index.js',
+    simulate: './src/node/simulate.js',
+  },
   target: 'node',
   output: {
-    filename: `${OUTPUT_NAME_NODE}.js`,
+    filename: '[name].js',
   },
   node: {
     __dirname: false,
@@ -54,7 +54,7 @@ const serverConfig = merge(common, {
 
 const serverMinConfig = merge(serverConfig, {
   output: {
-    filename: `${OUTPUT_NAME_NODE}.min.js`,
+    filename: '[name].min.js',
   },
   optimization: {
     minimize: true,
@@ -64,7 +64,7 @@ const serverMinConfig = merge(serverConfig, {
 const clientConfig = merge(common, {
   entry: './src/browser/index.js',
   output: {
-    filename: `${OUTPUT_NAME}.js`,
+    filename: '[name].js',
     library: 'BlackjackEngine',
     libraryTarget: 'umd',
   },
@@ -76,7 +76,7 @@ const clientConfig = merge(common, {
 
 const clientMinConfig = merge(clientConfig, {
   output: {
-    filename: `${OUTPUT_NAME}.min.js`,
+    filename: '[name].min.js',
   },
   optimization: {
     minimize: true,

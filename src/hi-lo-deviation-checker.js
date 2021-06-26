@@ -36,7 +36,7 @@ export default class HiLoDeviationChecker {
   static check(game, hand, input) {
     if (
       !game.settings.checkDeviations &&
-      game.settings.gameMode !== 'illustrious18'
+      game.settings.mode !== 'illustrious18'
     ) {
       return false;
     }

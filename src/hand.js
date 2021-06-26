@@ -4,12 +4,14 @@ import Utils from './utils.js';
 export default class Hand extends GameObject {
   static entity = 'hand';
 
-  constructor(cards = [], { fromSplit = false } = {}) {
+  constructor(player, cards = [], { fromSplit = false } = {}) {
     super();
 
     this.id = Utils.randomId();
+    this.player = player;
     this.fromSplit = fromSplit;
     this.betAmount = 0;
+    this.cardTotal = 0;
     this.cards = [];
 
     cards.forEach((card) => this.takeCard(card));
@@ -17,7 +19,14 @@ export default class Hand extends GameObject {
 
   takeCard(card, { prepend = false } = {}) {
     card.on('change', () => this.emitChange());
+
     this.cards[prepend ? 'unshift' : 'push'](card);
+    this.cardTotal += card.value;
+
+    if (this.cardTotal > 21 && card.rank === 'A') {
+      this.cardTotal -= 10;
+    }
+
     this.emitChange();
   }
 
@@ -25,7 +34,10 @@ export default class Hand extends GameObject {
   removeCards() {
     const cards = this.cards.slice();
     this.cards = [];
+    this.cardTotal = 0;
+
     this.emitChange();
+
     return cards;
   }
 
@@ -66,28 +78,10 @@ export default class Hand extends GameObject {
     return this.cards.filter((c) => c.rank === 'A').length;
   }
 
-  get highTotal() {
-    return Utils.arraySum(this.visibleCards.map((c) => c.value));
-  }
-
   get lowTotal() {
     return Utils.arraySum(
       this.visibleCards.map((c) => (c.rank === 'A' ? 1 : c.value))
     );
-  }
-
-  get cardTotal() {
-    let total = this.highTotal;
-    let aCount = this.acesCount;
-
-    // Aces can count as 1 or 11. Assume the smaller value until we run out of
-    // aces or the total goes below 22.
-    while (total > 21 && aCount > 0) {
-      total -= 10;
-      aCount -= 1;
-    }
-
-    return total;
   }
 
   get hasPairs() {

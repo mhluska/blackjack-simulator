@@ -6,7 +6,9 @@ export default class GameObject extends EventEmitter {
   // static entityName = '';
 
   emitChange() {
-    this.emit('change', this.constructor.entityName, this.attributes());
+    if (!EventEmitter.disableEvents) {
+      this.emit('change', this.constructor.entityName, this.attributes());
+    }
   }
 
   attributes() {

@@ -1,4 +1,3 @@
-import assert from 'assert';
 import PlayerInputReader from 'player-input-reader';
 
 import EventEmitter from './event-emitter.js';
@@ -12,20 +11,30 @@ import HiLoDeviationChecker from './hi-lo-deviation-checker.js';
 
 const SETTINGS_DEFAULTS = {
   animationDelay: 200,
-  deckCount: 2,
-  maxHandsAllowed: 4,
-  playerCount: 6,
-  playerTablePosition: 2,
-  tableMaxPositions: 6,
-  allowLateSurrender: false,
+  disableEvents: false,
+  autoDeclineInsurance: false,
+  autoConfirmNewGame: false,
   checkDeviations: false,
   checkTopNDeviations: 18,
+
   // Can be one of 'default', 'pairs', 'uncommon', 'illustrious18'. If the mode
   // is set to 'illustrious18', `checkDeviations` will be forced to true.
-  gameMode: 'default',
-  autoDeclineInsurance: false,
-  minimumBet: 10 * 100,
-  maximumBet: 1000 * 100,
+  mode: 'default',
+  debug: false,
+
+  // TODO: Move these under a player prefix.
+  playerBankroll: 10000 * 100,
+  playerTablePosition: 2,
+  playerStrategyOverride: {},
+
+  tableRules: {
+    allowLateSurrender: false,
+    deckCount: 2,
+    maxHandsAllowed: 4,
+    maximumBet: 1000 * 100,
+    minimumBet: 10 * 100,
+    playerCount: 6,
+  },
 };
 
 export default class Game extends EventEmitter {
@@ -35,18 +44,16 @@ export default class Game extends EventEmitter {
     const InputReader = settings.playerInputReader ?? PlayerInputReader;
 
     this.playerInputReader = new InputReader(this);
-    this.updateSettings(Object.assign({}, SETTINGS_DEFAULTS, settings));
+    this.updateSettings(Utils.mergeDeep(SETTINGS_DEFAULTS, settings));
     this._setupState();
   }
 
   updateSettings(settings) {
-    this.settings = Object.assign({}, this.settings, settings);
+    this.settings = Utils.mergeDeep({}, settings);
 
-    assert(
-      this.settings.playerTablePosition <= this.settings.playerCount &&
-        this.settings.playerTablePosition > 0,
-      `Player table position (${this.settings.playerTablePosition}) must be greater than 0 and less than player count (${this.settings.playerCount})`
-    );
+    if (this.settings.disableEvents) {
+      EventEmitter.disableEvents = true;
+    }
   }
 
   resetState() {
@@ -54,19 +61,17 @@ export default class Game extends EventEmitter {
     this.emit('resetState');
   }
 
-  async step({ betAmount = this.settings.minimumBet } = {}) {
-    assert(
-      betAmount >= this.settings.minimumBet &&
-        betAmount <= this.settings.maximumBet,
-      `Bet amount must be within ${Utils.formatCents(
-        this.settings.minimumBet
-      )} and ${Utils.formatCents(this.settings.maximumBet)}`
-    );
-
-    this.players.forEach((player) =>
+  async run({ betAmount = this.settings.tableRules.minimumBet } = {}) {
+    this.players.forEach((player) => {
       // TODO: Make NPCs bet more realistically than minimum bet.
-      player.useChips(player.isUser ? betAmount : this.settings.minimumBet)
-    );
+      player.useChips(
+        player.isUser ? betAmount : this.settings.tableRules.minimumBet
+      );
+
+      // Clears the result from the previous iteration. Otherwise this object
+      // will grow indefinitely over subsequent `run()` calls.
+      player.handWinner = new Map();
+    });
 
     // We assign a random ID to each game so that we can link hand results with
     // wrong moves in the database.
@@ -96,19 +101,23 @@ export default class Game extends EventEmitter {
     // Dealer peeks at the hole card if the upcard is ace to ask insurance.
     if (this.dealer.upcard.value === 11) {
       for (let player of this.players) {
+        // console.log('awaiting insurance');
         await this._handleInsurance(
           player,
-          player.isUser ? betAmount : this.settings.minimumBet
+          player.isUser ? betAmount : this.settings.tableRules.minimumBet
         );
+        // console.log('awaiting insurance done');
       }
     }
 
     for (let player of this.players) {
+      // console.log('awaiting play hands');
       await this._playHands(
         player,
         // TODO: Make NPCs bet more realistically than minimum bet.
-        player.isUser ? betAmount : this.settings.minimumBet
+        player.isUser ? betAmount : this.settings.tableRules.minimumBet
       );
+      // console.log('awaiting play hands done');
     }
 
     this.dealer.cards[0].flip();
@@ -118,7 +127,9 @@ export default class Game extends EventEmitter {
     if (!this._allPlayerHandsBusted()) {
       while (this.dealer.cardTotal < 17) {
         // TODO: Move this concern to the UI layer.
+        // console.log('awaiting sleep');
         await Utils.sleep(this.settings.animationDelay);
+        // console.log('awaiting sleep done');
         this.dealer.takeCard(this.shoe.drawCard());
       }
     }
@@ -127,7 +138,11 @@ export default class Game extends EventEmitter {
 
     this.state.step = 'game-result';
 
-    await this._getPlayerNewGameInput();
+    if (!this.settings.autoConfirmNewGame) {
+      // console.log('awaiting new game input');
+      await this._getPlayerNewGameInput();
+      // console.log('awaiting new game input done');
+    }
 
     this.state.playCorrection = '';
 
@@ -156,10 +171,12 @@ export default class Game extends EventEmitter {
         input = 'no-insurance';
       } else {
         while (!input?.includes('insurance')) {
+          // console.log('awaiting get player insurance');
           input = await this._getPlayerInsuranceInput();
+          // console.log('awaiting get player insurance done');
         }
 
-        this._validateInput(input, player.hands[0]);
+        this._validateInput(input, player.hands[0], player.hands.length);
       }
     } else {
       input = player.getNPCInput(this, player.hands[0]);
@@ -190,19 +207,23 @@ export default class Game extends EventEmitter {
     this.discardTray = this._chainEmitChange(new DiscardTray());
     this.dealer = this._chainEmitChange(new Dealer());
     this.players = Array.from(
-      { length: this.settings.playerCount },
+      { length: this.settings.tableRules.playerCount },
       (_item, index) =>
         this._chainEmitChange(
           new Player({
+            // TODO: Make this configurable for each player.
+            balance: this.settings.playerBankroll,
             strategy:
-              index === this.settings.playerTablePosition - 1
+              this.settings.playerStrategyOverride[index + 1] ??
+              (index === this.settings.playerTablePosition - 1
                 ? PLAYER_STRATEGY.USER_INPUT
-                : PLAYER_STRATEGY.PERFECT_BASIC_STRATEGY,
+                : PLAYER_STRATEGY.PERFECT_BASIC_STRATEGY),
           })
         )
     );
 
     this.player = this.players[this.settings.playerTablePosition - 1];
+
     this.player.on('hand-winner', (hand, winner) => {
       this.emit('create-record', 'hand-result', {
         createdAt: Date.now(),
@@ -222,16 +243,22 @@ export default class Game extends EventEmitter {
       sessionMovesCorrect: 0,
     };
 
-    this.state = new Proxy(this._state, {
-      set: (target, key, value) => {
-        target[key] = value;
-        this.emit('change', key, value.attributes?.() ?? value);
-        return true;
-      },
-    });
+    this.state = this.settings.disableEvents
+      ? this._state
+      : new Proxy(this._state, {
+          set: (target, key, value) => {
+            target[key] = value;
+            this.emit('change', key, value.attributes?.() ?? value);
+            return true;
+          },
+        });
   }
 
   _getPlayerMoveInput(hand) {
+    if (this.settings.debug) {
+      console.log('Getting player move input');
+    }
+
     const inputHandler = (str) =>
       ({
         h: 'hit',
@@ -248,6 +275,10 @@ export default class Game extends EventEmitter {
   }
 
   _getPlayerNewGameInput() {
+    if (this.settings.debug) {
+      console.log('Getting player new game input');
+    }
+
     return this.playerInputReader.readInput({
       keypress: () => true,
       click: (str) => str.toLowerCase() === 'd',
@@ -255,6 +286,10 @@ export default class Game extends EventEmitter {
   }
 
   _getPlayerInsuranceInput() {
+    if (this.settings.debug) {
+      console.log('Getting player insurance input');
+    }
+
     const inputHandler = (str) =>
       ({
         n: 'no-insurance',
@@ -300,11 +335,13 @@ export default class Game extends EventEmitter {
 
   async _playHands(player, betAmount) {
     for (let hand of player.hands) {
-      if (player.handWinner[hand.id]) {
+      if (player.handWinner.get(hand.id)) {
         continue;
       }
 
+      // console.log('awaiting play hand');
       await this._playHand(player, hand, betAmount);
+      // console.log('awaiting play hand done');
     }
   }
 
@@ -326,22 +363,27 @@ export default class Game extends EventEmitter {
     while (hand.cardTotal < 21) {
       this.state.step = 'waiting-for-move';
 
+      // console.log('awiating player move input', player.isNPC, hand.cardTotal, hand.id);
       input = player.isNPC
         ? player.getNPCInput(this, hand)
         : await this._getPlayerMoveInput(player, hand);
+      // console.log('awiating player move input done', input, hand.hasPairs, player.hands.length);
 
       // TODO: Skip this validation logic for NPC?
       if (!input) {
         continue;
       }
 
-      if (input === 'surrender' && !this.settings.allowLateSurrender) {
+      if (
+        input === 'surrender' &&
+        !this.settings.tableRules.allowLateSurrender
+      ) {
         continue;
       }
 
       if (
         input === 'surrender' &&
-        this.settings.allowLateSurrender &&
+        this.settings.tableRules.allowLateSurrender &&
         !hand.firstMove
       ) {
         continue;
@@ -371,7 +413,7 @@ export default class Game extends EventEmitter {
 
       if (
         input === 'split' &&
-        player.hands.length < this.settings.maxHandsAllowed
+        player.hands.length < this.settings.tableRules.maxHandsAllowed
       ) {
         const newHand = player.addHand([hand.cards.pop()], betAmount);
 
@@ -390,7 +432,9 @@ export default class Game extends EventEmitter {
       // These moves introduce a card so add a delay to make the UI less jarring.
       if (input === 'hit' || input === 'double') {
         // TODO: Move this concern to the UI layer.
+        // console.log('awaiting sleep');
         await Utils.sleep(this.settings.animationDelay);
+        // console.log('awaiting sleep done');
       }
     }
 
@@ -409,7 +453,7 @@ export default class Game extends EventEmitter {
 
   _setHandResults(player) {
     for (let hand of player.hands) {
-      if (player.handWinner[hand.id]) {
+      if (player.handWinner.get(hand.id)) {
         continue;
       }
 

@@ -79,4 +79,28 @@ export default class Utils {
   static formatCents(cents) {
     return `$${(cents / 100).toFixed(2)}`;
   }
+
+  // See https://stackoverflow.com/a/48218209/659910
+  static mergeDeep(...objects) {
+    const isObject = (obj) => obj && typeof obj === 'object';
+
+    return objects.reduce((prev, obj) => {
+      Object.keys(obj).forEach((key) => {
+        const pVal = prev[key];
+        const oVal = obj[key];
+
+        if (Array.isArray(pVal) && Array.isArray(oVal)) {
+          // For our use cases, we want to override arrays instead of appending.
+          // prev[key] = pVal.concat(...oVal);
+          prev[key] = oVal;
+        } else if (isObject(pVal) && isObject(oVal)) {
+          prev[key] = this.mergeDeep(pVal, oVal);
+        } else {
+          prev[key] = oVal;
+        }
+      });
+
+      return prev;
+    }, {});
+  }
 }

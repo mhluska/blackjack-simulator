@@ -2,30 +2,31 @@ import sinon from 'sinon';
 import assert from 'assert';
 import Game from '../src/game.js';
 import Card from '../src/card.js';
+import Utils from '../src/utils.js';
 
 function setupGame(options = {}) {
-  const defaultOptions = {
-    gameOptions: { animationDelay: 0, playerCount: 1, playerTablePosition: 1 },
-    repeatPlayerInput: false,
-    playerInput: [
-      {
-        'game-result': true,
-        'waiting-for-move': 'hit',
-        'ask-insurance': 'no-insurance',
+  const defaultOptions = Utils.mergeDeep(
+    {
+      settings: {
+        debug: !!process.env.DEBUG,
+        animationDelay: 0,
+        playerTablePosition: 1,
+        tableRules: { playerCount: 1 },
       },
-    ],
-    cards: '',
-  };
-
-  const gameOptions = Object.assign(
-    {},
-    defaultOptions.gameOptions,
-    options.gameOptions
+      repeatPlayerInput: false,
+      playerInput: [
+        {
+          'game-result': true,
+          'waiting-for-move': 'hit',
+          'ask-insurance': 'no-insurance',
+        },
+      ],
+      cards: '',
+    },
+    options
   );
 
-  Object.assign(defaultOptions, options);
-
-  const game = new Game(gameOptions);
+  const game = new Game(defaultOptions.settings);
 
   const hand = game.player.hands[0];
   const length = game.shoe.cards.length;
@@ -74,7 +75,7 @@ describe('Game', function () {
     });
   });
 
-  describe('#step()', function () {
+  describe('#run()', function () {
     context('when the shoe needs to be reset', function () {
       let cardsBefore;
 
@@ -84,7 +85,7 @@ describe('Game', function () {
         let shuffled = false;
         game.on('shuffle', () => (shuffled = true));
         while (!shuffled) {
-          await game.step();
+          await game.run();
         }
       });
 
@@ -110,7 +111,7 @@ describe('Game', function () {
       before(async function () {
         playerBalanceBefore = game.player.balance;
 
-        await game.step({ betAmount });
+        await game.run({ betAmount });
       });
 
       it('should increase the player balance', function () {
@@ -123,13 +124,13 @@ describe('Game', function () {
 
       before(function () {
         game = setupGame({
-          gameOptions: { autoDeclineInsurance: true },
+          settings: { autoDeclineInsurance: true },
           playerInput: [],
           // Force a hand that prompts for insurance (dealer Ace).
           cards: '?A',
         });
 
-        game.step();
+        game.run();
       });
 
       it('should not pause for player input', function () {
@@ -139,10 +140,12 @@ describe('Game', function () {
 
     context('when late surrender is enabled', function () {
       context('when only two cards are dealt', function () {
-        before(function () {
+        before(async function () {
           game = setupGame({
-            gameOptions: {
-              allowLateSurrender: true,
+            settings: {
+              tableRules: {
+                allowLateSurrender: true,
+              },
             },
             playerInput: [
               {
@@ -154,20 +157,22 @@ describe('Game', function () {
             cards: '6QJJ',
           });
 
-          game.step();
+          game.run();
         });
 
         it('should allow late surrender', function () {
           assert.equal(game.state.step, 'game-result');
-          assert.equal(Object.values(game.player.handWinner)[0], 'dealer');
+          assert.equal(game.player.handWinner.values()[0], 'dealer');
         });
       });
 
       context('when more than two cards are dealt', function () {
         before(function () {
           game = setupGame({
-            gameOptions: {
-              allowLateSurrender: true,
+            settings: {
+              tableRules: {
+                allowLateSurrender: true,
+              },
             },
             playerInput: [
               {
@@ -184,7 +189,7 @@ describe('Game', function () {
             cards: '6QJJ2',
           });
 
-          game.step();
+          game.run();
         });
 
         it('should not allow late surrender', function () {

@@ -1,5 +1,3 @@
-import assert from 'assert';
-
 import Utils from './utils.js';
 import GameObject from './game-object.js';
 import Hand from './hand.js';
@@ -18,7 +16,7 @@ export default class Player extends GameObject {
 
     this.strategy = strategy;
     this.balance = balance;
-    this.handWinner = {};
+    this.handWinner = new Map();
     this.resetHands();
   }
 
@@ -42,7 +40,7 @@ export default class Player extends GameObject {
   }
 
   addHand(cards = [], betAmount = 0) {
-    const hand = new Hand(cards, { fromSplit: true });
+    const hand = new Hand(this, cards, { fromSplit: true });
     hand.on('change', () => this.emitChange());
 
     this.hands.push(hand);
@@ -59,10 +57,6 @@ export default class Player extends GameObject {
   }
 
   takeCard(card, { hand, prepend = false } = {}) {
-    if (hand) {
-      assert(this.hands.includes(hand), 'Hand must belong to player');
-    }
-
     const targetHand = hand || this.hands[0];
     targetHand.takeCard(card, { prepend });
 
@@ -91,9 +85,7 @@ export default class Player extends GameObject {
   }
 
   useChips(betAmount, { hand } = {}) {
-    if (hand) {
-      assert(this.hands.includes(hand), 'Hand must belong to player');
-    } else {
+    if (!hand) {
       hand = this.hands[0];
     }
 
@@ -113,7 +105,7 @@ export default class Player extends GameObject {
   }
 
   setHandWinner({ hand = this.hands[0], winner } = {}) {
-    this.handWinner[hand.id] = winner;
+    this.handWinner.set(hand.id, winner);
 
     if (winner === 'player') {
       this.addChips(hand.betAmount * 2);

@@ -1,5 +1,3 @@
-import assert from 'assert';
-
 import GameObject from './game-object.js';
 import Utils from './utils.js';
 
@@ -7,10 +5,6 @@ export default class Card extends GameObject {
   static entityName = 'card';
 
   constructor(suit, rank, shoe) {
-    assert(suit, 'Need to initialize Card with suit');
-    assert(rank, 'Need to initialize Card with rank');
-    assert(shoe, 'Need to initialize Card with shoe');
-
     super();
 
     this.id = Utils.randomId();
