@@ -20,7 +20,7 @@ const common = {
   optimization: {
     minimize: false,
   },
-  devtool: process.env.NODE_ENV === 'development' ? 'eval-source-mnap' : false,
+  devtool: process.env.NODE_ENV === 'development' ? 'eval-source-map' : false,
 };
 
 function resolutions(target) {
