@@ -82,8 +82,6 @@ export default class Shoe extends DiscardTray {
       return true;
     }
 
-    // console.log('needs reset?', this.cards.length / this.maxCards < RESET_THRESHOLD, this.cards.length, this.maxCards);
-
     return this.cards.length / this.maxCards < RESET_THRESHOLD;
   }
 

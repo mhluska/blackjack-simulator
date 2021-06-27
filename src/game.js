@@ -101,23 +101,19 @@ export default class Game extends EventEmitter {
     // Dealer peeks at the hole card if the upcard is ace to ask insurance.
     if (this.dealer.upcard.value === 11) {
       for (let player of this.players) {
-        // console.log('awaiting insurance');
         await this._handleInsurance(
           player,
           player.isUser ? betAmount : this.settings.tableRules.minimumBet
         );
-        // console.log('awaiting insurance done');
       }
     }
 
     for (let player of this.players) {
-      // console.log('awaiting play hands');
       await this._playHands(
         player,
         // TODO: Make NPCs bet more realistically than minimum bet.
         player.isUser ? betAmount : this.settings.tableRules.minimumBet
       );
-      // console.log('awaiting play hands done');
     }
 
     this.dealer.cards[0].flip();
@@ -126,10 +122,6 @@ export default class Game extends EventEmitter {
     // busted, this step is skipped.
     if (!this._allPlayerHandsBusted()) {
       while (this.dealer.cardTotal < 17) {
-        // TODO: Move this concern to the UI layer.
-        // console.log('awaiting sleep');
-        await Utils.sleep(this.settings.animationDelay);
-        // console.log('awaiting sleep done');
         this.dealer.takeCard(this.shoe.drawCard());
       }
     }
@@ -139,9 +131,7 @@ export default class Game extends EventEmitter {
     this.state.step = 'game-result';
 
     if (!this.settings.autoConfirmNewGame) {
-      // console.log('awaiting new game input');
       await this._getPlayerNewGameInput();
-      // console.log('awaiting new game input done');
     }
 
     this.state.playCorrection = '';
@@ -171,9 +161,7 @@ export default class Game extends EventEmitter {
         input = 'no-insurance';
       } else {
         while (!input?.includes('insurance')) {
-          // console.log('awaiting get player insurance');
           input = await this._getPlayerInsuranceInput();
-          // console.log('awaiting get player insurance done');
         }
 
         this._validateInput(input, player.hands[0], player.hands.length);
@@ -339,9 +327,7 @@ export default class Game extends EventEmitter {
         continue;
       }
 
-      // console.log('awaiting play hand');
       await this._playHand(player, hand, betAmount);
-      // console.log('awaiting play hand done');
     }
   }
 
@@ -363,11 +349,9 @@ export default class Game extends EventEmitter {
     while (hand.cardTotal < 21) {
       this.state.step = 'waiting-for-move';
 
-      // console.log('awiating player move input', player.isNPC, hand.cardTotal, hand.id);
       input = player.isNPC
         ? player.getNPCInput(this, hand)
         : await this._getPlayerMoveInput(player, hand);
-      // console.log('awiating player move input done', input, hand.hasPairs, player.hands.length);
 
       // TODO: Skip this validation logic for NPC?
       if (!input) {
@@ -425,16 +409,6 @@ export default class Game extends EventEmitter {
 
       if (input === 'surrender') {
         break;
-      }
-    }
-
-    if (player.isUser) {
-      // These moves introduce a card so add a delay to make the UI less jarring.
-      if (input === 'hit' || input === 'double') {
-        // TODO: Move this concern to the UI layer.
-        // console.log('awaiting sleep');
-        await Utils.sleep(this.settings.animationDelay);
-        // console.log('awaiting sleep done');
       }
     }
 
