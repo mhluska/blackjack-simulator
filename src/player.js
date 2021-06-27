@@ -46,7 +46,7 @@ export default class Player extends GameObject {
     }[correctMove];
   }
 
-  addHand(betAmount, cards = []) {
+  addHand(betAmount = 0, cards = []) {
     const hand = new Hand(this, cards, betAmount);
     hand.on('change', () => this.emitChange());
 
@@ -88,8 +88,10 @@ export default class Player extends GameObject {
 
   useChips(betAmount, { hand } = {}) {
     if (!hand) {
-      hand = this.hands[0] ?? this.addHand(betAmount);
+      hand = this.hands[0] ?? this.addHand();
     }
+
+    hand.betAmount += betAmount;
 
     if (this.balance < hand.betAmount) {
       // TODO: Format cents.
