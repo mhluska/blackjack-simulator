@@ -19,7 +19,7 @@ export default class Player extends GameObject {
     this.strategy = strategy;
     this.balance = balance;
     this.handWinner = new Map();
-    this.resetHands();
+    this.hands = [];
   }
 
   getNPCInput(game, hand) {
@@ -46,8 +46,8 @@ export default class Player extends GameObject {
     }[correctMove];
   }
 
-  addHand(cards = [], betAmount = 0) {
-    const hand = new Hand(this, cards, { fromSplit: true });
+  addHand(betAmount, cards = []) {
+    const hand = new Hand(this, cards, betAmount);
     hand.on('change', () => this.emitChange());
 
     this.hands.push(hand);
@@ -58,13 +58,8 @@ export default class Player extends GameObject {
     return hand;
   }
 
-  resetHands() {
-    this.hands = [];
-    this.addHand();
-  }
-
   takeCard(card, { hand, prepend = false } = {}) {
-    const targetHand = hand || this.hands[0];
+    const targetHand = hand ?? this.hands[0] ?? this.addHand();
     targetHand.takeCard(card, { prepend });
 
     this.emitChange();
@@ -77,7 +72,7 @@ export default class Player extends GameObject {
       const cards = Utils.arrayFlatten(
         this.hands.map((hand) => hand.removeCards())
       );
-      this.resetHands();
+      this.hands = [];
       this.emitChange();
       return cards;
     }
@@ -93,18 +88,17 @@ export default class Player extends GameObject {
 
   useChips(betAmount, { hand } = {}) {
     if (!hand) {
-      hand = this.hands[0];
+      hand = this.hands[0] ?? this.addHand(betAmount);
     }
 
-    if (this.balance < betAmount) {
+    if (this.balance < hand.betAmount) {
       // TODO: Format cents.
       throw new Error(
         `Insufficient player balance: ${this.balance} < ${betAmount}`
       );
     }
 
-    this.balance -= betAmount;
-    hand.betAmount = betAmount;
+    this.balance -= hand.betAmount;
   }
 
   addChips(betAmount) {
@@ -115,7 +109,9 @@ export default class Player extends GameObject {
     this.handWinner.set(hand.id, winner);
 
     if (winner === 'player') {
-      this.addChips(hand.betAmount * 2);
+      this.addChips(
+        hand.blackjack ? hand.betAmount * (3 / 2) : hand.betAmount * 2
+      );
     } else if (winner === 'push') {
       this.addChips(hand.betAmount);
     }
@@ -123,12 +119,8 @@ export default class Player extends GameObject {
     this.emit('hand-winner', hand, winner);
   }
 
-  get isUser() {
-    return this.strategy === PLAYER_STRATEGY.USER_INPUT;
-  }
-
   get isNPC() {
-    return !this.isUser;
+    return this.strategy !== PLAYER_STRATEGY.USER_INPUT;
   }
 
   // TODO: Consider using `Proxy`.

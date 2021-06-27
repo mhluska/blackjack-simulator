@@ -4,13 +4,13 @@ import Utils from './utils.js';
 export default class Hand extends GameObject {
   static entity = 'hand';
 
-  constructor(player, cards = [], { fromSplit = false } = {}) {
+  constructor(player, cards = [], betAmount = 0) {
     super();
 
     this.id = Utils.randomId();
     this.player = player;
-    this.fromSplit = fromSplit;
-    this.betAmount = 0;
+    this.fromSplit = false;
+    this.betAmount = betAmount;
     this.cardTotal = 0;
     this.cards = [];
 
