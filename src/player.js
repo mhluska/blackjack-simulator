@@ -2,10 +2,12 @@ import Utils from './utils.js';
 import GameObject from './game-object.js';
 import Hand from './hand.js';
 import BasicStrategyChecker from './basic-strategy-checker.js';
+import HiLoDeviationChecker from './hi-lo-deviation-checker.js';
 
 export const PLAYER_STRATEGY = {
   USER_INPUT: 'USER_INPUT',
-  PERFECT_BASIC_STRATEGY: 'PERFECT_BASIC_STRATEGY',
+  BASIC_STRATEGY: 'BASIC_STRATEGY',
+  BASIC_STRATEGY_I18: 'BASIC_STRATEGY_I18',
 };
 
 export default class Player extends GameObject {
@@ -23,16 +25,21 @@ export default class Player extends GameObject {
   getNPCInput(game, hand) {
     let correctMove;
 
-    if (this.strategy === PLAYER_STRATEGY.PERFECT_BASIC_STRATEGY) {
+    if (this.strategy === PLAYER_STRATEGY.BASIC_STRATEGY) {
       correctMove = BasicStrategyChecker.suggest(game, hand);
     }
 
-    // TODO: Add devations for NPCs.
+    if (this.strategy === PLAYER_STRATEGY.BASIC_STRATEGY_I18) {
+      correctMove =
+        HiLoDeviationChecker.suggest(game, hand) ||
+        BasicStrategyChecker.suggest(game, hand);
+    }
 
     return {
       D: 'double',
       H: 'hit',
       N: 'no-insurance',
+      Y: 'ask-insurance',
       P: 'split',
       R: 'surrender',
       S: 'stand',

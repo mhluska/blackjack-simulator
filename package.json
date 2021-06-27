@@ -10,7 +10,7 @@
     "browser": "webpack-dev-server --open",
     "start": "node --unhandled-rejections=strict --trace-warnings dist/main.node.js",
     "test": "NODE_PATH=./src mocha --require @babel/register",
-    "lint": "eslint --fix .",
+    "lint": "eslint --fix ./src",
     "build": "webpack",
     "prepare": "npm run build"
   },

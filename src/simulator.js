@@ -44,6 +44,19 @@ export default class Simulator {
     this.settings = Utils.mergeDeep({}, settings);
   }
 
+  // TODO: Allow computing optimal bet spreads.
+  // Simple bet spread strategy, for $10 minimum:
+  // TC < 1: $10
+  // TC 1: $10 * 2^0 = $10
+  // TC 2: $10 * 2^1 = $20
+  // TC 3: $10 * 2^2 = $40
+  // TC 4: $10 * 2^3 = $80
+  betAmount(hiLoTrueCount, minimumBet) {
+    return hiLoTrueCount < 1
+      ? minimumBet
+      : minimumBet * 2 ** (Math.min(4, hiLoTrueCount) - 1);
+  }
+
   async run({ hands = 10 ** 6 } = {}) {
     const startTime = Date.now();
 
@@ -54,7 +67,7 @@ export default class Simulator {
       disableEvents: true,
       // TODO: Make this based on `playerStrategy`.
       playerStrategyOverride: {
-        2: PLAYER_STRATEGY.PERFECT_BASIC_STRATEGY,
+        2: PLAYER_STRATEGY.BASIC_STRATEGY_I18,
       },
 
       playerTablePosition: this.settings.playerTablePosition,
@@ -68,8 +81,12 @@ export default class Simulator {
     let handsPushed = 0;
 
     for (let i = 0; i < hands; i += 1) {
-      // TODO: Pass correct bet amount here.
-      await game.run();
+      await game.run({
+        betAmount: this.betAmount(
+          game.shoe.hiLoTrueCount,
+          game.settings.tableRules.minimumBet
+        ),
+      });
 
       bankroll.push(game.player.balance);
       for (let result of game.player.handWinner.values()) {

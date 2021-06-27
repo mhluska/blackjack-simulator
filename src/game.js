@@ -205,7 +205,7 @@ export default class Game extends EventEmitter {
               this.settings.playerStrategyOverride[index + 1] ??
               (index === this.settings.playerTablePosition - 1
                 ? PLAYER_STRATEGY.USER_INPUT
-                : PLAYER_STRATEGY.PERFECT_BASIC_STRATEGY),
+                : PLAYER_STRATEGY.BASIC_STRATEGY),
           })
         )
     );
