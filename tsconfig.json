@@ -1,0 +1,10 @@
+{
+  "compilerOptions": {
+    "strict": true,
+    "alwaysStrict": true,
+    "outDir": "./dist/",
+    "module": "es6",
+    "moduleResolution": "node",
+    "target": "es6"
+  }
+}
