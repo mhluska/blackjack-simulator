@@ -11,20 +11,26 @@
 </p>
 
 <p align="center">
-  Core game logic for a Blackjack basic strategy and card counting trainer
+  Realistic blackjack simulator (practice card counting and calculate EV for any table conditions)
 </p>
 
 ## Goals
 
-* Easy to play many hands quickly
-* Basic strategy and card counting deviation hints
+* Simulator for computing EV given some table conditions
+* Interactive mode for practicing basic strategy and card counting with hints
 * No package dependencies
-* Runs in Node or browser
+* Runs in any JS environment (CLI, browser, React Native app etc)
 
-## Run
+## Run interactive mode
 
 ```sh
-npx @blackjacktrainer/blackjack-engine
+npx @blackjacktrainer/blackjack-engine --interactive
+```
+
+## Run simulator
+
+```sh
+npx @blackjacktrainer/blackjack-engine --simulator
 ```
 
 ## Build and run locally
@@ -33,27 +39,37 @@ npx @blackjacktrainer/blackjack-engine
 npm install
 nvm use --install
 NODE_ENV=development npm run build
-npm start
+npm run interactive
+npm run simulator
 ```
 
-## Use as a library in the browser
+## Use as a library (interactive mode)
 
 ```js
-import BlackjackEngine from '@blackjacktrainer/blackjack-engine';
+import { Game } from '@blackjacktrainer/blackjack-engine';
 
 // The following are default settings:
 const settings = {
   animationDelay: 200,
-  deckCount: 2,
-  allowSurrender: false,
-  allowLateSurrender: false,
-  checkDeviations: false,
-  // Can be one of 'default', 'pairs', 'uncommon', 'illustrious18'.
-  gameMode: 'default',
   autoDeclineInsurance: false,
+  checkDeviations: false,
+  checkTopNDeviations: 18,
+  // Can be one of 'default', 'pairs', 'uncommon', 'illustrious18'. If the mode
+  // is set to 'illustrious18', `checkDeviations` will be forced to true.
+  mode: 'default',
+  playerTablePosition: 2,
+
+  tableRules: {
+    allowLateSurrender: false,
+    deckCount: 2,
+    maxHandsAllowed: 4,
+    maximumBet: 1000 * 100,
+    minimumBet: 10 * 100,
+    playerCount: 6,
+  },
 };
 
-const game = new BlackjackEngine(settings);
+const game = new Game(settings);
 
 // In a real app, this will likely be a React-redux store or a Vuex store.
 const state = {};
@@ -78,7 +94,7 @@ game.on('shuffle', () => {
   console.log('End of shoe, cards shuffled!');
 });
 
-// Emitted when the engine wants to save optional game statistics.
+// Emitted when the game wants to save optional game statistics.
 // `entityName` can be one of `hand-result` or `move`.
 // `data` is a plain object with values to save to the backend.
 game.on('create-record', (entityName, data) => {
@@ -96,7 +112,7 @@ async function startGame(game) {
   while (true) {
     try {
       // `betAmount` is a cent value.
-      await game.step({ betAmount: 100 * 100 });
+      await game.run({ betAmount: 100 * 100 });
     } catch (error) {
       if (error.message === 'Game reset') {
         continue;
@@ -108,6 +124,8 @@ async function startGame(game) {
 }
 
 startGame(game);
+```
+
 ```
 
 The game often pauses and listens for a `click` or `keypress` event on
@@ -128,4 +146,43 @@ for user interaction:
 <template v-else>
   <button data-action="d">Deal (press any key)</button>
 </template>
+```
+
+## Use as a library (simulator mode)
+
+```js
+import { Simulator } from '@blackjacktrainer/blackjack-engine';
+
+// The following are default settings:
+const settings = {
+  // Can be one of:
+  // 'basic-strategy': play perfect basic strategy
+  // 'basic-strategy-i18': play perfect basic strategy plus illustious 18
+  playerStrategy: 'basic-strategy-i18',
+  playerTablePosition: 2,
+
+  tableRules: {
+    allowLateSurrender: false,
+    deckCount: 2,
+    maxHandsAllowed: 4,
+    maximumBet: 1000 * 100,
+    minimumBet: 10 * 100,
+    playerCount: 6,
+  },
+};
+
+const simulator = new Simulator(settings);
+const result = simulator.run({ hands: 10 ** 6 });
+```
+
+Result contains the following data:
+
+```
+{
+  timeElapsed: number;
+  amountEarned: number;
+  amountEarnedVariance: number;
+  handsWon: number;
+  handsLost: number;
+}
 ```

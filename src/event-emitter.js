@@ -8,11 +8,19 @@ export default class EventEmitter {
       this.events[event] = [];
     }
 
+    if (EventEmitter.disableEvents) {
+      return;
+    }
+
     this.events[event].push(listener);
   }
 
   removeListener(event, listener) {
     if (typeof this.events[event] !== 'object') {
+      return;
+    }
+
+    if (EventEmitter.disableEvents) {
       return;
     }
 
@@ -26,6 +34,10 @@ export default class EventEmitter {
 
   emit(event) {
     if (typeof this.events[event] !== 'object') {
+      return;
+    }
+
+    if (EventEmitter.disableEvents) {
       return;
     }
 

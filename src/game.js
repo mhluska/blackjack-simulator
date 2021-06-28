@@ -1,4 +1,3 @@
-import assert from 'assert';
 import PlayerInputReader from 'player-input-reader';
 
 import EventEmitter from './event-emitter.js';
@@ -12,20 +11,31 @@ import HiLoDeviationChecker from './hi-lo-deviation-checker.js';
 
 const SETTINGS_DEFAULTS = {
   animationDelay: 200,
-  deckCount: 2,
-  maxHandsAllowed: 4,
-  playerCount: 6,
-  playerTablePosition: 2,
-  tableMaxPositions: 6,
-  allowLateSurrender: false,
+  disableEvents: false,
+  autoDeclineInsurance: false,
+  autoConfirmNewGame: false,
   checkDeviations: false,
   checkTopNDeviations: 18,
+
   // Can be one of 'default', 'pairs', 'uncommon', 'illustrious18'. If the mode
   // is set to 'illustrious18', `checkDeviations` will be forced to true.
-  gameMode: 'default',
-  autoDeclineInsurance: false,
-  minimumBet: 10 * 100,
-  maximumBet: 1000 * 100,
+  mode: 'default',
+  debug: false,
+
+  // TODO: Move these under a player prefix.
+  playerBankroll: 10000 * 100,
+  playerTablePosition: 2,
+  playerStrategyOverride: {},
+
+  tableRules: {
+    hitSoft17: true,
+    allowLateSurrender: false,
+    deckCount: 2,
+    maxHandsAllowed: 4,
+    maximumBet: 1000 * 100,
+    minimumBet: 10 * 100,
+    playerCount: 6,
+  },
 };
 
 export default class Game extends EventEmitter {
@@ -35,18 +45,16 @@ export default class Game extends EventEmitter {
     const InputReader = settings.playerInputReader ?? PlayerInputReader;
 
     this.playerInputReader = new InputReader(this);
-    this.updateSettings(Object.assign({}, SETTINGS_DEFAULTS, settings));
+    this.updateSettings(Utils.mergeDeep(SETTINGS_DEFAULTS, settings));
     this._setupState();
   }
 
   updateSettings(settings) {
-    this.settings = Object.assign({}, this.settings, settings);
+    this.settings = Utils.mergeDeep({}, settings);
 
-    assert(
-      this.settings.playerTablePosition <= this.settings.playerCount &&
-        this.settings.playerTablePosition > 0,
-      `Player table position (${this.settings.playerTablePosition}) must be greater than 0 and less than player count (${this.settings.playerCount})`
-    );
+    if (this.settings.disableEvents) {
+      EventEmitter.disableEvents = true;
+    }
   }
 
   resetState() {
@@ -54,19 +62,21 @@ export default class Game extends EventEmitter {
     this.emit('resetState');
   }
 
-  async step({ betAmount = this.settings.minimumBet } = {}) {
-    assert(
-      betAmount >= this.settings.minimumBet &&
-        betAmount <= this.settings.maximumBet,
-      `Bet amount must be within ${Utils.formatCents(
-        this.settings.minimumBet
-      )} and ${Utils.formatCents(this.settings.maximumBet)}`
-    );
+  async run({ betAmount = this.settings.tableRules.minimumBet } = {}) {
+    if (this.settings.debug) {
+      console.log('> Starting new game');
+    }
 
-    this.players.forEach((player) =>
+    this.players.forEach((player) => {
       // TODO: Make NPCs bet more realistically than minimum bet.
-      player.useChips(player.isUser ? betAmount : this.settings.minimumBet)
-    );
+      player.addHand(
+        player === this.player ? betAmount : this.settings.tableRules.minimumBet
+      );
+
+      // Clears the result from the previous iteration. Otherwise this object
+      // will grow indefinitely over subsequent `run()` calls.
+      player.handWinner = new Map();
+    });
 
     // We assign a random ID to each game so that we can link hand results with
     // wrong moves in the database.
@@ -74,6 +84,8 @@ export default class Game extends EventEmitter {
 
     // Draw card for each player face up (upcard).
     this.players.forEach((player) => player.takeCard(this.shoe.drawCard()));
+
+    this.dealer.addHand();
 
     // Draw card for dealer face up.
     this.dealer.takeCard(this.shoe.drawCard());
@@ -98,7 +110,9 @@ export default class Game extends EventEmitter {
       for (let player of this.players) {
         await this._handleInsurance(
           player,
-          player.isUser ? betAmount : this.settings.minimumBet
+          player === this.player
+            ? betAmount
+            : this.settings.tableRules.minimumBet
         );
       }
     }
@@ -107,7 +121,7 @@ export default class Game extends EventEmitter {
       await this._playHands(
         player,
         // TODO: Make NPCs bet more realistically than minimum bet.
-        player.isUser ? betAmount : this.settings.minimumBet
+        player === this.player ? betAmount : this.settings.tableRules.minimumBet
       );
     }
 
@@ -115,10 +129,16 @@ export default class Game extends EventEmitter {
 
     // Dealer draws cards until they reach 17. However, if all player hands have
     // busted, this step is skipped.
-    if (!this._allPlayerHandsBusted()) {
-      while (this.dealer.cardTotal < 17) {
-        // TODO: Move this concern to the UI layer.
-        await Utils.sleep(this.settings.animationDelay);
+    if (!this._allPlayerHandsFinished()) {
+      while (this.dealer.cardTotal <= 17) {
+        if (this.dealer.cardTotal === 17) {
+          if (this.dealer.isHard) {
+            break;
+          } else if (!this.settings.tableRules.hitSoft17) {
+            break;
+          }
+        }
+
         this.dealer.takeCard(this.shoe.drawCard());
       }
     }
@@ -127,7 +147,9 @@ export default class Game extends EventEmitter {
 
     this.state.step = 'game-result';
 
-    await this._getPlayerNewGameInput();
+    if (!this.settings.autoConfirmNewGame) {
+      await this._getPlayerNewGameInput();
+    }
 
     this.state.playCorrection = '';
 
@@ -144,6 +166,10 @@ export default class Game extends EventEmitter {
       this.shoe.shuffle();
       this.emit('shuffle');
     }
+
+    if (this.settings.debug) {
+      console.log();
+    }
   }
 
   async _handleInsurance(player, betAmount) {
@@ -151,7 +177,9 @@ export default class Game extends EventEmitter {
 
     this.state.step = 'ask-insurance';
 
-    if (player.isUser) {
+    if (player.isNPC) {
+      input = player.getNPCInput(this, player.hands[0]);
+    } else {
       if (this.settings.autoDeclineInsurance) {
         input = 'no-insurance';
       } else {
@@ -159,10 +187,8 @@ export default class Game extends EventEmitter {
           input = await this._getPlayerInsuranceInput();
         }
 
-        this._validateInput(input, player.hands[0]);
+        this._validateInput(input, player.hands[0], player.hands.length);
       }
-    } else {
-      input = player.getNPCInput(this, player.hands[0]);
     }
 
     if (this.dealer.holeCard.value !== 10) {
@@ -173,7 +199,7 @@ export default class Game extends EventEmitter {
 
     // TODO: Make insurance amount configurable. Currently uses half the
     // bet size as insurance to recover full bet amount.
-    if (input === 'buy-insurance') {
+    if (input === 'ask-insurance') {
       player.addChips(betAmount);
     }
   }
@@ -190,19 +216,24 @@ export default class Game extends EventEmitter {
     this.discardTray = this._chainEmitChange(new DiscardTray());
     this.dealer = this._chainEmitChange(new Dealer());
     this.players = Array.from(
-      { length: this.settings.playerCount },
+      { length: this.settings.tableRules.playerCount },
       (_item, index) =>
         this._chainEmitChange(
           new Player({
+            debug: this.settings.debug,
+            // TODO: Make this configurable for each player.
+            balance: this.settings.playerBankroll,
             strategy:
-              index === this.settings.playerTablePosition - 1
+              this.settings.playerStrategyOverride[index + 1] ??
+              (index === this.settings.playerTablePosition - 1
                 ? PLAYER_STRATEGY.USER_INPUT
-                : PLAYER_STRATEGY.PERFECT_BASIC_STRATEGY,
+                : PLAYER_STRATEGY.BASIC_STRATEGY),
           })
         )
     );
 
     this.player = this.players[this.settings.playerTablePosition - 1];
+
     this.player.on('hand-winner', (hand, winner) => {
       this.emit('create-record', 'hand-result', {
         createdAt: Date.now(),
@@ -222,16 +253,22 @@ export default class Game extends EventEmitter {
       sessionMovesCorrect: 0,
     };
 
-    this.state = new Proxy(this._state, {
-      set: (target, key, value) => {
-        target[key] = value;
-        this.emit('change', key, value.attributes?.() ?? value);
-        return true;
-      },
-    });
+    this.state = this.settings.disableEvents
+      ? this._state
+      : new Proxy(this._state, {
+          set: (target, key, value) => {
+            target[key] = value;
+            this.emit('change', key, value.attributes?.() ?? value);
+            return true;
+          },
+        });
   }
 
   _getPlayerMoveInput(hand) {
+    if (this.settings.debug) {
+      console.log('Getting player move input');
+    }
+
     const inputHandler = (str) =>
       ({
         h: 'hit',
@@ -248,6 +285,10 @@ export default class Game extends EventEmitter {
   }
 
   _getPlayerNewGameInput() {
+    if (this.settings.debug) {
+      console.log('Getting player new game input');
+    }
+
     return this.playerInputReader.readInput({
       keypress: () => true,
       click: (str) => str.toLowerCase() === 'd',
@@ -255,10 +296,14 @@ export default class Game extends EventEmitter {
   }
 
   _getPlayerInsuranceInput() {
+    if (this.settings.debug) {
+      console.log('Getting player insurance input');
+    }
+
     const inputHandler = (str) =>
       ({
         n: 'no-insurance',
-        y: 'buy-insurance',
+        y: 'ask-insurance',
       }[str.toLowerCase()]);
 
     return this.playerInputReader.readInput({
@@ -267,9 +312,9 @@ export default class Game extends EventEmitter {
     });
   }
 
-  _allPlayerHandsBusted() {
+  _allPlayerHandsFinished() {
     return this.players.every((player) =>
-      player.hands.every((hand) => hand.busted)
+      player.hands.every((hand) => hand.finished)
     );
   }
 
@@ -300,7 +345,7 @@ export default class Game extends EventEmitter {
 
   async _playHands(player, betAmount) {
     for (let hand of player.hands) {
-      if (player.handWinner[hand.id]) {
+      if (player.handWinner.get(hand.id)) {
         continue;
       }
 
@@ -309,7 +354,7 @@ export default class Game extends EventEmitter {
   }
 
   async _playHand(player, hand, betAmount) {
-    if (player.isUser) {
+    if (player === this.player) {
       this.state.focusedHand = hand;
     }
 
@@ -335,23 +380,22 @@ export default class Game extends EventEmitter {
         continue;
       }
 
-      if (input === 'surrender' && !this.settings.allowLateSurrender) {
-        continue;
-      }
-
       if (
         input === 'surrender' &&
-        this.settings.allowLateSurrender &&
-        !hand.firstMove
+        (!this.settings.tableRules.allowLateSurrender || !hand.firstMove)
       ) {
         continue;
       }
 
-      if (input === 'split' && !hand.hasPairs) {
+      if (input === 'split' && (!hand.hasPairs || !hand.firstMove)) {
         continue;
       }
 
-      if (player.isUser) {
+      if (input === 'double' && !hand.firstMove) {
+        continue;
+      }
+
+      if (!player.isNPC) {
         this._validateInput(input, hand);
       }
 
@@ -363,7 +407,7 @@ export default class Game extends EventEmitter {
         player.takeCard(this.shoe.drawCard(), { hand });
       }
 
-      if (input === 'double' && hand.firstMove) {
+      if (input === 'double') {
         player.useChips(betAmount, { hand });
         player.takeCard(this.shoe.drawCard(), { hand });
         break;
@@ -371,10 +415,11 @@ export default class Game extends EventEmitter {
 
       if (
         input === 'split' &&
-        player.hands.length < this.settings.maxHandsAllowed
+        player.hands.length < this.settings.tableRules.maxHandsAllowed
       ) {
-        const newHand = player.addHand([hand.cards.pop()], betAmount);
+        const newHand = player.addHand(betAmount, [hand.removeCard()]);
 
+        newHand.fromSplit = true;
         hand.fromSplit = true;
 
         player.takeCard(this.shoe.drawCard(), { hand });
@@ -382,24 +427,12 @@ export default class Game extends EventEmitter {
       }
 
       if (input === 'surrender') {
-        break;
+        return player.setHandWinner({
+          winner: 'dealer',
+          hand,
+          surrender: true,
+        });
       }
-    }
-
-    if (player.isUser) {
-      // These moves introduce a card so add a delay to make the UI less jarring.
-      if (input === 'hit' || input === 'double') {
-        // TODO: Move this concern to the UI layer.
-        await Utils.sleep(this.settings.animationDelay);
-      }
-    }
-
-    if (input === 'surrender') {
-      return player.setHandWinner({ winner: 'dealer', hand });
-    }
-
-    if (hand.cardTotal === 21) {
-      return player.setHandWinner({ winner: 'player', hand });
     }
 
     if (hand.busted) {
@@ -409,7 +442,7 @@ export default class Game extends EventEmitter {
 
   _setHandResults(player) {
     for (let hand of player.hands) {
-      if (player.handWinner[hand.id]) {
+      if (player.handWinner.get(hand.id)) {
         continue;
       }
 

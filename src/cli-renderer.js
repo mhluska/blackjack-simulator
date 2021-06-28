@@ -56,14 +56,15 @@ export default class CLIRenderer extends Renderer {
       if (this.game.state.focusedHand.firstMove) {
         choices.push('D (double)');
 
-        if (this.game.settings.allowLateSurrender) {
+        if (this.game.settings.tableRules.allowLateSurrender) {
           choices.push('R (surrender)');
         }
       }
 
       if (
         this.game.state.focusedHand?.hasPairs &&
-        this.game.player.hands.length < this.game.settings.maxHandsAllowed
+        this.game.player.hands.length <
+          this.game.settings.tableRules.maxHandsAllowed
       ) {
         choices.push('P (split)');
       }
@@ -75,7 +76,7 @@ export default class CLIRenderer extends Renderer {
       const getGameResult = (hand) => {
         const blackjack = hand.blackjack ? 'Blackjack! ' : '';
 
-        switch (this.game.player.handWinner[hand.id]) {
+        switch (this.game.player.handWinner.get(hand.id)) {
           case 'player':
             return `${blackjack}Player wins`;
           case 'dealer':

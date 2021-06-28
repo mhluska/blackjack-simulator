@@ -1,5 +1,3 @@
-import assert from 'assert';
-
 import Utils from './utils.js';
 import Deck from './deck.js';
 import GameObject from './game-object.js';
@@ -8,8 +6,10 @@ import Card from './card.js';
 import BasicStrategyChecker from './basic-strategy-checker.js';
 import { illustrious18Deviations } from './hi-lo-deviation-checker.js';
 
-// When there are less than 20% cards in the shoe, a shuffle + reset is needed.
-const RESET_THRESHOLD = 0.2;
+// TODO: When simulating a large number of hands, this can sometimes still run
+// out of cards. Figure out why.
+// When there are less than 35% cards in the shoe, a shuffle + reset is needed.
+const RESET_THRESHOLD = 0.35;
 
 // TODO: Make this mix in functionality from `DiscardTray` instead of extending.
 export default class Shoe extends DiscardTray {
@@ -18,11 +18,9 @@ export default class Shoe extends DiscardTray {
   constructor(game) {
     super();
 
-    assert(game, 'Need to initialize Shoe with game');
-
     this.hiLoRunningCount = 0;
-    this.deckCount = game.settings.deckCount;
-    this.gameMode = game.settings.gameMode;
+    this.deckCount = game.settings.tableRules.deckCount;
+    this.mode = game.settings.mode;
     this.checkTopNDeviations = game.settings.checkTopNDeviations;
     this.cards = this._setupCards();
     this.shuffle();
@@ -31,15 +29,15 @@ export default class Shoe extends DiscardTray {
   shuffle() {
     Utils.arrayShuffle(this.cards);
 
-    if (this.gameMode === 'pairs') {
+    if (this.mode === 'pairs') {
       this._setupPairsMode();
     }
 
-    if (this.gameMode === 'uncommon') {
+    if (this.mode === 'uncommon') {
       this._setupUncommonMode();
     }
 
-    if (this.gameMode === 'illustrious18') {
+    if (this.mode === 'illustrious18') {
       this._setupIllustrious18Mode();
     }
   }
@@ -80,7 +78,7 @@ export default class Shoe extends DiscardTray {
   }
 
   get needsReset() {
-    if (this.gameMode !== 'default') {
+    if (this.mode !== 'default') {
       return true;
     }
 

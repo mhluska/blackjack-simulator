@@ -27,25 +27,12 @@ export const illustrious18Deviations = [
 ];
 
 export default class HiLoDeviationChecker {
-  // TODO: Implement this similar to `BasicStrategyChecker`
-  static suggest(game, hand) {}
-
-  // Returns true if an Illustrious 18 deviation was followed correctly.
-  // Returns false if a deviation was not present.
-  // Returns an object with a `correctMove` code and a `hint` otherwise.
-  static check(game, hand, input) {
-    if (
-      !game.settings.checkDeviations &&
-      game.settings.gameMode !== 'illustrious18'
-    ) {
-      return false;
-    }
-
+  static suggest(game, hand) {
     let deviationIndex;
 
     const trueCount = game.shoe.hiLoTrueCount;
 
-    if (input.includes('insurance')) {
+    if (game.dealer.upcard.value === 'A' && game.dealer.holeCard) {
       deviationIndex = illustrious18Deviations.findIndex(
         (d) => d.insurance && Utils.compareRange(trueCount, d.index)
       );
@@ -68,11 +55,37 @@ export default class HiLoDeviationChecker {
       return false;
     }
 
-    const deviation = illustrious18Deviations[deviationIndex];
-    const correctMove = deviation.correctMove;
+    const correctMove = illustrious18Deviations[deviationIndex].correctMove;
+
+    if (correctMove === 'D' && !hand.firstMove) {
+      return false;
+    }
+
+    const allowSplit =
+      hand.player.hands.length < game.settings.tableRules.maxHandsAllowed;
+    if (correctMove === 'P' && !allowSplit) {
+      return false;
+    }
+
+    return correctMove;
+  }
+
+  // Returns true if an Illustrious 18 deviation was followed correctly.
+  // Returns false if a deviation was not present.
+  // Returns an object with a `correctMove` code and a `hint` otherwise.
+  static check(game, hand, input) {
+    if (
+      !game.settings.checkDeviations &&
+      game.settings.mode !== 'illustrious18'
+    ) {
+      return false;
+    }
+
+    const correctMove = this.suggest(game, hand);
+
     let hint;
 
-    if (correctMove === 'Y' && input !== 'buy-insurance') {
+    if (correctMove === 'Y' && input !== 'ask-insurance') {
       hint = 'buy insurance';
     }
 

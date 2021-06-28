@@ -1,10 +1,8 @@
-import assert from 'assert';
-
 import Card from './card.js';
 import Utils from './utils.js';
 import GameObject from './game-object.js';
 
-const suits = ['hearts', 'tiles', 'clovers', 'pikes'];
+const suits = ['hearts', 'diamonds', 'clubs', 'spades'];
 const ranks = [
   'A',
   '2',
@@ -33,8 +31,6 @@ export default class Deck extends GameObject {
   }
 
   constructor(shoe) {
-    assert(shoe, 'Need to initialize Deck with shoe');
-
     super();
 
     this.shoe = shoe;

@@ -41,14 +41,6 @@ export default class Utils {
     return Math.random().toString(36).substring(2);
   }
 
-  static sleep(ms) {
-    if (ms <= 0) {
-      return Promise.resolve();
-    }
-
-    return new Promise((resolve) => setTimeout(resolve, ms));
-  }
-
   static clamp(number, min, max) {
     return Math.max(Math.min(number, max), min);
   }
@@ -77,6 +69,33 @@ export default class Utils {
   }
 
   static formatCents(cents) {
-    return `$${(cents / 100).toFixed(2)}`;
+    return new Intl.NumberFormat('en-US', {
+      style: 'currency',
+      currency: 'USD',
+    }).format(cents / 100);
+  }
+
+  // See https://stackoverflow.com/a/48218209/659910
+  static mergeDeep(...objects) {
+    const isObject = (obj) => obj && typeof obj === 'object';
+
+    return objects.reduce((prev, obj) => {
+      Object.keys(obj).forEach((key) => {
+        const pVal = prev[key];
+        const oVal = obj[key];
+
+        if (Array.isArray(pVal) && Array.isArray(oVal)) {
+          // For our use cases, we want to override arrays instead of appending.
+          // prev[key] = pVal.concat(...oVal);
+          prev[key] = oVal;
+        } else if (isObject(pVal) && isObject(oVal)) {
+          prev[key] = this.mergeDeep(pVal, oVal);
+        } else {
+          prev[key] = oVal;
+        }
+      });
+
+      return prev;
+    }, {});
   }
 }

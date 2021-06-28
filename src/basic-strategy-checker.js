@@ -1,5 +1,3 @@
-import assert from 'assert';
-
 import Utils from './utils.js';
 import singleDeck from './charts/1-deck';
 import doubleDeck from './charts/2-deck';
@@ -22,27 +20,24 @@ export default class BasicStrategyChecker {
     }
 
     if (game.state.step === 'waiting-for-move') {
+      const allowSplit =
+        hand.player.hands.length < game.settings.tableRules.maxHandsAllowed;
+
       const chartGroup = this._chartGroup(game.settings.deckCount);
-      const chartType = this._chartType(hand);
+      const chartType = this._chartType(hand, allowSplit);
       const chart = chartGroup[chartType];
 
       const keys = Object.keys(chart).map((key) => parseInt(key));
       const chartMin = Math.min(...keys);
       const chartMax = Math.max(...keys);
       const playerTotal = Utils.clamp(
-        hand.hasPairs ? hand.cards[0].value : hand.cardTotal,
+        hand.hasPairs && allowSplit ? hand.cards[0].value : hand.cardTotal,
         chartMin,
         chartMax
       );
 
       const dealersCard = game.dealer.upcard.value;
       const dealerHints = chart[playerTotal];
-
-      assert(
-        dealerHints,
-        `Warning: unable to find hint for ${playerTotal} vs ${dealersCard}`
-      );
-
       const correctMove = dealerHints[dealersCard];
 
       if (correctMove === 'Dh' || correctMove === 'Ds') {
@@ -126,9 +121,7 @@ export default class BasicStrategyChecker {
   }
 
   static _allowSurrender(hand, settings) {
-    return (
-      settings.allowSurrender && (hand.firstMove || settings.allowLateSurrender)
-    );
+    return hand.firstMove && settings.tableRules.allowLateSurrender;
   }
 
   static _chartData(deckCount) {
@@ -147,8 +140,8 @@ export default class BasicStrategyChecker {
     return this._chartData(deckCount).chart;
   }
 
-  static _chartType(hand) {
-    if (hand.hasPairs) {
+  static _chartType(hand, allowSplit) {
+    if (hand.hasPairs && allowSplit) {
       return 'splits';
     } else if (hand.isSoft) {
       return 'soft';
