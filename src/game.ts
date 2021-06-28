@@ -252,7 +252,7 @@ export default class Game extends EventEmitter {
     }
   }
 
-  _chainEmitChange<R>(object: R): R  {
+  _chainEmitChange<R>(object: R): R {
     object.on('change', (name, value) => this.emit('change', name, value));
     return object;
   }

@@ -1,3 +1,5 @@
+/* eslint-disable @typescript-eslint/no-var-requires */
+
 const path = require('path');
 const merge = require('webpack-merge');
 
@@ -21,7 +23,7 @@ const common = {
   devtool: process.env.NODE_ENV === 'development' ? 'eval-source-map' : false,
 };
 
-function resolutions(target: string) {
+function resolutions(target) {
   return {
     alias: {
       'player-input-reader': path.resolve(

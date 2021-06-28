@@ -3,7 +3,14 @@ export type actionDataKeys = 'h' | 's' | 'd' | 'p' | 'r';
 // TODO: Consolidate with `actionDataKeys`.
 export type correctMoves = 'H' | 'S' | 'D' | 'P' | 'R' | 'N' | 'Y';
 
-export type actions = 'hit' | 'stand' | 'double' | 'split' | 'surrender' | 'no-insurance' | 'ask-insurance';
+export type actions =
+  | 'hit'
+  | 'stand'
+  | 'double'
+  | 'split'
+  | 'surrender'
+  | 'no-insurance'
+  | 'ask-insurance';
 
 export type handWinners = 'player' | 'dealer' | 'push';
 
@@ -37,7 +44,7 @@ export enum Ranks {
 export type CheckResult = {
   code: correctMoves;
   hint: string;
-}
+};
 
 type chartMoves = correctMoves & ('Dh' | 'Ds' | 'Rh' | 'Rs');
 type BasicStrategyChart = Record<chartTypes, Record<number, chartMoves>>;
@@ -47,5 +54,5 @@ export type BasicStrategyData = {
   hitsSoft17: {
     chart: BasicStrategyChart;
     uncommon: UncommonChart;
-  }
-}
+  };
+};

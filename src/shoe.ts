@@ -17,7 +17,7 @@ type ShoeAttributes = {
   penetration: number;
   hiLoRunningCount: number;
   hiLoTrueCount: number;
-}
+};
 
 // TODO: Make this mix in functionality from `DiscardTray` instead of extending.
 export default class Shoe extends DiscardTray {
@@ -136,7 +136,11 @@ export default class Shoe extends DiscardTray {
     return cards;
   }
 
-  _moveCardsToFront(playerRank1: Ranks, playerRank2: Ranks, dealerUpcardValue?: number): void {
+  _moveCardsToFront(
+    playerRank1: Ranks,
+    playerRank2: Ranks,
+    dealerUpcardValue?: number
+  ): void {
     // Move the first two cards to the 0th and 2nd spot so they are dealt to the
     // player at the start of the game.
     Utils.arrayMove(
@@ -160,14 +164,20 @@ export default class Shoe extends DiscardTray {
     );
   }
 
-  _twoRandomRanksFromTotal(total: number, chartType: chartTypes): [Ranks, Ranks] {
+  _twoRandomRanksFromTotal(
+    total: number,
+    chartType: chartTypes
+  ): [Ranks, Ranks] {
     return this._twoRandomIntegerRanksFromTotal(
       parseInt(total),
       chartType
-    ).map((r) => r === 11 ? Ranks.ACE : r.toString() as Rank);
+    ).map((r) => (r === 11 ? Ranks.ACE : (r.toString() as Rank)));
   }
 
-  _twoRandomIntegerRanksFromTotal(total: number, chartType: chartTypes): [number, number] {
+  _twoRandomIntegerRanksFromTotal(
+    total: number,
+    chartType: chartTypes
+  ): [number, number] {
     switch (chartType) {
       case 'hard': {
         const rank = total > 11 ? 10 : 2;

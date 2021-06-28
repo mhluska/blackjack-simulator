@@ -11,8 +11,11 @@ export default class DOMPlayerInputReader implements PlayerInputReader {
 
   readInput({
     keypress = () => undefined,
-    click = () => undefined
-  }: { keypress: (action: string) => actions | void, click: (action: string) => actions | void }): Promise<actions | void> {
+    click = () => undefined,
+  }: {
+    keypress: (action: string) => actions | void;
+    click: (action: string) => actions | void;
+  }): Promise<actions | void> {
     return new Promise((resolve, reject) => {
       // HACK: Advance the game without making a move.
       this.game.on('resetState', () => reject(new Error('Game reset')));
@@ -20,7 +23,10 @@ export default class DOMPlayerInputReader implements PlayerInputReader {
       document.body.addEventListener(
         'keypress',
         (event) => {
-          if (!this.game.settings.element || !document.querySelector(this.game.settings.element)) {
+          if (
+            !this.game.settings.element ||
+            !document.querySelector(this.game.settings.element)
+          ) {
             return;
           }
 

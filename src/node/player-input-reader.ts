@@ -11,7 +11,10 @@ export default class CLIPlayerInputReader implements PlayerInputReader {
 
   readInput({
     keypress = (): actions | void => undefined,
-  }: { keypress: (action: string) => actions | void, click: (action: string) => actions | void }): Promise<actions | void> {
+  }: {
+    keypress: (action: string) => actions | void;
+    click: (action: string) => actions | void;
+  }): Promise<actions | void> {
     return new Promise((resolve) => {
       process.stdin.once('keypress', (str, key) => {
         if (key && key.ctrl && key.name === 'c') {

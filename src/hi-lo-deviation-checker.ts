@@ -10,7 +10,7 @@ type Illustrious18Deviation = {
   dealersCard: number;
   correctMove: correctMoves;
   index: string;
-}
+};
 
 // prettier-ignore
 // Referenced from the book `Blackjack Attack`.
@@ -39,7 +39,10 @@ export const illustrious18Deviations: Illustrious18Deviation[] = [
 ];
 
 export default class HiLoDeviationChecker {
-  static _suggest(game: Game, hand: Hand): { correctMove: correctMoves | false, deviation?: Illustrious18Deviation } {
+  static _suggest(
+    game: Game,
+    hand: Hand
+  ): { correctMove: correctMoves | false; deviation?: Illustrious18Deviation } {
     let deviationIndex;
 
     const trueCount = game.shoe.hiLoTrueCount;

@@ -18,7 +18,7 @@ type PlayerAttributes = {
   balance: number;
   hands: HandAttributes[];
   handWinner: { [id: string]: handWinners };
-}
+};
 
 export default class Player extends GameObject {
   static entityName = 'player';
@@ -162,7 +162,11 @@ export default class Player extends GameObject {
     hand = this.hands[0],
     winner,
     surrender = false,
-  }: { hand?: Hand; winner: handWinners, surrender?: boolean }): void {
+  }: {
+    hand?: Hand;
+    winner: handWinners;
+    surrender?: boolean;
+  }): void {
     this.handWinner.set(hand.id, winner);
 
     if (this.debug) {

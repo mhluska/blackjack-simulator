@@ -2,7 +2,14 @@ import Utils from './utils';
 import Game, { GameSettings } from './game';
 import Hand from './hand';
 import { singleDeck, doubleDeck } from './charts';
-import { deckCounts, chartTypes, CheckResult, actions, correctMoves, BasicStrategyData } from './types';
+import {
+  deckCounts,
+  chartTypes,
+  CheckResult,
+  actions,
+  correctMoves,
+  BasicStrategyData,
+} from './types';
 
 // TODO: Should this only be used for the first card?
 const CHARTS = {
@@ -12,11 +19,13 @@ const CHARTS = {
   // TODO: Add more basic strategy charts.
   4: { hitsSoft17: { chart: {} } },
   6: { hitsSoft17: { chart: {} } },
-  8: { hitsSoft17: { chart: {} } }
+  8: { hitsSoft17: { chart: {} } },
 };
 
 export default class BasicStrategyChecker {
-  static uncommonHands(deckCount: deckCounts): BasicStrategyData['hitsSoft17']['uncommon'] {
+  static uncommonHands(
+    deckCount: deckCounts
+  ): BasicStrategyData['hitsSoft17']['uncommon'] {
     return this._chartData(deckCount).uncommon;
   }
 
@@ -149,7 +158,9 @@ export default class BasicStrategyChecker {
     return (CHARTS[deckCount] || CHARTS['2']).hitsSoft17;
   }
 
-  static _chartGroup(deckCount: deckCounts): BasicStrategyData['hitsSoft17']['chart'] {
+  static _chartGroup(
+    deckCount: deckCounts
+  ): BasicStrategyData['hitsSoft17']['chart'] {
     return this._chartData(deckCount).chart;
   }
 

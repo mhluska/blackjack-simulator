@@ -30,14 +30,16 @@ function setupGame(options = {}) {
   const game = new Game(defaultOptions.settings);
   const length = game.shoe.cards.length;
 
-  defaultOptions.cards.split('').forEach((cardRank: Ranks | '?', index: number) => {
-    game.shoe.cards[length - index - 1] = new Card(
-      Suits.HEARTS,
-      // If the input is `?`, the rank is irrelevant. We arbitrarily pick `2`.
-      cardRank === '?' ? Ranks.TWO : cardRank,
-      game.shoe
-    );
-  });
+  defaultOptions.cards
+    .split('')
+    .forEach((cardRank: Ranks | '?', index: number) => {
+      game.shoe.cards[length - index - 1] = new Card(
+        Suits.HEARTS,
+        // If the input is `?`, the rank is irrelevant. We arbitrarily pick `2`.
+        cardRank === '?' ? Ranks.TWO : cardRank,
+        game.shoe
+      );
+    });
 
   let callCount = 0;
 
@@ -116,7 +118,9 @@ describe('Game', function () {
       });
 
       it('should increase the player balance', function () {
-        expect(game.player.balance).to.equal(playerBalanceBefore + betAmount * (3/2))
+        expect(game.player.balance).to.equal(
+          playerBalanceBefore + betAmount * (3 / 2)
+        );
       });
     });
 
@@ -163,7 +167,9 @@ describe('Game', function () {
 
         it('should allow late surrender', function () {
           expect(game.state.step).to.equal('game-result');
-          expect(game.player.handWinner.values().next().value).to.equal('dealer');
+          expect(game.player.handWinner.values().next().value).to.equal(
+            'dealer'
+          );
         });
       });
 

@@ -3,12 +3,12 @@ import Utils from './utils';
 import { PlayerStrategy } from './player';
 
 type SimulatorSettings = {
-  debug: boolean,
+  debug: boolean;
   playerStrategy: 'basic-strategy' | 'basic-strategy-i18';
-  playerTablePosition: number,
+  playerTablePosition: number;
   playerBankroll: number;
   tableRules: GameSettings['tableRules'];
-}
+};
 
 type SimuatorResult = {
   timeElapsed: number;
@@ -16,11 +16,11 @@ type SimuatorResult = {
   amountEarned: string;
   amountEarnedVariance: string;
   houseEdge: number;
-  handsWon: number,
-  handsLost: number,
-  handsPushed: number,
-  handsPlayed: number,
-}
+  handsWon: number;
+  handsLost: number;
+  handsPushed: number;
+  handsPlayed: number;
+};
 
 const SETTINGS_DEFAULTS: SimulatorSettings = {
   debug: false,

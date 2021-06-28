@@ -29,7 +29,9 @@ export default class Deck extends GameObject {
     const cards: Card[] = [];
 
     Object.values(Suits).forEach((suit) =>
-      Object.values(Ranks).forEach((rank) => cards.push(new Card(suit, rank, this.shoe)))
+      Object.values(Ranks).forEach((rank) =>
+        cards.push(new Card(suit, rank, this.shoe))
+      )
     );
 
     Utils.arrayShuffle(cards);

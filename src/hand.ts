@@ -10,7 +10,7 @@ export type HandAttributes = {
   cardTotal: number;
   blackjack: boolean;
   firstMove: boolean;
-}
+};
 
 export default class Hand extends GameObject {
   static entity = 'hand';
