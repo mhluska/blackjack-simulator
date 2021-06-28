@@ -44,7 +44,7 @@ export default class CLIRenderer extends Renderer {
   }
 
   _renderQuestion() {
-    if (!this.game.state.step) {
+    if (!this.game.state.step || !this.game.state.focusedHand) {
       return;
     }
 

@@ -8,7 +8,7 @@
   },
   "scripts": {
     "browser": "webpack-dev-server --open",
-    "start": "node --unhandled-rejections=strict --trace-warnings dist/main.node.js",
+    "start": "node --unhandled-rejections=strict --trace-warnings dist/game.js",
     "test": "NODE_PATH=./src mocha --require @babel/register",
     "lint": "eslint --fix ./src",
     "build": "webpack",
