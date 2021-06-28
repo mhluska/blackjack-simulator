@@ -179,10 +179,14 @@ Result contains the following data:
 
 ```
 {
-  timeElapsed: number;
-  amountEarned: number;
-  amountEarnedVariance: number;
-  handsWon: number;
+  amountEarned: string;
+  amountEarnedVariance: string;
+  amountWagered: string;
   handsLost: number;
+  handsPlayed: number;
+  handsPushed: number;
+  handsWon: number;
+  houseEdge: number;
+  timeElapsed: number;
 }
 ```
