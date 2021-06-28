@@ -45,7 +45,7 @@ function setupGame(options = {}) {
     const promise =
       defaultOptions.playerInput.length === 0 ||
       callCount > defaultOptions.playerInput.length - 1
-        ? new Promise(() => {/* noop */})
+        ? new Promise(() => undefined)
         : Promise.resolve(
             defaultOptions.playerInput[callCount][game.state.step]
           );

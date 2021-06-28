@@ -10,12 +10,8 @@ export default class DOMPlayerInputReader implements PlayerInputReader {
   }
 
   readInput({
-    keypress = () => {
-      // lol
-    },
-    click = () => {
-      // lol
-    },
+    keypress = () => undefined,
+    click = () => undefined
   }: { keypress: (action: string) => actions | void, click: (action: string) => actions | void }): Promise<actions | void> {
     return new Promise((resolve, reject) => {
       // HACK: Advance the game without making a move.
