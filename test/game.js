@@ -115,7 +115,10 @@ describe('Game', function () {
       });
 
       it('should increase the player balance', function () {
-        assert.equal(game.player.balance, playerBalanceBefore + betAmount);
+        assert.equal(
+          game.player.balance,
+          playerBalanceBefore + betAmount * (3 / 2)
+        );
       });
     });
 
@@ -162,7 +165,7 @@ describe('Game', function () {
 
         it('should allow late surrender', function () {
           assert.equal(game.state.step, 'game-result');
-          assert.equal(game.player.handWinner.values()[0], 'dealer');
+          assert.equal(game.player.handWinner.values().next().value, 'dealer');
         });
       });
 

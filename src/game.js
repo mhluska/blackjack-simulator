@@ -28,6 +28,7 @@ const SETTINGS_DEFAULTS = {
   playerStrategyOverride: {},
 
   tableRules: {
+    hitSoft17: true,
     allowLateSurrender: false,
     deckCount: 2,
     maxHandsAllowed: 4,
@@ -62,9 +63,13 @@ export default class Game extends EventEmitter {
   }
 
   async run({ betAmount = this.settings.tableRules.minimumBet } = {}) {
+    if (this.settings.debug) {
+      console.log('> Starting new game');
+    }
+
     this.players.forEach((player) => {
       // TODO: Make NPCs bet more realistically than minimum bet.
-      player.useChips(
+      player.addHand(
         player === this.player ? betAmount : this.settings.tableRules.minimumBet
       );
 
@@ -124,8 +129,16 @@ export default class Game extends EventEmitter {
 
     // Dealer draws cards until they reach 17. However, if all player hands have
     // busted, this step is skipped.
-    if (!this._allPlayerHandsBusted()) {
-      while (this.dealer.cardTotal < 17) {
+    if (!this._allPlayerHandsFinished()) {
+      while (this.dealer.cardTotal <= 17) {
+        if (this.dealer.cardTotal === 17) {
+          if (this.dealer.isHard) {
+            break;
+          } else if (!this.settings.tableRules.hitSoft17) {
+            break;
+          }
+        }
+
         this.dealer.takeCard(this.shoe.drawCard());
       }
     }
@@ -152,6 +165,10 @@ export default class Game extends EventEmitter {
       );
       this.shoe.shuffle();
       this.emit('shuffle');
+    }
+
+    if (this.settings.debug) {
+      console.log();
     }
   }
 
@@ -182,7 +199,7 @@ export default class Game extends EventEmitter {
 
     // TODO: Make insurance amount configurable. Currently uses half the
     // bet size as insurance to recover full bet amount.
-    if (input === 'buy-insurance') {
+    if (input === 'ask-insurance') {
       player.addChips(betAmount);
     }
   }
@@ -203,6 +220,7 @@ export default class Game extends EventEmitter {
       (_item, index) =>
         this._chainEmitChange(
           new Player({
+            debug: this.settings.debug,
             // TODO: Make this configurable for each player.
             balance: this.settings.playerBankroll,
             strategy:
@@ -285,7 +303,7 @@ export default class Game extends EventEmitter {
     const inputHandler = (str) =>
       ({
         n: 'no-insurance',
-        y: 'buy-insurance',
+        y: 'ask-insurance',
       }[str.toLowerCase()]);
 
     return this.playerInputReader.readInput({
@@ -294,9 +312,9 @@ export default class Game extends EventEmitter {
     });
   }
 
-  _allPlayerHandsBusted() {
+  _allPlayerHandsFinished() {
     return this.players.every((player) =>
-      player.hands.every((hand) => hand.busted)
+      player.hands.every((hand) => hand.finished)
     );
   }
 
@@ -364,24 +382,20 @@ export default class Game extends EventEmitter {
 
       if (
         input === 'surrender' &&
-        !this.settings.tableRules.allowLateSurrender
+        (!this.settings.tableRules.allowLateSurrender || !hand.firstMove)
       ) {
         continue;
       }
 
-      if (
-        input === 'surrender' &&
-        this.settings.tableRules.allowLateSurrender &&
-        !hand.firstMove
-      ) {
+      if (input === 'split' && (!hand.hasPairs || !hand.firstMove)) {
         continue;
       }
 
-      if (input === 'split' && !hand.hasPairs) {
+      if (input === 'double' && !hand.firstMove) {
         continue;
       }
 
-      if (player === this.player) {
+      if (!player.isNPC) {
         this._validateInput(input, hand);
       }
 
@@ -393,7 +407,7 @@ export default class Game extends EventEmitter {
         player.takeCard(this.shoe.drawCard(), { hand });
       }
 
-      if (input === 'double' && hand.firstMove) {
+      if (input === 'double') {
         player.useChips(betAmount, { hand });
         player.takeCard(this.shoe.drawCard(), { hand });
         break;
@@ -403,7 +417,7 @@ export default class Game extends EventEmitter {
         input === 'split' &&
         player.hands.length < this.settings.tableRules.maxHandsAllowed
       ) {
-        const newHand = player.addHand(betAmount, [hand.cards.pop()]);
+        const newHand = player.addHand(betAmount, [hand.removeCard()]);
 
         newHand.fromSplit = true;
         hand.fromSplit = true;
@@ -413,16 +427,12 @@ export default class Game extends EventEmitter {
       }
 
       if (input === 'surrender') {
-        break;
+        return player.setHandWinner({
+          winner: 'dealer',
+          hand,
+          surrender: true,
+        });
       }
-    }
-
-    if (input === 'surrender') {
-      return player.setHandWinner({ winner: 'dealer', hand });
-    }
-
-    if (hand.cardTotal === 21) {
-      return player.setHandWinner({ winner: 'player', hand });
     }
 
     if (hand.busted) {

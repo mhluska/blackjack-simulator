@@ -2,7 +2,7 @@ import Card from './card.js';
 import Utils from './utils.js';
 import GameObject from './game-object.js';
 
-const suits = ['hearts', 'tiles', 'clovers', 'pikes'];
+const suits = ['hearts', 'diamonds', 'clubs', 'spades'];
 const ranks = [
   'A',
   '2',

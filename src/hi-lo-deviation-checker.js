@@ -58,13 +58,13 @@ export default class HiLoDeviationChecker {
     const correctMove = illustrious18Deviations[deviationIndex].correctMove;
 
     if (correctMove === 'D' && !hand.firstMove) {
-      return null;
+      return false;
     }
 
     const allowSplit =
       hand.player.hands.length < game.settings.tableRules.maxHandsAllowed;
     if (correctMove === 'P' && !allowSplit) {
-      return null;
+      return false;
     }
 
     return correctMove;
@@ -85,7 +85,7 @@ export default class HiLoDeviationChecker {
 
     let hint;
 
-    if (correctMove === 'Y' && input !== 'buy-insurance') {
+    if (correctMove === 'Y' && input !== 'ask-insurance') {
       hint = 'buy insurance';
     }
 

@@ -4,14 +4,16 @@ import Utils from './utils.js';
 export default class Hand extends GameObject {
   static entity = 'hand';
 
-  constructor(player, cards = [], betAmount = 0) {
+  constructor(player, cards = []) {
     super();
 
     this.id = Utils.randomId();
     this.player = player;
     this.fromSplit = false;
-    this.betAmount = betAmount;
+    this.betAmount = 0;
     this.cardTotal = 0;
+    this.cardLowTotal = 0;
+    this.acesCount = 0;
     this.cards = [];
 
     cards.forEach((card) => this.takeCard(card));
@@ -22,6 +24,11 @@ export default class Hand extends GameObject {
 
     this.cards[prepend ? 'unshift' : 'push'](card);
     this.cardTotal += card.value;
+    this.cardLowTotal += card.rank === 'A' ? 1 : card.value;
+
+    if (card.rank === 'A') {
+      this.acesCount += 1;
+    }
 
     if (this.cardTotal > 21 && card.rank === 'A') {
       this.cardTotal -= 10;
@@ -30,11 +37,30 @@ export default class Hand extends GameObject {
     this.emitChange();
   }
 
+  removeCard() {
+    const card = this.cards.pop();
+
+    this.cardTotal -= card.value;
+    this.cardLowTotal -= card.rank === 'A' ? 1 : card.value;
+
+    if (card.rank === 'A') {
+      this.acesCount -= 1;
+
+      if (this.cardTotal + 10 <= 21) {
+        this.cardTotal += 10;
+      }
+    }
+
+    return card;
+  }
+
   // TODO: Remove change handler when removing cards.
   removeCards() {
     const cards = this.cards.slice();
     this.cards = [];
     this.cardTotal = 0;
+    this.cardLowTotal = 0;
+    this.acesCount = 0;
 
     this.emitChange();
 
@@ -62,10 +88,6 @@ export default class Hand extends GameObject {
     return this.cards.length <= 2;
   }
 
-  get visibleCards() {
-    return this.cards.filter((c) => c.visible);
-  }
-
   get busted() {
     return this.cardTotal > 21;
   }
@@ -74,14 +96,8 @@ export default class Hand extends GameObject {
     return this.cards.length === 2 && this.cardTotal === 21 && !this.fromSplit;
   }
 
-  get acesCount() {
-    return this.cards.filter((c) => c.rank === 'A').length;
-  }
-
-  get lowTotal() {
-    return Utils.arraySum(
-      this.visibleCards.map((c) => (c.rank === 'A' ? 1 : c.value))
-    );
+  get finished() {
+    return this.busted || this.blackjack;
   }
 
   get hasPairs() {
@@ -94,7 +110,7 @@ export default class Hand extends GameObject {
   // 1. there's at least one ace
   // 2. counting the aces as value 1, the total is <= 11
   get isSoft() {
-    return this.acesCount > 0 && this.lowTotal <= 11;
+    return this.acesCount > 0 && this.cardLowTotal <= 11;
   }
 
   get isHard() {

@@ -10,6 +10,7 @@ const SETTINGS_DEFAULTS = {
 
   // TODO: DRY with Game.
   tableRules: {
+    hitSoft17: true,
     allowLateSurrender: false,
     deckCount: 2,
     maxHandsAllowed: 4,
@@ -54,7 +55,7 @@ export default class Simulator {
   betAmount(hiLoTrueCount, minimumBet) {
     return hiLoTrueCount < 1
       ? minimumBet
-      : minimumBet * 2 ** (Math.min(4, hiLoTrueCount) - 1);
+      : minimumBet * 2 ** (Math.min(5, hiLoTrueCount) - 1);
   }
 
   async run({ hands = 10 ** 6 } = {}) {
@@ -67,7 +68,7 @@ export default class Simulator {
       disableEvents: true,
       // TODO: Make this based on `playerStrategy`.
       playerStrategyOverride: {
-        2: PLAYER_STRATEGY.BASIC_STRATEGY_I18,
+        2: PLAYER_STRATEGY.BASIC_STRATEGY,
       },
 
       playerTablePosition: this.settings.playerTablePosition,
@@ -79,17 +80,27 @@ export default class Simulator {
     let handsWon = 0;
     let handsLost = 0;
     let handsPushed = 0;
+    let handsPlayed = 0;
+    let amountWagered = 0;
 
-    for (let i = 0; i < hands; i += 1) {
+    while (handsPlayed < hands) {
+      // const betAmount = this.betAmount(
+      //   game.shoe.hiLoTrueCount,
+      //   game.settings.tableRules.minimumBet
+      // );
+
+      const betAmount = game.settings.tableRules.minimumBet;
+
       await game.run({
-        betAmount: this.betAmount(
-          game.shoe.hiLoTrueCount,
-          game.settings.tableRules.minimumBet
-        ),
+        betAmount,
       });
 
+      amountWagered += betAmount;
       bankroll.push(game.player.balance);
+
       for (let result of game.player.handWinner.values()) {
+        handsPlayed += 1;
+
         switch (result) {
           case 'player':
             handsWon += 1;
@@ -104,13 +115,18 @@ export default class Simulator {
       }
     }
 
+    const amountEarned = bankroll[bankroll.length - 1] - bankroll[0];
+
     return {
       timeElapsed: Date.now() - startTime,
-      amountEarned: bankroll[bankroll.length - 1] - bankroll[0],
-      amountEarnedVariance: variance(bankroll),
+      amountWagered: Utils.formatCents(amountWagered),
+      amountEarned: Utils.formatCents(amountEarned),
+      amountEarnedVariance: Utils.formatCents(variance(bankroll)),
+      houseEdge: -amountEarned / amountWagered,
       handsWon,
       handsLost,
       handsPushed,
+      handsPlayed,
     };
   }
 }

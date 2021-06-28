@@ -19,9 +19,12 @@ describe('Simulator', function () {
         'timeElapsed',
         'amountEarned',
         'amountEarnedVariance',
+        'amountWagered',
         'handsWon',
         'handsLost',
-        'handsPushed'
+        'handsPushed',
+        'handsPlayed',
+        'houseEdge'
       );
     });
   });

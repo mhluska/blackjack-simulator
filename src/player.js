@@ -13,13 +13,15 @@ export const PLAYER_STRATEGY = {
 export default class Player extends GameObject {
   static entityName = 'player';
 
-  constructor({ strategy, balance = 10000 * 100 } = {}) {
+  constructor({ strategy, balance = 10000 * 100, debug = false } = {}) {
     super();
 
+    this.id = Utils.randomId();
     this.strategy = strategy;
     this.balance = balance;
     this.handWinner = new Map();
     this.hands = [];
+    this.debug = debug;
   }
 
   getNPCInput(game, hand) {
@@ -35,6 +37,18 @@ export default class Player extends GameObject {
         BasicStrategyChecker.suggest(game, hand);
     }
 
+    if (this.debug) {
+      console.log(
+        this.strategy,
+        this.id,
+        'dealer',
+        game.dealer.upcard.rank,
+        'player',
+        hand.cardTotal,
+        correctMove
+      );
+    }
+
     return {
       D: 'double',
       H: 'hit',
@@ -47,7 +61,7 @@ export default class Player extends GameObject {
   }
 
   addHand(betAmount = 0, cards = []) {
-    const hand = new Hand(this, cards, betAmount);
+    const hand = new Hand(this, cards);
     hand.on('change', () => this.emitChange());
 
     this.hands.push(hand);
@@ -80,6 +94,7 @@ export default class Player extends GameObject {
 
   attributes() {
     return {
+      id: this.id,
       balance: this.balance,
       hands: this.hands.map((hand) => hand.attributes()),
       handWinner: this.handWinner,
@@ -88,10 +103,12 @@ export default class Player extends GameObject {
 
   useChips(betAmount, { hand } = {}) {
     if (!hand) {
-      hand = this.hands[0] ?? this.addHand();
+      hand = this.hands[0];
     }
 
-    hand.betAmount += betAmount;
+    if (!hand) {
+      throw new Error(`Player ${this.id} has no hand to add chips to`);
+    }
 
     if (this.balance < hand.betAmount) {
       // TODO: Format cents.
@@ -100,22 +117,42 @@ export default class Player extends GameObject {
       );
     }
 
-    this.balance -= hand.betAmount;
+    hand.betAmount += betAmount;
+    this.balance -= betAmount;
+
+    if (this.debug) {
+      console.log('Subtracting balance', this.id, this.balance, hand.betAmount);
+    }
   }
 
   addChips(betAmount) {
     this.balance += betAmount;
+
+    if (this.debug) {
+      console.log('Adding balance', this.id, this.balance, betAmount);
+    }
   }
 
-  setHandWinner({ hand = this.hands[0], winner } = {}) {
+  setHandWinner({ hand = this.hands[0], winner, surrender = false } = {}) {
     this.handWinner.set(hand.id, winner);
+
+    if (this.debug) {
+      console.log(
+        'Hand result',
+        this.id,
+        winner,
+        hand.blackjack ? 'blackjack' : ''
+      );
+    }
 
     if (winner === 'player') {
       this.addChips(
-        hand.blackjack ? hand.betAmount * (3 / 2) : hand.betAmount * 2
+        hand.blackjack ? hand.betAmount * (5 / 2) : hand.betAmount * 2
       );
     } else if (winner === 'push') {
       this.addChips(hand.betAmount);
+    } else if (winner === 'dealer' && surrender) {
+      this.addChips(hand.betAmount / 2);
     }
 
     this.emit('hand-winner', hand, winner);
@@ -128,11 +165,6 @@ export default class Player extends GameObject {
   // TODO: Consider using `Proxy`.
   get cards() {
     return this.hands[0].cards;
-  }
-
-  // TODO: Consider using `Proxy`.
-  get visibleCards() {
-    return this.hands[0].visibleCards;
   }
 
   // TODO: Consider using `Proxy`.
@@ -153,5 +185,15 @@ export default class Player extends GameObject {
   // TODO: Consider using `Proxy`.
   get hasPairs() {
     return this.hands[0].hasPairs;
+  }
+
+  // TODO: Consider using `Proxy`.
+  get isSoft() {
+    return this.hands[0].isSoft;
+  }
+
+  // TODO: Consider using `Proxy`.
+  get isHard() {
+    return this.hands[0].isHard;
   }
 }

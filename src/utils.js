@@ -69,7 +69,10 @@ export default class Utils {
   }
 
   static formatCents(cents) {
-    return `$${(cents / 100).toFixed(2)}`;
+    return new Intl.NumberFormat('en-US', {
+      style: 'currency',
+      currency: 'USD',
+    }).format(cents / 100);
   }
 
   // See https://stackoverflow.com/a/48218209/659910

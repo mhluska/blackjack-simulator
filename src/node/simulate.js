@@ -9,7 +9,11 @@ const playerBankroll = tableMinimum * 1000 * 1000;
 const simulator = new Simulator({
   debug: !!process.env.DEBUG,
   playerBankroll,
-  tableRules: { tableMinimum, tableMaximum: tableMinimum * 100 },
+  tableRules: {
+    tableMinimum,
+    tableMaximum: tableMinimum * 100,
+    allowLateSurrender: true,
+  },
 });
 
 async function run() {
