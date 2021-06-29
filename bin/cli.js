@@ -1,3 +1,3 @@
 #!/usr/bin/env node
 
-require('../dist/main.node.js');
+require('../dist/game.js');

@@ -1,10 +1,10 @@
 {
-  "name": "@blackjacktrainer/blackjack-engine",
-  "version": "0.9.1",
+  "name": "@blackjacktrainer/blackjack-simulator",
+  "version": "0.10.2",
   "description": "Core game logic for a Blackjack basic strategy and card counting trainer",
   "main": "dist/main.js",
   "bin": {
-    "blackjack-engine": "bin/cli.js"
+    "blackjack-simulator": "bin/cli.js"
   },
   "scripts": {
     "browser": "webpack-dev-server --open",
@@ -17,7 +17,7 @@
   },
   "repository": {
     "type": "git",
-    "url": "git+https://github.com/mhluska/blackjack-engine.git"
+    "url": "git+https://github.com/mhluska/blackjack-simulator.git"
   },
   "keywords": [
     "blackjack",
@@ -28,7 +28,7 @@
   "author": "BlackjackTrainer <contact@mail.blackjacktrainer.app>",
   "license": "MIT",
   "bugs": {
-    "url": "https://github.com/mhluska/blackjack-engine/issues"
+    "url": "https://github.com/mhluska/blackjack-simulator/issues"
   },
   "homepage": "https://blackjacktrainer.app",
   "devDependencies": {
