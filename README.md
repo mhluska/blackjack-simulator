@@ -1,13 +1,13 @@
 <p align="center">
   <a href="https://blackjacktrainer.app/" target="_blank">
-    <img width="450" src="https://github.com/mhluska/blackjack-engine/raw/master/preview.gif" alt="Preview" />
+    <img width="450" src="https://github.com/mhluska/blackjack-simulator/raw/master/preview.gif" alt="Preview" />
   </a>
 </p>
 
 <p align="center">
-  <a href="https://github.com/mhluska/blackjack-engine/actions"><img src="https://github.com/mhluska/blackjack-engine/workflows/tests/badge.svg?branch=master" alt="Build Status" /></a>
-  <a href="https://www.npmjs.com/package/@blackjacktrainer/blackjack-engine"><img src="https://img.shields.io/npm/v/@blackjacktrainer/blackjack-engine.svg" alt="Version"></a>
-  <a href="https://github.com/mhluska/blackjack-engine/blob/master/LICENSE"><img src="https://img.shields.io/github/license/mhluska/blackjack-engine" alt="License"></a>
+  <a href="https://github.com/mhluska/blackjack-simulator/actions"><img src="https://github.com/mhluska/blackjack-simulator/workflows/tests/badge.svg?branch=master" alt="Build Status" /></a>
+  <a href="https://www.npmjs.com/package/@blackjacktrainer/blackjack-simulator"><img src="https://img.shields.io/npm/v/@blackjacktrainer/blackjack-simulator.svg" alt="Version"></a>
+  <a href="https://github.com/mhluska/blackjack-simulator/blob/master/LICENSE"><img src="https://img.shields.io/github/license/mhluska/blackjack-simulator" alt="License"></a>
 </p>
 
 <p align="center">
@@ -24,13 +24,13 @@
 ## Run interactive mode
 
 ```sh
-npx @blackjacktrainer/blackjack-engine --interactive
+npx @blackjacktrainer/blackjack-simulator --interactive
 ```
 
 ## Run simulator
 
 ```sh
-npx @blackjacktrainer/blackjack-engine --simulator
+npx @blackjacktrainer/blackjack-simulator
 ```
 
 ## Build and run locally
@@ -46,7 +46,7 @@ npm run simulator
 ## Use as a library (interactive mode)
 
 ```js
-import { Game } from '@blackjacktrainer/blackjack-engine';
+import { Game } from '@blackjacktrainer/blackjack-simulator';
 
 // The following are default settings:
 const settings = {
@@ -151,7 +151,7 @@ for user interaction:
 ## Use as a library (simulator mode)
 
 ```js
-import { Simulator } from '@blackjacktrainer/blackjack-engine';
+import { Simulator } from '@blackjacktrainer/blackjack-simulator';
 
 // The following are default settings:
 const settings = {
