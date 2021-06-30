@@ -56,3 +56,16 @@ export type BasicStrategyData = {
     uncommon: UncommonChart;
   };
 };
+
+// TODO: Avoid any here.
+export type SimpleObject = {
+  [key: string]: any;
+};
+
+// export type SimpleObject = {
+//   [key: string]: string | number | boolean | SimpleObject | SimpleObject[];
+// };
+
+export type DeepPartial<T> = {
+  [P in keyof T]?: DeepPartial<T[P]>;
+};

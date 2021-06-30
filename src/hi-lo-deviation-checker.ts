@@ -5,7 +5,7 @@ import { actions, correctMoves, CheckResult } from './types';
 
 type Illustrious18Deviation = {
   insurance?: boolean;
-  playerTotal?: number;
+  playerTotal: number;
   pair?: boolean;
   dealersCard: number;
   correctMove: correctMoves;
@@ -18,7 +18,7 @@ type Illustrious18Deviation = {
 //
 // TODO: Consider different deviations for deck counts and s17.
 export const illustrious18Deviations: Illustrious18Deviation[] = [
-  { insurance: true, dealersCard: 11, correctMove: 'Y', index: '>= 3' },
+  { playerTotal: 0,  dealersCard: 11, correctMove: 'Y', index: '>= 3', insurance: true },
   { playerTotal: 16, dealersCard: 10, correctMove: 'S', index: '>= 0' },
   { playerTotal: 15, dealersCard: 10, correctMove: 'S', index: '>= 4' },
   { playerTotal: 20, dealersCard: 5,  correctMove: 'P', index: '>= 5', pair: true },

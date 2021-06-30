@@ -9,7 +9,7 @@ import DiscardTray from './discard-tray';
 import BasicStrategyChecker from './basic-strategy-checker';
 import HiLoDeviationChecker from './hi-lo-deviation-checker';
 import Hand from './hand';
-import { actions, deckCounts } from './types';
+import { actions, deckCounts, DeepPartial } from './types';
 
 export type GameSettings = {
   animationDelay: number;
@@ -90,7 +90,7 @@ export default class Game extends EventEmitter {
   state!: GameState;
   discardTray!: DiscardTray;
 
-  constructor(settings: Partial<GameSettings> = SETTINGS_DEFAULTS) {
+  constructor(settings: DeepPartial<GameSettings> = SETTINGS_DEFAULTS) {
     super();
 
     const InputReader = settings.playerInputReader ?? PlayerInputReader;

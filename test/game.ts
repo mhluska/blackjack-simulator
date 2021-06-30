@@ -1,61 +1,71 @@
 import * as sinon from 'sinon';
 import * as chai from 'chai';
-import Game from '../src/game';
+import Game, { GameSettings } from '../src/game';
 import Card from '../src/card';
 import Utils from '../src/utils';
-import { Suits, Ranks } from '../src/types';
+import { DeepPartial, Suits, Ranks, actions } from '../src/types';
 
-function setupGame(options = {}) {
-  const defaultOptions = Utils.mergeDeep(
-    {
-      settings: {
-        debug: !!process.env.DEBUG,
-        animationDelay: 0,
-        playerTablePosition: 1,
-        tableRules: { playerCount: 1 },
-      },
-      repeatPlayerInput: false,
-      playerInput: [
-        {
-          'game-result': true,
-          'waiting-for-move': 'hit',
-          'ask-insurance': 'no-insurance',
-        },
-      ],
-      cards: '',
+type PlayerInput = {
+  'game-result': boolean;
+  'waiting-for-move': actions;
+  'ask-insurance': 'ask-insurance' | 'no-insurance';
+};
+
+type GameSetupOptions = {
+  settings: DeepPartial<GameSettings>;
+  repeatPlayerInput: boolean;
+  playerInput: PlayerInput[];
+  cards: Ranks[];
+};
+
+function setupGame(options: Partial<GameSetupOptions>) {
+  const defaults: GameSetupOptions = {
+    settings: {
+      debug: !!process.env.DEBUG,
+      animationDelay: 0,
+      playerTablePosition: 1,
+      tableRules: { playerCount: 1 },
     },
-    options
-  );
+    repeatPlayerInput: false,
+    playerInput: [
+      {
+        'game-result': true,
+        'waiting-for-move': 'hit',
+        'ask-insurance': 'no-insurance',
+      },
+    ],
+    cards: [],
+  };
 
-  const game = new Game(defaultOptions.settings);
+  // TODO: Avoid `as` here. Otherwise returns `Partial<GameSetupOptions>`.
+  const mergedOptions = Utils.mergeDeep(defaults, options) as GameSetupOptions;
+
+  const game = new Game(mergedOptions.settings);
   const length = game.shoe.cards.length;
 
-  defaultOptions.cards
-    .split('')
-    .forEach((cardRank: Ranks | '?', index: number) => {
-      game.shoe.cards[length - index - 1] = new Card(
-        Suits.HEARTS,
-        // If the input is `?`, the rank is irrelevant. We arbitrarily pick `2`.
-        cardRank === '?' ? Ranks.TWO : cardRank,
-        game.shoe
-      );
-    });
+  mergedOptions.cards.forEach((cardRank: Ranks, index: number) => {
+    game.shoe.cards[length - index - 1] = new Card(
+      Suits.HEARTS,
+      cardRank,
+      game.shoe
+    );
+  });
 
   let callCount = 0;
 
   sinon.stub(game.playerInputReader, 'readInput').callsFake(() => {
     const promise =
-      defaultOptions.playerInput.length === 0 ||
-      callCount > defaultOptions.playerInput.length - 1
+      mergedOptions.playerInput.length === 0 ||
+      callCount > mergedOptions.playerInput.length - 1
         ? new Promise(() => undefined)
         : Promise.resolve(
-            defaultOptions.playerInput[callCount][game.state.step]
+            mergedOptions.playerInput[callCount][game.state.step]
           );
 
-    if (callCount < defaultOptions.playerInput.length) {
+    if (callCount < mergedOptions.playerInput.length) {
       if (
-        callCount !== defaultOptions.playerInput.length - 1 ||
-        !defaultOptions.repeatPlayerInput
+        callCount !== mergedOptions.playerInput.length - 1 ||
+        !mergedOptions.repeatPlayerInput
       ) {
         callCount += 1;
       }
@@ -108,7 +118,7 @@ describe('Game', function () {
 
       const game = setupGame({
         // Force a winning hand for the player (Blackjack with A-J).
-        cards: 'A?J?',
+        cards: [Ranks.ACE, Ranks.TWO, Ranks.JACK, Ranks.TWO],
       });
 
       before(async function () {
@@ -132,7 +142,7 @@ describe('Game', function () {
           settings: { autoDeclineInsurance: true },
           playerInput: [],
           // Force a hand that prompts for insurance (dealer Ace).
-          cards: '?A',
+          cards: [Ranks.TWO, Ranks.ACE],
         });
 
         game.run();
@@ -159,7 +169,7 @@ describe('Game', function () {
                 'ask-insurance': 'no-insurance',
               },
             ],
-            cards: '6QJJ',
+            cards: [Ranks.SIX, Ranks.QUEEN, Ranks.JACK, Ranks.JACK],
           });
 
           game.run();
@@ -193,7 +203,7 @@ describe('Game', function () {
                 'ask-insurance': 'no-insurance',
               },
             ],
-            cards: '6QJJ2',
+            cards: [Ranks.SIX, Ranks.QUEEN, Ranks.JACK, Ranks.JACK],
           });
 
           game.run();

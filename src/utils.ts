@@ -1,4 +1,5 @@
 import Card from './card';
+import { SimpleObject } from './types';
 
 export default class Utils {
   static arraySum(array: number[]): number {
@@ -78,28 +79,27 @@ export default class Utils {
     }).format(cents / 100);
   }
 
-  // See https://stackoverflow.com/a/48218209/659910
-  // TODO: Type this.
-  static mergeDeep(...objects) {
-    const isObject = (obj) => obj && typeof obj === 'object';
+  // See https://stackoverflow.com/a/34749873/659910
+  static mergeDeep<T extends SimpleObject>(target: T, ...sources: T[]): T {
+    const isObject = (item: T | undefined) =>
+      item && typeof item === 'object' && !Array.isArray(item);
 
-    return objects.reduce((prev, obj) => {
-      Object.keys(obj).forEach((key) => {
-        const pVal = prev[key];
-        const oVal = obj[key];
+    const source = sources.shift();
+    if (!source) {
+      return target;
+    }
 
-        if (Array.isArray(pVal) && Array.isArray(oVal)) {
-          // For our use cases, we want to override arrays instead of appending.
-          // prev[key] = pVal.concat(...oVal);
-          prev[key] = oVal;
-        } else if (isObject(pVal) && isObject(oVal)) {
-          prev[key] = this.mergeDeep(pVal, oVal);
+    if (isObject(target) && isObject(source)) {
+      for (const key in source) {
+        if (isObject(source[key])) {
+          if (!target[key]) Object.assign(target, { [key]: {} });
+          this.mergeDeep(target[key], source[key]);
         } else {
-          prev[key] = oVal;
+          Object.assign(target, { [key]: source[key] });
         }
-      });
+      }
+    }
 
-      return prev;
-    }, {});
+    return this.mergeDeep(target, ...sources);
   }
 }

@@ -60,7 +60,11 @@ export default class Simulator {
   settings: SimulatorSettings;
 
   constructor(settings: Partial<SimulatorSettings>) {
-    this.settings = Utils.mergeDeep(SETTINGS_DEFAULTS, settings);
+    // TODO: Avoid `as` here. Otherwise returns `Partial<SimulatorSettings>`.
+    this.settings = Utils.mergeDeep(
+      SETTINGS_DEFAULTS,
+      settings
+    ) as SimulatorSettings;
   }
 
   // TODO: Allow computing optimal bet spreads.
