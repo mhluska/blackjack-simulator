@@ -6,7 +6,14 @@ import Card from './card';
 import BasicStrategyChecker from './basic-strategy-checker';
 import { illustrious18Deviations } from './hi-lo-deviation-checker';
 import { GameSettings } from './game';
-import { Ranks, chartTypes } from './types';
+import {
+  Ranks,
+  chartTypes,
+  entries,
+  playerTotal,
+  cardValue,
+  cardValueToRank,
+} from './types';
 
 // TODO: When simulating a large number of hands, this can sometimes still run
 // out of cards. Figure out why.
@@ -164,32 +171,30 @@ export default class Shoe extends DiscardTray {
     );
   }
 
-  _twoRandomRanksFromTotal(
-    total: number,
+  _playerTotalToTwoCardRanks(
+    total: playerTotal,
     chartType: chartTypes
   ): [Ranks, Ranks] {
-    return this._twoRandomIntegerRanksFromTotal(
-      parseInt(total),
-      chartType
-    ).map((r) => (r === 11 ? Ranks.ACE : (r.toString() as Rank)));
+    const [rank1, rank2] = this._playerTotalToTwoCardValues(total, chartType);
+    return [cardValueToRank(rank1), cardValueToRank(rank2)];
   }
 
-  _twoRandomIntegerRanksFromTotal(
-    total: number,
+  _playerTotalToTwoCardValues(
+    total: playerTotal,
     chartType: chartTypes
-  ): [number, number] {
+  ): [cardValue, cardValue] {
     switch (chartType) {
       case 'hard': {
-        const rank = total > 11 ? 10 : 2;
-        return [rank, total - rank];
+        const value = total > 11 ? 10 : 2;
+        return [value, total - value] as [cardValue, cardValue];
       }
 
       case 'soft':
-        return [11, total - 11];
+        return [11, total - 11] as [cardValue, cardValue];
 
       default:
       case 'splits':
-        return [total, total];
+        return [total, total] as [cardValue, cardValue];
     }
   }
 
@@ -200,14 +205,18 @@ export default class Shoe extends DiscardTray {
 
   _setupUncommonMode(): void {
     const [chartType, chart] = Utils.arraySample(
-      Object.entries(BasicStrategyChecker.uncommonHands(this.deckCount))
+      entries(BasicStrategyChecker.uncommonHands(this.deckCount))
     );
-    const [playerTotal, dealerUpcardValues] = Utils.arraySample(
-      Object.entries(chart)
-    );
+    const [playerTotal, dealerUpcardValues] = Utils.arraySample(entries(chart));
+
+    // TODO: Remove this once we have uncommon values defined for all charts.
+    if (!dealerUpcardValues) {
+      return;
+    }
+
     const dealerUpcardValue = Utils.arraySample(dealerUpcardValues);
-    const [rank1, rank2] = this._twoRandomRanksFromTotal(
-      parseInt(playerTotal),
+    const [rank1, rank2] = this._playerTotalToTwoCardRanks(
+      playerTotal,
       chartType
     );
 
@@ -225,9 +234,16 @@ export default class Shoe extends DiscardTray {
       illustrious18Deviations.slice(0, this.checkTopNDeviations)
     );
 
-    const total = insurance ? Utils.random(2, 20) : playerTotal;
-    const [rank1, rank2] = this._twoRandomRanksFromTotal(
-      pair ? total / 2 : total,
+    let total = insurance ? (Utils.random(2, 20) as playerTotal) : playerTotal;
+
+    // TODO: Make the splits format just equal the player total so we don't have
+    // to do this awkward division and type cast.
+    if (pair) {
+      total = (total / 2) as playerTotal;
+    }
+
+    const [rank1, rank2] = this._playerTotalToTwoCardRanks(
+      total,
       pair ? 'splits' : 'hard'
     );
 

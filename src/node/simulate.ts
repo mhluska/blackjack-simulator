@@ -1,17 +1,17 @@
 import Simulator from '../simulator';
 
-const tableMinimum = 10 * 100;
+const minimumBet = 10 * 100;
 
 // For 1% RoR, we use roughly 1000x the table minimum for the bankroll. And an
 // extra 1000x for good measure since not counting yet (just basic strategy).
-const playerBankroll = tableMinimum * 1000 * 1000;
+const playerBankroll = minimumBet * 1000 * 1000;
 
 const simulator = new Simulator({
   debug: !!process.env.DEBUG,
   playerBankroll,
   tableRules: {
-    tableMinimum,
-    tableMaximum: tableMinimum * 100,
+    minimumBet,
+    maximumBet: minimumBet * 100,
     allowLateSurrender: true,
   },
 });

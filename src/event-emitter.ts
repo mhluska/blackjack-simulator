@@ -1,4 +1,6 @@
-type Listener = (...args: unknown[]) => void;
+// TODO: Avoid using `any` here.
+// eslint-disable-next-line @typescript-eslint/no-explicit-any
+type Listener = (...args: any[]) => void;
 
 export default class EventEmitter {
   static disableEvents: boolean;

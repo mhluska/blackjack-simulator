@@ -2,9 +2,14 @@
   "compilerOptions": {
     "strict": true,
     "alwaysStrict": true,
+    "allowSyntheticDefaultImports": true,
     "outDir": "./dist/",
-    "module": "es6",
+    "module": "commonjs",
     "moduleResolution": "node",
-    "target": "es6"
+    "target": "es2019",
+    "baseUrl": "./",
+    "paths": {
+      "player-input-reader": ["./src/node/player-input-reader.ts"]
+    },
   }
 }

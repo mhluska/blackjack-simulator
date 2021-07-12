@@ -1,6 +1,6 @@
 import PlayerInputReader from '../player-input-reader';
 import Game from '../game';
-import { actions } from '../types';
+import { actions, actionDataKeys } from '../types';
 
 export default class CLIPlayerInputReader implements PlayerInputReader {
   game: Game;
@@ -12,8 +12,8 @@ export default class CLIPlayerInputReader implements PlayerInputReader {
   readInput({
     keypress = (): actions | void => undefined,
   }: {
-    keypress: (action: string) => actions | void;
-    click: (action: string) => actions | void;
+    keypress: (action: actionDataKeys) => actions | void;
+    click: (action: actionDataKeys) => actions | void;
   }): Promise<actions | void> {
     return new Promise((resolve) => {
       process.stdin.once('keypress', (str, key) => {

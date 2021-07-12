@@ -1,13 +1,19 @@
 import Utils from './utils';
 import Game from './game';
 import Hand from './hand';
-import { actions, correctMoves, CheckResult } from './types';
+import {
+  actions,
+  correctMoves,
+  CheckResult,
+  playerTotal,
+  dealerTotal,
+} from './types';
 
 type Illustrious18Deviation = {
   insurance?: boolean;
-  playerTotal: number;
+  playerTotal: playerTotal;
   pair?: boolean;
-  dealersCard: number;
+  dealersCard: dealerTotal;
   correctMove: correctMoves;
   index: string;
 };
@@ -42,12 +48,19 @@ export default class HiLoDeviationChecker {
   static _suggest(
     game: Game,
     hand: Hand
-  ): { correctMove: correctMoves | false; deviation?: Illustrious18Deviation } {
+  ): {
+    correctMove: correctMoves | false;
+    deviation?: Illustrious18Deviation;
+  } {
     let deviationIndex;
 
     const trueCount = game.shoe.hiLoTrueCount;
 
-    if (game.dealer.upcard.value === 'A' && game.dealer.holeCard) {
+    if (!game.dealer.upcard) {
+      return { correctMove: false };
+    }
+
+    if (game.dealer.upcard.value === 11 && game.dealer.holeCard) {
       deviationIndex = illustrious18Deviations.findIndex(
         (d) => d.insurance && Utils.compareRange(trueCount, d.index)
       );
@@ -87,8 +100,7 @@ export default class HiLoDeviationChecker {
   }
 
   static suggest(game: Game, hand: Hand): correctMoves | false {
-    const { correctMove } = this._suggest(game, hand);
-    return correctMove;
+    return this._suggest(game, hand).correctMove;
   }
 
   // Returns true if an Illustrious 18 deviation was followed correctly.

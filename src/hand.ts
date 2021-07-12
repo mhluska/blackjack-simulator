@@ -24,7 +24,7 @@ export default class Hand extends GameObject {
   acesCount: number;
   cards: Card[];
 
-  constructor(player: Player, cards = []) {
+  constructor(player: Player, cards: Card[] = []) {
     super();
 
     this.id = Utils.randomId();

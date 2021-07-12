@@ -1,5 +1,5 @@
 import Card from './card';
-import { SimpleObject } from './types';
+import { SimpleObject, DeepPartial } from './types';
 
 export default class Utils {
   static arraySum(array: number[]): number {
@@ -80,9 +80,14 @@ export default class Utils {
   }
 
   // See https://stackoverflow.com/a/34749873/659910
-  static mergeDeep<T extends SimpleObject>(target: T, ...sources: T[]): T {
-    const isObject = (item: T | undefined) =>
-      item && typeof item === 'object' && !Array.isArray(item);
+  static mergeDeep<T extends SimpleObject>(
+    target: T,
+    ...sources: DeepPartial<T>[]
+  ): T {
+    const isObject = (
+      item: DeepPartial<T> | undefined
+    ): item is DeepPartial<T> =>
+      !!item && typeof item === 'object' && !Array.isArray(item);
 
     const source = sources.shift();
     if (!source) {
@@ -91,9 +96,13 @@ export default class Utils {
 
     if (isObject(target) && isObject(source)) {
       for (const key in source) {
-        if (isObject(source[key])) {
-          if (!target[key]) Object.assign(target, { [key]: {} });
-          this.mergeDeep(target[key], source[key]);
+        const nextSource = source[key];
+        if (isObject(nextSource)) {
+          if (!target[key]) {
+            Object.assign(target, { [key]: {} });
+          }
+
+          this.mergeDeep(target[key], nextSource);
         } else {
           Object.assign(target, { [key]: source[key] });
         }

@@ -3,11 +3,11 @@ import EventEmitter from './event-emitter';
 export default class GameObject extends EventEmitter {
   // NOTE: Implement this in a subclass. We need this because the minifier will
   // mangle the class name.
-  // static entityName = '';
+  static entityName = '';
 
   emitChange(): void {
     if (!EventEmitter.disableEvents) {
-      this.emit('change', this.constructor.entityName, this.attributes());
+      this.emit('change', GameObject.entityName, this.attributes());
     }
   }
 

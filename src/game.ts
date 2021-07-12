@@ -9,7 +9,14 @@ import DiscardTray from './discard-tray';
 import BasicStrategyChecker from './basic-strategy-checker';
 import HiLoDeviationChecker from './hi-lo-deviation-checker';
 import Hand from './hand';
-import { actions, deckCounts, DeepPartial } from './types';
+import {
+  actions,
+  deckCounts,
+  DeepPartial,
+  actionDataKeys,
+  SimpleObject,
+  actionDataKeyToAction,
+} from './types';
 
 export type GameSettings = {
   animationDelay: number;
@@ -26,7 +33,6 @@ export type GameSettings = {
     [index: number]: PlayerStrategy;
   };
 
-  playerInputReader?: PlayerInputReader;
   element?: string;
 
   tableRules: {
@@ -90,10 +96,15 @@ export default class Game extends EventEmitter {
   state!: GameState;
   discardTray!: DiscardTray;
 
-  constructor(settings: DeepPartial<GameSettings> = SETTINGS_DEFAULTS) {
+  constructor(
+    settings: DeepPartial<GameSettings> = SETTINGS_DEFAULTS,
+    playerInputReader?: PlayerInputReader
+  ) {
     super();
 
-    const InputReader = settings.playerInputReader ?? PlayerInputReader;
+    // TODO: Avoid using `as` here
+    const InputReader = (playerInputReader ??
+      PlayerInputReader) as typeof PlayerInputReader;
 
     this.playerInputReader = new InputReader(this);
     this.settings = Utils.mergeDeep(SETTINGS_DEFAULTS, settings);
@@ -106,7 +117,7 @@ export default class Game extends EventEmitter {
   }
 
   updateSettings(settings: GameSettings): void {
-    this.settings = Utils.mergeDeep({}, settings);
+    this.settings = settings;
   }
 
   resetState(): void {
@@ -114,7 +125,9 @@ export default class Game extends EventEmitter {
     this.emit('resetState');
   }
 
-  async run({ betAmount = this.settings.tableRules.minimumBet } = {}): void {
+  async run({ betAmount = this.settings.tableRules.minimumBet } = {}): Promise<
+    void
+  > {
     if (this.settings.debug) {
       console.log('> Starting new game');
     }
@@ -145,6 +158,12 @@ export default class Game extends EventEmitter {
     this.dealer.takeCard(this.shoe.drawCard({ showingFace: false }), {
       prepend: true,
     });
+
+    // This will never happen since we take a visible card on the previous line
+    // but we have to make TypeScript happy.
+    if (!this.dealer.upcard || !this.dealer.holeCard) {
+      return;
+    }
 
     // Dealer peeks at the hole card if the upcard is 10 to check blackjack.
     if (this.dealer.upcard.value === 10 && this.dealer.holeCard.value === 11) {
@@ -220,8 +239,8 @@ export default class Game extends EventEmitter {
     }
   }
 
-  async _handleInsurance(player: Player, betAmount: number): void {
-    let input;
+  async _handleInsurance(player: Player, betAmount: number): Promise<void> {
+    let input: actions | void | boolean;
 
     this.state.step = 'ask-insurance';
 
@@ -231,7 +250,7 @@ export default class Game extends EventEmitter {
       if (this.settings.autoDeclineInsurance) {
         input = 'no-insurance';
       } else {
-        while (!input?.includes('insurance')) {
+        while (typeof input !== 'string' || !input?.includes('insurance')) {
           input = await this._getPlayerInsuranceInput();
         }
 
@@ -239,7 +258,7 @@ export default class Game extends EventEmitter {
       }
     }
 
-    if (this.dealer.holeCard.value !== 10) {
+    if (this.dealer.holeCard?.value !== 10) {
       return;
     }
 
@@ -252,8 +271,10 @@ export default class Game extends EventEmitter {
     }
   }
 
-  _chainEmitChange<R>(object: R): R {
-    object.on('change', (name, value) => this.emit('change', name, value));
+  _chainEmitChange<T extends EventEmitter>(object: T): T {
+    object.on('change', (name: string, value: SimpleObject) =>
+      this.emit('change', name, value)
+    );
     return object;
   }
 
@@ -297,35 +318,44 @@ export default class Game extends EventEmitter {
     this._state = {
       step: 'waiting-for-move',
       focusedHand: this.player.hands[0],
-      playCorrection: null,
+      playCorrection: '',
       sessionMovesTotal: 0,
       sessionMovesCorrect: 0,
     };
+
+    const hasKey = <T extends SimpleObject>(
+      obj: T,
+      k: string | number | symbol
+    ): k is keyof T => k in obj;
 
     this.state = this.settings.disableEvents
       ? this._state
       : new Proxy(this._state, {
           set: (target, key, value) => {
-            target[key] = value;
-            this.emit('change', key, value.attributes?.() ?? value);
+            if (hasKey(target, key)) {
+              // TODO: Fix this TypeScript issue.
+              // eslint-disable-next-line @typescript-eslint/ban-ts-comment
+              // @ts-ignore Type 'any' is not assignable to type 'never'.
+              target[key] = value;
+            }
+
+            if (typeof value === 'object' && value.attributes) {
+              this.emit('change', key, value.attributes());
+            } else {
+              this.emit('change', key, value);
+            }
+
             return true;
           },
         });
   }
 
-  _getPlayerMoveInput(): void {
+  _getPlayerMoveInput(): Promise<void | actions> {
     if (this.settings.debug) {
       console.log('Getting player move input');
     }
 
-    const inputHandler = (str) =>
-      ({
-        h: 'hit',
-        s: 'stand',
-        d: 'double',
-        p: 'split',
-        r: 'surrender',
-      }[str.toLowerCase()]);
+    const inputHandler = (str: actionDataKeys) => actionDataKeyToAction(str);
 
     return this.playerInputReader.readInput({
       keypress: inputHandler,
@@ -333,27 +363,28 @@ export default class Game extends EventEmitter {
     });
   }
 
-  _getPlayerNewGameInput(): void {
+  _getPlayerNewGameInput(): Promise<void | actions> {
     if (this.settings.debug) {
       console.log('Getting player new game input');
     }
 
     return this.playerInputReader.readInput({
-      keypress: () => true,
-      click: (str) => str.toLowerCase() === 'd',
+      keypress: () => 'next-game',
+      click: (str: actionDataKeys) => {
+        if (str.toLowerCase() === 'd') {
+          return 'next-game';
+        }
+      },
     });
   }
 
-  _getPlayerInsuranceInput(): void {
+  _getPlayerInsuranceInput(): Promise<void | actions> {
     if (this.settings.debug) {
       console.log('Getting player insurance input');
     }
 
-    const inputHandler = (str) =>
-      ({
-        n: 'no-insurance',
-        y: 'ask-insurance',
-      }[str.toLowerCase()]);
+    const inputHandler = (str: actionDataKeys): actions =>
+      actionDataKeyToAction(str);
 
     return this.playerInputReader.readInput({
       keypress: inputHandler,
@@ -361,7 +392,7 @@ export default class Game extends EventEmitter {
     });
   }
 
-  _allPlayerHandsFinished(): void {
+  _allPlayerHandsFinished(): boolean {
     return this.players.every((player) =>
       player.hands.every((hand) => hand.finished)
     );
@@ -372,7 +403,7 @@ export default class Game extends EventEmitter {
       HiLoDeviationChecker.check(this, hand, input) ||
       BasicStrategyChecker.check(this, hand, input);
 
-    if (checkerResult?.hint) {
+    if (typeof checkerResult === 'object' && checkerResult.hint) {
       this.state.playCorrection = checkerResult.hint;
     } else {
       this.state.sessionMovesCorrect += 1;
@@ -386,13 +417,11 @@ export default class Game extends EventEmitter {
       dealerHand: this.dealer.hands[0].serialize({ showHidden: true }),
       playerHand: this.state.focusedHand.serialize(),
       move: input,
-      correction: checkerResult?.code,
+      correction: typeof checkerResult === 'object' ? checkerResult.code : null,
     });
-
-    return checkerResult;
   }
 
-  async _playHands(player: Player, betAmount: number): void {
+  async _playHands(player: Player, betAmount: number): Promise<void> {
     for (const hand of player.hands) {
       if (player.handWinner.get(hand.id)) {
         continue;
@@ -402,7 +431,11 @@ export default class Game extends EventEmitter {
     }
   }
 
-  async _playHand(player: Player, hand: Hand, betAmount: number): void {
+  async _playHand(
+    player: Player,
+    hand: Hand,
+    betAmount: number
+  ): Promise<void> {
     if (player === this.player) {
       this.state.focusedHand = hand;
     }
@@ -422,7 +455,7 @@ export default class Game extends EventEmitter {
 
       input = player.isNPC
         ? player.getNPCInput(this, hand)
-        : await this._getPlayerMoveInput(player, hand);
+        : await this._getPlayerMoveInput();
 
       // TODO: Skip this validation logic for NPC?
       if (!input) {
@@ -433,6 +466,7 @@ export default class Game extends EventEmitter {
         input === 'surrender' &&
         (!this.settings.tableRules.allowLateSurrender || !hand.firstMove)
       ) {
+        console.log('CANNOT SURRENDER');
         continue;
       }
 
@@ -466,7 +500,15 @@ export default class Game extends EventEmitter {
         input === 'split' &&
         player.hands.length < this.settings.tableRules.maxHandsAllowed
       ) {
-        const newHand = player.addHand(betAmount, [hand.removeCard()]);
+        const newHandCard = hand.removeCard();
+
+        // In practice this will never happen since the hand will always have
+        // a card at this point. It just makes TypeScript happy.
+        if (!newHandCard) {
+          continue;
+        }
+
+        const newHand = player.addHand(betAmount, [newHandCard]);
 
         newHand.fromSplit = true;
         hand.fromSplit = true;

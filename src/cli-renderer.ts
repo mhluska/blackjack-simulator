@@ -3,6 +3,7 @@ import readline from 'readline';
 import Renderer from './renderer';
 import Game from './game';
 import Player from './player';
+import Hand from './hand';
 
 // Renders the game state to the terminal.
 // TODO: Make this draw ascii-based cards. For now just basic text output.
@@ -78,7 +79,7 @@ export default class CLIRenderer implements Renderer {
     } else if (this.game.state.step === 'ask-insurance') {
       question = 'Y (buy insurance), N (no insurance)? ';
     } else {
-      const getGameResult = (hand) => {
+      const getGameResult = (hand: Hand) => {
         const blackjack = hand.blackjack ? 'Blackjack! ' : '';
 
         switch (this.game.player.handWinner.get(hand.id)) {

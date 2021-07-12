@@ -6,7 +6,7 @@ import Utils from '../src/utils';
 import { DeepPartial, Suits, Ranks, actions } from '../src/types';
 
 type PlayerInput = {
-  'game-result': boolean;
+  'game-result': 'next-game';
   'waiting-for-move': actions;
   'ask-insurance': 'ask-insurance' | 'no-insurance';
 };
@@ -29,7 +29,7 @@ function setupGame(options: Partial<GameSetupOptions>) {
     repeatPlayerInput: false,
     playerInput: [
       {
-        'game-result': true,
+        'game-result': 'next-game',
         'waiting-for-move': 'hit',
         'ask-insurance': 'no-insurance',
       },
@@ -57,7 +57,7 @@ function setupGame(options: Partial<GameSetupOptions>) {
     const promise =
       mergedOptions.playerInput.length === 0 ||
       callCount > mergedOptions.playerInput.length - 1
-        ? new Promise(() => undefined)
+        ? new Promise<actions>(() => undefined)
         : Promise.resolve(
             mergedOptions.playerInput[callCount][game.state.step]
           );
@@ -103,7 +103,7 @@ describe('Game', function () {
       });
 
       it('should move all the cards from the discard tray back to the shoe', function () {
-        expect(cardsBefore).to.have.length(game.shoe.cards.length);
+        expect(cardsBefore).to.equal(game.shoe.cards.length);
       });
 
       it('should reset the hi-lo running count', function () {
@@ -149,7 +149,7 @@ describe('Game', function () {
       });
 
       it('should not pause for player input', function () {
-        expect(game.state.step).to.equal('ask-insurance');
+        expect(game.state.step).not.to.equal('ask-insurance');
       });
     });
 
@@ -164,7 +164,7 @@ describe('Game', function () {
             },
             playerInput: [
               {
-                'game-result': true,
+                'game-result': 'next-game',
                 'waiting-for-move': 'surrender',
                 'ask-insurance': 'no-insurance',
               },
@@ -193,17 +193,19 @@ describe('Game', function () {
             },
             playerInput: [
               {
-                'game-result': true,
+                'game-result': 'next-game',
                 'waiting-for-move': 'hit',
                 'ask-insurance': 'no-insurance',
               },
               {
-                'game-result': true,
+                'game-result': 'next-game',
                 'waiting-for-move': 'surrender',
                 'ask-insurance': 'no-insurance',
               },
             ],
-            cards: [Ranks.SIX, Ranks.QUEEN, Ranks.JACK, Ranks.JACK],
+            // Force a hand where the player has 16v10 and the next card will
+            // not bust the player.
+            cards: [Ranks.SIX, Ranks.QUEEN, Ranks.JACK, Ranks.JACK, Ranks.TWO],
           });
 
           game.run();

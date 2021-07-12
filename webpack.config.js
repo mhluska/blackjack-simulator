@@ -20,6 +20,9 @@ const common = {
   optimization: {
     minimize: false,
   },
+  resolve: {
+    extensions: ['.ts'],
+  },
   devtool: process.env.NODE_ENV === 'development' ? 'eval-source-map' : false,
 };
 

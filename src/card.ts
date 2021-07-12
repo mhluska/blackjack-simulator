@@ -1,7 +1,7 @@
 import GameObject from './game-object';
 import Utils from './utils';
 import Shoe from './shoe';
-import { Suits, Ranks } from './types';
+import { Suits, Ranks, dealerTotal, cardRankToValue } from './types';
 
 export type CardAttributes = {
   id: string;
@@ -71,16 +71,7 @@ export default class Card extends GameObject {
     return this.showingFace;
   }
 
-  get value(): number {
-    switch (this.rank) {
-      case 'A':
-        return 11;
-      case 'K':
-      case 'Q':
-      case 'J':
-        return 10;
-      default:
-        return parseInt(this.rank);
-    }
+  get value(): dealerTotal {
+    return cardRankToValue(this.rank);
   }
 }

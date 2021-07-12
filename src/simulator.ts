@@ -1,6 +1,7 @@
 import Game, { GameSettings } from './game';
 import Utils from './utils';
 import { PlayerStrategy } from './player';
+import { DeepPartial } from './types';
 
 type SimulatorSettings = {
   debug: boolean;
@@ -59,7 +60,7 @@ function variance(data: number[]) {
 export default class Simulator {
   settings: SimulatorSettings;
 
-  constructor(settings: Partial<SimulatorSettings>) {
+  constructor(settings: DeepPartial<SimulatorSettings>) {
     // TODO: Avoid `as` here. Otherwise returns `Partial<SimulatorSettings>`.
     this.settings = Utils.mergeDeep(
       SETTINGS_DEFAULTS,

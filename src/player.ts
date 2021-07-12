@@ -5,7 +5,13 @@ import Hand, { HandAttributes } from './hand';
 import Card from './card';
 import BasicStrategyChecker from './basic-strategy-checker';
 import HiLoDeviationChecker from './hi-lo-deviation-checker';
-import { handWinners, actions } from './types';
+import {
+  handWinners,
+  actions,
+  correctMoves,
+  correctMoveToAction,
+  entries,
+} from './types';
 
 export enum PlayerStrategy {
   USER_INPUT = 'USER_INPUT',
@@ -49,8 +55,8 @@ export default class Player extends GameObject {
     this.debug = debug;
   }
 
-  getNPCInput(game: Game, hand: Hand): actions {
-    let correctMove;
+  getNPCInput(game: Game, hand: Hand): actions | void {
+    let correctMove: correctMoves | void;
 
     if (this.strategy === PlayerStrategy.BASIC_STRATEGY) {
       correctMove = BasicStrategyChecker.suggest(game, hand);
@@ -74,18 +80,14 @@ export default class Player extends GameObject {
       );
     }
 
-    return {
-      D: 'double',
-      H: 'hit',
-      N: 'no-insurance',
-      Y: 'ask-insurance',
-      P: 'split',
-      R: 'surrender',
-      S: 'stand',
-    }[correctMove];
+    if (!correctMove) {
+      return;
+    }
+
+    return correctMoveToAction(correctMove);
   }
 
-  addHand(betAmount = 0, cards = []): Hand {
+  addHand(betAmount = 0, cards: Card[] = []): Hand {
     const hand = new Hand(this, cards);
     hand.on('change', () => this.emitChange());
 
@@ -97,7 +99,14 @@ export default class Player extends GameObject {
     return hand;
   }
 
-  takeCard(card: Card, { hand, prepend = false } = {}): void {
+  takeCard(
+    card: Card | void,
+    { hand, prepend = false }: { hand?: Hand; prepend?: boolean } = {}
+  ): void {
+    if (!card) {
+      return;
+    }
+
     const targetHand = hand ?? this.hands[0] ?? this.addHand();
     targetHand.takeCard(card, { prepend });
 
@@ -118,11 +127,21 @@ export default class Player extends GameObject {
   }
 
   attributes(): PlayerAttributes {
+    // TODO: Get `Object.fromEntries` working when running `npm run test`.
+    const handWinner: { [key: string]: handWinners } = {};
+    for (const key of this.handWinner.keys()) {
+      const value = this.handWinner.get(key);
+      if (value) {
+        handWinner[key] = value;
+      }
+    }
+
     return {
       id: this.id,
       balance: this.balance,
       hands: this.hands.map((hand) => hand.attributes()),
-      handWinner: Object.fromEntries(this.handWinner),
+      // handWinner: Object.fromEntries(this.handWinner),
+      handWinner,
     };
   }
 

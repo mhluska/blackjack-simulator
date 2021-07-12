@@ -9,6 +9,7 @@ import {
   actions,
   correctMoves,
   BasicStrategyData,
+  keys,
 } from './types';
 
 // TODO: Should this only be used for the first card?
@@ -17,9 +18,24 @@ const CHARTS = {
   2: doubleDeck,
 
   // TODO: Add more basic strategy charts.
-  4: { hitsSoft17: { chart: {} } },
-  6: { hitsSoft17: { chart: {} } },
-  8: { hitsSoft17: { chart: {} } },
+  4: {
+    hitsSoft17: {
+      chart: { hard: {}, soft: {}, splits: {} },
+      uncommon: { hard: {}, soft: {}, splits: {} },
+    },
+  },
+  6: {
+    hitsSoft17: {
+      chart: { hard: {}, soft: {}, splits: {} },
+      uncommon: { hard: {}, soft: {}, splits: {} },
+    },
+  },
+  8: {
+    hitsSoft17: {
+      chart: { hard: {}, soft: {}, splits: {} },
+      uncommon: { hard: {}, soft: {}, splits: {} },
+    },
+  },
 };
 
 export default class BasicStrategyChecker {
@@ -42,14 +58,16 @@ export default class BasicStrategyChecker {
       const chartType = this._chartType(hand, allowSplit);
       const chart = chartGroup[chartType];
 
-      const keys = Object.keys(chart).map((key) => parseInt(key));
-      const chartMin = Math.min(...keys);
-      const chartMax = Math.max(...keys);
+      const chartKeys = keys(chart);
+      // TODO: Is there a way to avoid type casts here? Typescript doesn't seem
+      // to know that the min of a union type should still be that union type.
+      const chartMin = Math.min(...chartKeys) as typeof chartKeys[0];
+      const chartMax = Math.max(...chartKeys) as typeof chartKeys[0];
       const playerTotal = Utils.clamp(
         hand.hasPairs && allowSplit ? hand.cards[0].value : hand.cardTotal,
         chartMin,
         chartMax
-      );
+      ) as typeof chartMin;
 
       const dealersCard = game.dealer.upcard?.value;
       if (!dealersCard) {
@@ -57,6 +75,10 @@ export default class BasicStrategyChecker {
       }
 
       const dealerHints = chart[playerTotal];
+      if (!dealerHints) {
+        return;
+      }
+
       const correctMove = dealerHints[dealersCard];
 
       if (correctMove === 'Dh' || correctMove === 'Ds') {
@@ -71,11 +93,22 @@ export default class BasicStrategyChecker {
       // TODO: Add this check.
       const allowDoubleAfterSplit = true;
 
-      if (correctMove === 'Ph' || correctMove === 'Pd') {
+      if (
+        correctMove === 'Ph' ||
+        correctMove === 'Pd' ||
+        correctMove === 'Ps'
+      ) {
         if (allowDoubleAfterSplit) {
           return 'P';
         } else {
-          return correctMove === 'Ph' ? 'H' : 'D';
+          switch (correctMove) {
+            case 'Ph':
+              return 'H';
+            case 'Pd':
+              return 'D';
+            case 'Ps':
+              return 'S';
+          }
         }
       }
 
@@ -155,6 +188,7 @@ export default class BasicStrategyChecker {
     // - 6 deck (stays/hits soft 17)
     // - 8 deck (stays/hits soft 17)
     // Add an assert that the chart exists.
+
     return (CHARTS[deckCount] || CHARTS['2']).hitsSoft17;
   }
 
