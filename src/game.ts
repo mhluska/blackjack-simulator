@@ -466,7 +466,6 @@ export default class Game extends EventEmitter {
         input === 'surrender' &&
         (!this.settings.tableRules.allowLateSurrender || !hand.firstMove)
       ) {
-        console.log('CANNOT SURRENDER');
         continue;
       }
 
