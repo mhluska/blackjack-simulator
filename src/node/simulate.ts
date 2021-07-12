@@ -17,7 +17,12 @@ const simulator = new Simulator({
 });
 
 async function run() {
-  const result = await simulator.run({ hands: 10 ** 5 });
+  const hands = 10 ** 5;
+
+  console.log(`Simulating Blackjack with ${hands} hands...`);
+
+  const result = await simulator.run({ hands });
+
   console.log(result);
 }
 

@@ -1,4 +1,4 @@
-import readline from 'readline';
+import * as readline from 'readline';
 
 import Renderer from './renderer';
 import Game from './game';

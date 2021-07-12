@@ -4,8 +4,10 @@ import FileStorage from '../file-storage';
 
 const game = new Game();
 const renderer = new CLIRenderer(game);
+const storage = new FileStorage();
+
 game.on('change', () => renderer.render());
-game.on('create-record', FileStorage.createRecord);
+game.on('create-record', storage.createRecord);
 
 (async function () {
   while (true) {
