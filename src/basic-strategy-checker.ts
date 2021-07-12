@@ -12,7 +12,6 @@ import {
   keys,
 } from './types';
 
-// TODO: Should this only be used for the first card?
 const CHARTS = {
   1: singleDeck,
   2: doubleDeck,
