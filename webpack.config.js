@@ -1,3 +1,5 @@
+/* eslint-disable @typescript-eslint/no-var-requires */
+
 const path = require('path');
 const merge = require('webpack-merge');
 
@@ -9,16 +11,17 @@ const common = {
   module: {
     rules: [
       {
-        test: /\.m?js$/,
-        exclude: /(node_modules|bower_components)/,
-        use: {
-          loader: 'babel-loader',
-        },
+        test: /\.ts?$/,
+        use: 'ts-loader',
+        exclude: /node_modules/,
       },
     ],
   },
   optimization: {
     minimize: false,
+  },
+  resolve: {
+    extensions: ['.ts'],
   },
   devtool: process.env.NODE_ENV === 'development' ? 'eval-source-map' : false,
 };
@@ -30,7 +33,7 @@ function resolutions(target) {
         __dirname,
         'src',
         target,
-        'player-input-reader.js'
+        'player-input-reader.ts'
       ),
     },
   };
@@ -38,8 +41,8 @@ function resolutions(target) {
 
 const serverConfig = merge(common, {
   entry: {
-    game: './src/node/index.js',
-    simulate: './src/node/simulate.js',
+    game: './src/node/index.ts',
+    simulate: './src/node/simulate.ts',
   },
   target: 'node',
   output: {
@@ -62,7 +65,7 @@ const serverMinConfig = merge(serverConfig, {
 });
 
 const clientConfig = merge(common, {
-  entry: './src/browser/index.js',
+  entry: './src/browser/index.ts',
   output: {
     filename: '[name].js',
     library: 'BlackjackEngine',
