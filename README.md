@@ -26,13 +26,17 @@
 ### Simulator mode
 
 ```sh
-npx @blackjacktrainer/blackjack-simulator simulate --help
+npm install -g @blackjacktrainer/blackjack-simulator
+```
+
+```sh
+blackjack-simulator simulate --help
 ```
 
 ### Game mode
 
 ```sh
-npx @blackjacktrainer/blackjack-simulator game --help
+blackjack-simulator game --help
 ```
 
 ### Build and run locally
@@ -53,7 +57,7 @@ import { Simulator } from '@blackjacktrainer/blackjack-simulator';
 const settings = {
   // Can be one of:
   // 'basic-strategy': play perfect basic strategy
-  // 'basic-strategy-i18': play perfect basic strategy plus illustious 18
+  // 'basic-strategy-i18': play perfect basic strategy plus illustrious 18
   playerStrategy: 'basic-strategy-i18',
   playerTablePosition: 2,
 
