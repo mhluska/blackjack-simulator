@@ -51,9 +51,9 @@ export default class BasicStrategyChecker {
 
     if (game.state.step === 'waiting-for-move') {
       const allowSplit =
-        hand.player.hands.length < game.settings.tableRules.maxHandsAllowed;
+        hand.player.hands.length < game.settings.maxHandsAllowed;
 
-      const chartGroup = this._chartGroup(game.settings.tableRules.deckCount);
+      const chartGroup = this._chartGroup(game.settings.deckCount);
       const chartType = this._chartType(hand, allowSplit);
       const chart = chartGroup[chartType];
 
@@ -175,7 +175,7 @@ export default class BasicStrategyChecker {
   }
 
   static _allowSurrender(hand: Hand, settings: GameSettings): boolean {
-    return hand.firstMove && settings.tableRules.allowLateSurrender;
+    return hand.firstMove && settings.allowLateSurrender;
   }
 
   static _chartData(deckCount: deckCounts): BasicStrategyData['hitsSoft17'] {

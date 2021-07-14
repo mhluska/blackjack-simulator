@@ -24,7 +24,7 @@ function setupGame(options: Partial<GameSetupOptions>) {
       debug: !!process.env.DEBUG,
       animationDelay: 0,
       playerTablePosition: 1,
-      tableRules: { playerCount: 1 },
+      playerCount: 1,
     },
     repeatPlayerInput: false,
     playerInput: [
@@ -158,9 +158,7 @@ describe('Game', function () {
         before(async function () {
           game = setupGame({
             settings: {
-              tableRules: {
-                allowLateSurrender: true,
-              },
+              allowLateSurrender: true,
             },
             playerInput: [
               {
@@ -187,9 +185,7 @@ describe('Game', function () {
         before(function () {
           game = setupGame({
             settings: {
-              tableRules: {
-                allowLateSurrender: true,
-              },
+              allowLateSurrender: true,
             },
             playerInput: [
               {

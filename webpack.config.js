@@ -7,6 +7,7 @@ const common = {
   mode: process.env.NODE_ENV || 'production',
   output: {
     path: path.resolve(__dirname, 'dist'),
+    libraryTarget: 'umd',
   },
   module: {
     rules: [
@@ -41,16 +42,12 @@ function resolutions(target) {
 
 const serverConfig = merge(common, {
   entry: {
-    game: './src/node/index.ts',
-    simulate: './src/node/simulate.ts',
+    game: './src/node/commands/game.ts',
+    simulate: './src/node/commands/simulate.ts',
   },
   target: 'node',
   output: {
     filename: '[name].js',
-  },
-  node: {
-    __dirname: false,
-    __filename: false,
   },
   resolve: resolutions('node'),
 });
@@ -58,6 +55,7 @@ const serverConfig = merge(common, {
 const serverMinConfig = merge(serverConfig, {
   output: {
     filename: '[name].min.js',
+    libraryExport: 'default',
   },
   optimization: {
     minimize: true,
@@ -69,7 +67,6 @@ const clientConfig = merge(common, {
   output: {
     filename: '[name].js',
     library: 'BlackjackEngine',
-    libraryTarget: 'umd',
   },
   resolve: resolutions('browser'),
   devServer: {

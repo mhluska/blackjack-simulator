@@ -214,3 +214,13 @@ export function actionDataKeyToAction(actionDataKey: actionDataKeys): actions {
       return 'stand';
   }
 }
+
+export type TableRules = {
+  hitSoft17: boolean;
+  allowLateSurrender: boolean;
+  deckCount: deckCounts;
+  maxHandsAllowed: number;
+  maximumBet: number;
+  minimumBet: number;
+  playerCount: number;
+};

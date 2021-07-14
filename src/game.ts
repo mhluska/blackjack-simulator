@@ -11,11 +11,11 @@ import HiLoDeviationChecker from './hi-lo-deviation-checker';
 import Hand from './hand';
 import {
   actions,
-  deckCounts,
   DeepPartial,
   actionDataKeys,
   SimpleObject,
   actionDataKeyToAction,
+  TableRules,
 } from './types';
 
 export type GameSettings = {
@@ -34,17 +34,7 @@ export type GameSettings = {
   };
 
   element?: string;
-
-  tableRules: {
-    hitSoft17: boolean;
-    allowLateSurrender: boolean;
-    deckCount: deckCounts;
-    maxHandsAllowed: number;
-    maximumBet: number;
-    minimumBet: number;
-    playerCount: number;
-  };
-};
+} & TableRules;
 
 type GameState = {
   playCorrection: string;
@@ -54,7 +44,7 @@ type GameState = {
   focusedHand: Hand;
 };
 
-const SETTINGS_DEFAULTS: GameSettings = {
+export const SETTINGS_DEFAULTS: GameSettings = {
   animationDelay: 200,
   disableEvents: false,
   autoDeclineInsurance: false,
@@ -72,15 +62,14 @@ const SETTINGS_DEFAULTS: GameSettings = {
   playerTablePosition: 2,
   playerStrategyOverride: {},
 
-  tableRules: {
-    hitSoft17: true,
-    allowLateSurrender: false,
-    deckCount: 2,
-    maxHandsAllowed: 4,
-    maximumBet: 1000 * 100,
-    minimumBet: 10 * 100,
-    playerCount: 6,
-  },
+  // Table rules
+  hitSoft17: true,
+  allowLateSurrender: false,
+  deckCount: 2,
+  maxHandsAllowed: 4,
+  maximumBet: 1000 * 100,
+  minimumBet: 10 * 100,
+  playerCount: 6,
 };
 
 export default class Game extends EventEmitter {
@@ -125,7 +114,7 @@ export default class Game extends EventEmitter {
     this.emit('resetState');
   }
 
-  async run({ betAmount = this.settings.tableRules.minimumBet } = {}): Promise<
+  async run({ betAmount = this.settings.minimumBet } = {}): Promise<
     void
   > {
     if (this.settings.debug) {
@@ -135,7 +124,7 @@ export default class Game extends EventEmitter {
     this.players.forEach((player) => {
       // TODO: Make NPCs bet more realistically than minimum bet.
       player.addHand(
-        player === this.player ? betAmount : this.settings.tableRules.minimumBet
+        player === this.player ? betAmount : this.settings.minimumBet
       );
 
       // Clears the result from the previous iteration. Otherwise this object
@@ -179,7 +168,7 @@ export default class Game extends EventEmitter {
           player,
           player === this.player
             ? betAmount
-            : this.settings.tableRules.minimumBet
+            : this.settings.minimumBet
         );
       }
     }
@@ -188,7 +177,7 @@ export default class Game extends EventEmitter {
       await this._playHands(
         player,
         // TODO: Make NPCs bet more realistically than minimum bet.
-        player === this.player ? betAmount : this.settings.tableRules.minimumBet
+        player === this.player ? betAmount : this.settings.minimumBet
       );
     }
 
@@ -201,7 +190,7 @@ export default class Game extends EventEmitter {
         if (this.dealer.cardTotal === 17) {
           if (this.dealer.isHard) {
             break;
-          } else if (!this.settings.tableRules.hitSoft17) {
+          } else if (!this.settings.hitSoft17) {
             break;
           }
         }
@@ -287,7 +276,7 @@ export default class Game extends EventEmitter {
     this.discardTray = this._chainEmitChange(new DiscardTray());
     this.dealer = this._chainEmitChange(new Dealer());
     this.players = Array.from(
-      { length: this.settings.tableRules.playerCount },
+      { length: this.settings.playerCount },
       (_item, index) =>
         this._chainEmitChange(
           new Player({
@@ -464,7 +453,7 @@ export default class Game extends EventEmitter {
 
       if (
         input === 'surrender' &&
-        (!this.settings.tableRules.allowLateSurrender || !hand.firstMove)
+        (!this.settings.allowLateSurrender || !hand.firstMove)
       ) {
         continue;
       }
@@ -497,7 +486,7 @@ export default class Game extends EventEmitter {
 
       if (
         input === 'split' &&
-        player.hands.length < this.settings.tableRules.maxHandsAllowed
+        player.hands.length < this.settings.maxHandsAllowed
       ) {
         const newHandCard = hand.removeCard();
 

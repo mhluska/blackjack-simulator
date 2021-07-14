@@ -31,7 +31,7 @@ export default class Shoe extends DiscardTray {
   static entityName = 'shoe';
 
   hiLoRunningCount: number;
-  deckCount: GameSettings['tableRules']['deckCount'];
+  deckCount: GameSettings['deckCount'];
   mode: GameSettings['mode'];
   checkTopNDeviations: GameSettings['checkTopNDeviations'];
   cards: Card[];
@@ -40,7 +40,7 @@ export default class Shoe extends DiscardTray {
     super();
 
     this.hiLoRunningCount = 0;
-    this.deckCount = game.settings.tableRules.deckCount;
+    this.deckCount = game.settings.deckCount;
     this.mode = game.settings.mode;
     this.checkTopNDeviations = game.settings.checkTopNDeviations;
     this.cards = this._setupCards();

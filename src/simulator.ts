@@ -1,15 +1,15 @@
-import Game, { GameSettings } from './game';
+import Game from './game';
 import Utils from './utils';
 import { PlayerStrategy } from './player';
-import { DeepPartial } from './types';
+import { DeepPartial, TableRules } from './types';
 
-type SimulatorSettings = {
+export type SimulatorSettings = {
   debug: boolean;
   playerStrategy: 'basic-strategy' | 'basic-strategy-i18';
   playerTablePosition: number;
   playerBankroll: number;
-  tableRules: GameSettings['tableRules'];
-};
+  hands: number;
+} & TableRules;
 
 type SimuatorResult = {
   timeElapsed: number;
@@ -23,22 +23,23 @@ type SimuatorResult = {
   handsPlayed: number;
 };
 
-const SETTINGS_DEFAULTS: SimulatorSettings = {
+const minimumBet = 10 * 100;
+
+export const SETTINGS_DEFAULTS: SimulatorSettings = {
   debug: false,
   playerStrategy: 'basic-strategy-i18',
   playerTablePosition: 2,
-  playerBankroll: 10000 * 100,
+  playerBankroll: minimumBet * 1000 * 1000,
+  hands: 10 ** 5,
 
-  // TODO: DRY with Game.
-  tableRules: {
-    hitSoft17: true,
-    allowLateSurrender: false,
-    deckCount: 2,
-    maxHandsAllowed: 4,
-    maximumBet: 1000 * 100,
-    minimumBet: 10 * 100,
-    playerCount: 6,
-  },
+  // Table rules
+  hitSoft17: true,
+  allowLateSurrender: true,
+  deckCount: 2,
+  maxHandsAllowed: 4,
+  maximumBet: 1000 * 100,
+  minimumBet,
+  playerCount: 6,
 };
 
 // TODO: Move to stats utils.
@@ -81,7 +82,7 @@ export default class Simulator {
       : minimumBet * 2 ** (Math.min(5, hiLoTrueCount) - 1);
   }
 
-  async run({ hands = 10 ** 6 }: { hands: number }): Promise<SimuatorResult> {
+  async run(): Promise<SimuatorResult> {
     const startTime = Date.now();
 
     const game = new Game({
@@ -96,7 +97,14 @@ export default class Simulator {
 
       playerTablePosition: this.settings.playerTablePosition,
       playerBankroll: this.settings.playerBankroll,
-      tableRules: this.settings.tableRules,
+
+      hitSoft17: this.settings.hitSoft17,
+      allowLateSurrender: this.settings.allowLateSurrender,
+      deckCount: this.settings.deckCount,
+      maxHandsAllowed: this.settings.maxHandsAllowed,
+      maximumBet: this.settings.maximumBet,
+      minimumBet: this.settings.minimumBet,
+      playerCount: this.settings.playerCount,
     });
 
     const bankroll = [game.player.balance];
@@ -106,13 +114,13 @@ export default class Simulator {
     let handsPlayed = 0;
     let amountWagered = 0;
 
-    while (handsPlayed < hands) {
+    while (handsPlayed < this.settings.hands) {
       // const betAmount = this.betAmount(
       //   game.shoe.hiLoTrueCount,
       //   game.settings.tableRules.minimumBet
       // );
 
-      const betAmount = game.settings.tableRules.minimumBet;
+      const betAmount = game.settings.minimumBet;
 
       await game.run({
         betAmount,

@@ -24,13 +24,13 @@
 ## Run interactive mode
 
 ```sh
-npx @blackjacktrainer/blackjack-simulator --interactive
+npx @blackjacktrainer/blackjack-simulator game --help
 ```
 
 ## Run simulator
 
 ```sh
-npx @blackjacktrainer/blackjack-simulator
+npx @blackjacktrainer/blackjack-simulator simulate --help
 ```
 
 ## Build and run locally

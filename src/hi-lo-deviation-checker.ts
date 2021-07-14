@@ -91,7 +91,7 @@ export default class HiLoDeviationChecker {
     }
 
     const allowSplit =
-      hand.player.hands.length < game.settings.tableRules.maxHandsAllowed;
+      hand.player.hands.length < game.settings.maxHandsAllowed;
     if (correctMove === 'P' && !allowSplit) {
       return { correctMove: false };
     }
