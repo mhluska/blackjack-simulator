@@ -14,36 +14,80 @@
   Realistic blackjack simulator (practice card counting and calculate EV for any table conditions)
 </p>
 
-## Goals
+## Project goals
 
 * Simulator for computing EV given some table conditions
-* Interactive mode for practicing basic strategy and card counting with hints
+* Game mode for practicing basic strategy and card counting with hints
 * No package dependencies
 * Runs in any JS environment (CLI, browser, React Native app etc)
 
-## Run interactive mode
+## Usage
 
-```sh
-npx @blackjacktrainer/blackjack-simulator game --help
-```
-
-## Run simulator
+### Simulator mode
 
 ```sh
 npx @blackjacktrainer/blackjack-simulator simulate --help
 ```
 
-## Build and run locally
+### Game mode
+
+```sh
+npx @blackjacktrainer/blackjack-simulator game --help
+```
+
+### Build and run locally
 
 ```sh
 npm install
 nvm use --install
 NODE_ENV=development npm run build
-npm run interactive
-npm run simulator
+./bin/cli.js
 ```
 
-## Use as a library (interactive mode)
+### Use as a library (simulator mode)
+
+```js
+import { Simulator } from '@blackjacktrainer/blackjack-simulator';
+
+// The following are default settings:
+const settings = {
+  // Can be one of:
+  // 'basic-strategy': play perfect basic strategy
+  // 'basic-strategy-i18': play perfect basic strategy plus illustious 18
+  playerStrategy: 'basic-strategy-i18',
+  playerTablePosition: 2,
+
+  tableRules: {
+    allowLateSurrender: false,
+    deckCount: 2,
+    maxHandsAllowed: 4,
+    maximumBet: 1000 * 100,
+    minimumBet: 10 * 100,
+    playerCount: 6,
+  },
+};
+
+const simulator = new Simulator(settings);
+const result = simulator.run({ hands: 10 ** 6 });
+```
+
+Result contains the following data:
+
+```
+{
+  amountEarned: string;
+  amountEarnedVariance: string;
+  amountWagered: string;
+  handsLost: number;
+  handsPlayed: number;
+  handsPushed: number;
+  handsWon: number;
+  houseEdge: number;
+  timeElapsed: number;
+}
+```
+
+### Use as a library (game mode)
 
 ```js
 import { Game } from '@blackjacktrainer/blackjack-simulator';
@@ -146,47 +190,4 @@ for user interaction:
 <template v-else>
   <button data-action="d">Deal (press any key)</button>
 </template>
-```
-
-## Use as a library (simulator mode)
-
-```js
-import { Simulator } from '@blackjacktrainer/blackjack-simulator';
-
-// The following are default settings:
-const settings = {
-  // Can be one of:
-  // 'basic-strategy': play perfect basic strategy
-  // 'basic-strategy-i18': play perfect basic strategy plus illustious 18
-  playerStrategy: 'basic-strategy-i18',
-  playerTablePosition: 2,
-
-  tableRules: {
-    allowLateSurrender: false,
-    deckCount: 2,
-    maxHandsAllowed: 4,
-    maximumBet: 1000 * 100,
-    minimumBet: 10 * 100,
-    playerCount: 6,
-  },
-};
-
-const simulator = new Simulator(settings);
-const result = simulator.run({ hands: 10 ** 6 });
-```
-
-Result contains the following data:
-
-```
-{
-  amountEarned: string;
-  amountEarnedVariance: string;
-  amountWagered: string;
-  handsLost: number;
-  handsPlayed: number;
-  handsPushed: number;
-  handsWon: number;
-  houseEdge: number;
-  timeElapsed: number;
-}
 ```
