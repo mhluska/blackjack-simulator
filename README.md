@@ -61,14 +61,12 @@ const settings = {
   playerStrategy: 'basic-strategy-i18',
   playerTablePosition: 2,
 
-  tableRules: {
-    allowLateSurrender: false,
-    deckCount: 2,
-    maxHandsAllowed: 4,
-    maximumBet: 1000 * 100,
-    minimumBet: 10 * 100,
-    playerCount: 6,
-  },
+  allowLateSurrender: false,
+  deckCount: 2,
+  maxHandsAllowed: 4,
+  maximumBet: 1000 * 100,
+  minimumBet: 10 * 100,
+  playerCount: 6,
 };
 
 const simulator = new Simulator(settings);
@@ -107,14 +105,12 @@ const settings = {
   mode: 'default',
   playerTablePosition: 2,
 
-  tableRules: {
-    allowLateSurrender: false,
-    deckCount: 2,
-    maxHandsAllowed: 4,
-    maximumBet: 1000 * 100,
-    minimumBet: 10 * 100,
-    playerCount: 6,
-  },
+  allowLateSurrender: false,
+  deckCount: 2,
+  maxHandsAllowed: 4,
+  maximumBet: 1000 * 100,
+  minimumBet: 10 * 100,
+  playerCount: 6,
 };
 
 const game = new Game(settings);
