@@ -63,10 +63,10 @@ const serverMinConfig = merge(serverConfig, {
 });
 
 const clientConfig = merge(common, {
-  entry: './src/browser/index.ts',
+  entry: './src/index.ts',
   output: {
     filename: '[name].js',
-    library: 'BlackjackEngine',
+    library: 'BlackjackSimulator',
   },
   resolve: resolutions('browser'),
   devServer: {
