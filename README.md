@@ -171,7 +171,6 @@ startGame(game);
 ```
 
 ```
-
 The game often pauses and listens for a `click` or `keypress` event on
 `document.body`. Your DOM just has to declare the following buttons somewhere
 for user interaction:
