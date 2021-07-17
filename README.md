@@ -84,7 +84,7 @@ Result contains the following data:
   handsPlayed: number;
   handsPushed: number;
   handsWon: number;
-  houseEdge: number;
+  houseEdge: string;
   timeElapsed: number;
 }
 ```

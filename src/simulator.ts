@@ -16,7 +16,7 @@ type SimuatorResult = {
   amountWagered: string;
   amountEarned: string;
   amountEarnedVariance: string;
-  houseEdge: number;
+  houseEdge: string;
   handsWon: number;
   handsLost: number;
   handsPushed: number;
@@ -153,7 +153,7 @@ export default class Simulator {
       amountWagered: Utils.formatCents(amountWagered),
       amountEarned: Utils.formatCents(amountEarned),
       amountEarnedVariance: Utils.formatCents(variance(bankroll)),
-      houseEdge: -amountEarned / amountWagered,
+      houseEdge: `${((-amountEarned / amountWagered) * 100).toFixed(2)}%`,
       handsWon,
       handsLost,
       handsPushed,

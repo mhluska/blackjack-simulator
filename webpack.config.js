@@ -22,7 +22,7 @@ const common = {
     minimize: false,
   },
   resolve: {
-    extensions: ['.ts'],
+    extensions: ['.ts', '.js'],
   },
   devtool: process.env.NODE_ENV === 'development' ? 'eval-source-map' : false,
 };
@@ -74,10 +74,12 @@ const clientConfig = merge(common, {
   },
 });
 
-const clientMinConfig = merge(clientConfig, {
+const clientMinConfig = merge(common, {
   output: {
     filename: '[name].min.js',
+    library: 'BlackjackSimulator',
   },
+  resolve: resolutions('browser'),
   optimization: {
     minimize: true,
   },
