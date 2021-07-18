@@ -14,13 +14,13 @@ export type SimulatorSettings = {
 export type SimulatorResult = {
   amountWagered: string;
   expectedValue: string;
-  handsLost: number;
-  handsPlayed: number;
-  handsPushed: number;
-  handsWon: number;
+  handsLost: string;
+  handsPlayed: string;
+  handsPushed: string;
+  handsWon: string;
   houseEdge: string;
   tableRules: string;
-  timeElapsed: number;
+  timeElapsed: string;
   variance: string;
 };
 
@@ -66,6 +66,7 @@ function formatTableRules(settings: GameSettings) {
     `${Utils.formatCents(settings.minimumBet)}–${Utils.formatCents(
       settings.maximumBet
     )}`,
+    `${settings.deckCount}D`,
     settings.hitSoft17 ? 'H17' : 'S17',
     settings.allowDoubleAfterSplit ? 'DAS' : null,
     settings.allowLateSurrender ? 'LS' : null,
@@ -171,13 +172,13 @@ export default class Simulator {
     return {
       amountWagered: Utils.formatCents(amountWagered),
       expectedValue: `${Utils.formatCents(amountEarned / hoursPlayed)}/hour`,
-      handsLost,
-      handsPlayed,
-      handsPushed,
-      handsWon,
+      handsLost: Utils.abbreviateNumber(handsLost),
+      handsPlayed: Utils.abbreviateNumber(handsPlayed),
+      handsPushed: Utils.abbreviateNumber(handsPushed),
+      handsWon: Utils.abbreviateNumber(handsWon),
       houseEdge: `${((-amountEarned / amountWagered) * 100).toFixed(2)}%`,
       tableRules: formatTableRules(game.settings),
-      timeElapsed: Date.now() - startTime,
+      timeElapsed: Utils.formatTime(Date.now() - startTime),
       variance: Utils.formatCents(variance(bankroll)),
     };
   }

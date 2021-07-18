@@ -72,11 +72,34 @@ export default class Utils {
     return cards.reduce((acc, card) => acc + card.hiLoValue, 0);
   }
 
+  // See https://stackoverflow.com/a/40724354/659910
+  static abbreviateNumber(number: number): string {
+    const SI_SYMBOL = ['', 'K', 'M', 'G', 'T', 'P', 'E'];
+
+    // Determine SI symbol.
+    const tier = (Math.log10(Math.abs(number)) / 3) | 0;
+
+    if (tier === 0) {
+      return number.toString();
+    }
+
+    const suffix = SI_SYMBOL[tier];
+    const scale = Math.pow(10, tier * 3);
+    const scaled = number / scale;
+    const fixed = scaled.toFixed(1);
+
+    return (fixed.includes('.0') ? scaled.toFixed(0) : fixed) + suffix;
+  }
+
   static formatCents(cents: number): string {
     return new Intl.NumberFormat('en-US', {
       style: 'currency',
       currency: 'USD',
     }).format(cents / 100);
+  }
+
+  static formatTime(timeMs: number): string {
+    return `${(timeMs / 1000).toFixed(2)} seconds`;
   }
 
   // See https://stackoverflow.com/a/34749873/659910

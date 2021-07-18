@@ -79,12 +79,13 @@ Result contains the following data:
 {
   amountWagered: string;
   expectedValue: string;
-  handsLost: number;
-  handsPlayed: number;
-  handsPushed: number;
-  handsWon: number;
+  handsLost: string;
+  handsPlayed: string;
+  handsPushed: string;
+  handsWon: string;
   houseEdge: string;
-  timeElapsed: number;
+  tableRules: string;
+  timeElapsed: string;
   variance: string;
 }
 ```
