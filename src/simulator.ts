@@ -141,11 +141,11 @@ export default class Simulator {
         betAmount,
       });
 
-      amountWagered += betAmount;
       bankroll.push(game.player.balance);
 
       for (const result of game.player.handWinner.values()) {
         handsPlayed += 1;
+        amountWagered += betAmount;
 
         switch (result) {
           case 'player':
