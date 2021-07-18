@@ -25,7 +25,7 @@ describe('Simulator', function () {
         'houseEdge',
         'tableRules',
         'timeElapsed',
-        'variance',
+        'variance'
       );
     });
   });

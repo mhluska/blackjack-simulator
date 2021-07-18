@@ -66,9 +66,9 @@ function variance(data: number[]) {
 
 function formatTableRules(settings: GameSettings) {
   return [
-    `${Utils.formatCents(settings.minimumBet)}–${Utils.formatCents(
-      settings.maximumBet
-    )}`,
+    `${Utils.formatCents(settings.minimumBet, {
+      stripZeroCents: true,
+    })}–${Utils.formatCents(settings.maximumBet, { stripZeroCents: true })}`,
     `${settings.deckCount}D`,
     settings.blackjackPayout,
     settings.hitSoft17 ? 'H17' : 'S17',

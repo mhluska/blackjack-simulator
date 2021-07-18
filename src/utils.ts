@@ -91,11 +91,20 @@ export default class Utils {
     return (fixed.includes('.0') ? scaled.toFixed(0) : fixed) + suffix;
   }
 
-  static formatCents(cents: number): string {
-    return new Intl.NumberFormat('en-US', {
+  static formatCents(
+    cents: number,
+    { stripZeroCents = false }: { stripZeroCents?: boolean } = {}
+  ): string {
+    const value = new Intl.NumberFormat('en-US', {
       style: 'currency',
       currency: 'USD',
     }).format(cents / 100);
+
+    if (stripZeroCents && value.endsWith('.00')) {
+      return value.slice(0, value.length - 3);
+    } else {
+      return value;
+    }
   }
 
   static formatTime(timeMs: number): string {
