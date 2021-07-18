@@ -11,16 +11,16 @@ export type SimulatorSettings = {
   hands: number;
 } & TableRules;
 
-type SimuatorResult = {
-  timeElapsed: number;
+export type SimulatorResult = {
   amountWagered: string;
-  amountEarned: string;
-  amountEarnedVariance: string;
-  houseEdge: string;
-  handsWon: number;
+  expectedValue: string;
   handsLost: number;
-  handsPushed: number;
   handsPlayed: number;
+  handsPushed: number;
+  handsWon: number;
+  houseEdge: string;
+  timeElapsed: number;
+  variance: string;
 };
 
 const minimumBet = 10 * 100;
@@ -82,7 +82,7 @@ export default class Simulator {
       : minimumBet * 2 ** (Math.min(5, hiLoTrueCount) - 1);
   }
 
-  async run(): Promise<SimuatorResult> {
+  async run(): Promise<SimulatorResult> {
     const startTime = Date.now();
 
     const game = new Game({
@@ -117,7 +117,7 @@ export default class Simulator {
     while (handsPlayed < this.settings.hands) {
       // const betAmount = this.betAmount(
       //   game.shoe.hiLoTrueCount,
-      //   game.settings.tableRules.minimumBet
+      //   game.settings.minimumBet
       // );
 
       const betAmount = game.settings.minimumBet;
@@ -148,16 +148,20 @@ export default class Simulator {
 
     const amountEarned = bankroll[bankroll.length - 1] - bankroll[0];
 
+    // TODO: Estimate this based on number of players at the table.
+    const handsPerHour = 50;
+    const hoursPlayed = handsPlayed / handsPerHour;
+
     return {
-      timeElapsed: Date.now() - startTime,
       amountWagered: Utils.formatCents(amountWagered),
-      amountEarned: Utils.formatCents(amountEarned),
-      amountEarnedVariance: Utils.formatCents(variance(bankroll)),
-      houseEdge: `${((-amountEarned / amountWagered) * 100).toFixed(2)}%`,
-      handsWon,
+      expectedValue: `${Utils.formatCents(amountEarned / hoursPlayed)}/hour`,
       handsLost,
-      handsPushed,
       handsPlayed,
+      handsPushed,
+      handsWon,
+      houseEdge: `${((-amountEarned / amountWagered) * 100).toFixed(2)}%`,
+      timeElapsed: Date.now() - startTime,
+      variance: Utils.formatCents(variance(bankroll)),
     };
   }
 }

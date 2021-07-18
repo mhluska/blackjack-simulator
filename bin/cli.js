@@ -17,7 +17,7 @@ function parseArgValue(value) {
   }
 
   if (value[0] >= '0' && value[0] <= '9') {
-    return parseInt(value);
+    return parseInt(value.replace(/[^\d]/g, ''));
   }
 
   return value;

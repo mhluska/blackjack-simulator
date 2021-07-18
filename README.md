@@ -77,15 +77,15 @@ Result contains the following data:
 
 ```
 {
-  amountEarned: string;
-  amountEarnedVariance: string;
   amountWagered: string;
+  expectedValue: string;
   handsLost: number;
   handsPlayed: number;
   handsPushed: number;
   handsWon: number;
   houseEdge: string;
   timeElapsed: number;
+  variance: string;
 }
 ```
 
