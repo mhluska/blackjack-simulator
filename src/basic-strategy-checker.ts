@@ -89,15 +89,12 @@ export default class BasicStrategyChecker {
         }
       }
 
-      // TODO: Add this check.
-      const allowDoubleAfterSplit = true;
-
       if (
         correctMove === 'Ph' ||
         correctMove === 'Pd' ||
         correctMove === 'Ps'
       ) {
-        if (allowDoubleAfterSplit) {
+        if (game.settings.allowDoubleAfterSplit) {
           return 'P';
         } else {
           switch (correctMove) {
@@ -114,7 +111,9 @@ export default class BasicStrategyChecker {
       const allowSurrender = this._allowSurrender(hand, game.settings);
 
       if (correctMove === 'Rp') {
-        return allowSurrender && allowDoubleAfterSplit ? 'R' : 'P';
+        return allowSurrender && game.settings.allowDoubleAfterSplit
+          ? 'R'
+          : 'P';
       }
 
       if (correctMove === 'Rh' || correctMove === 'Rs') {

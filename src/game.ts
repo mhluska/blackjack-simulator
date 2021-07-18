@@ -63,9 +63,10 @@ export const SETTINGS_DEFAULTS: GameSettings = {
   playerStrategyOverride: {},
 
   // Table rules
-  hitSoft17: true,
+  allowDoubleAfterSplit: true,
   allowLateSurrender: false,
   deckCount: 2,
+  hitSoft17: true,
   maxHandsAllowed: 4,
   maximumBet: 1000 * 100,
   minimumBet: 10 * 100,

@@ -26,6 +26,7 @@ export default async function (
 
   const result = await simulator.run();
   const displayOrder: (keyof SimulatorResult)[] = [
+    'tableRules',
     'handsPlayed',
     'expectedValue',
     'houseEdge',

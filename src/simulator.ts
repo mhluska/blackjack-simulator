@@ -1,4 +1,4 @@
-import Game from './game';
+import Game, { GameSettings } from './game';
 import Utils from './utils';
 import { PlayerStrategy } from './player';
 import { DeepPartial, TableRules } from './types';
@@ -19,6 +19,7 @@ export type SimulatorResult = {
   handsPushed: number;
   handsWon: number;
   houseEdge: string;
+  tableRules: string;
   timeElapsed: number;
   variance: string;
 };
@@ -33,9 +34,11 @@ export const SETTINGS_DEFAULTS: SimulatorSettings = {
   hands: 10 ** 5,
 
   // Table rules
-  hitSoft17: true,
+  // TODO: DRY with `game.ts`.
+  allowDoubleAfterSplit: true,
   allowLateSurrender: true,
   deckCount: 2,
+  hitSoft17: true,
   maxHandsAllowed: 4,
   maximumBet: 1000 * 100,
   minimumBet,
@@ -56,6 +59,19 @@ function mean(data: number[]) {
 function variance(data: number[]) {
   const dataMean = mean(data);
   return sum(data.map((num) => (num - dataMean) ** 2)) / (data.length - 1);
+}
+
+function formatTableRules(settings: GameSettings) {
+  return [
+    `${Utils.formatCents(settings.minimumBet)}–${Utils.formatCents(
+      settings.maximumBet
+    )}`,
+    settings.hitSoft17 ? 'H17' : 'S17',
+    settings.allowDoubleAfterSplit ? 'DAS' : null,
+    settings.allowLateSurrender ? 'LS' : null,
+    // TODO: Add a setting for resplit aces.
+    'RSA',
+  ].join(' ');
 }
 
 export default class Simulator {
@@ -160,6 +176,7 @@ export default class Simulator {
       handsPushed,
       handsWon,
       houseEdge: `${((-amountEarned / amountWagered) * 100).toFixed(2)}%`,
+      tableRules: formatTableRules(game.settings),
       timeElapsed: Date.now() - startTime,
       variance: Utils.formatCents(variance(bankroll)),
     };

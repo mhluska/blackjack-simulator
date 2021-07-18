@@ -216,9 +216,10 @@ export function actionDataKeyToAction(actionDataKey: actionDataKeys): actions {
 }
 
 export type TableRules = {
-  hitSoft17: boolean;
+  allowDoubleAfterSplit: boolean;
   allowLateSurrender: boolean;
   deckCount: deckCounts;
+  hitSoft17: boolean;
   maxHandsAllowed: number;
   maximumBet: number;
   minimumBet: number;
