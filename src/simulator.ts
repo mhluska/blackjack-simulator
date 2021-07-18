@@ -29,7 +29,7 @@ const minimumBet = 10 * 100;
 export const SETTINGS_DEFAULTS: SimulatorSettings = {
   // Simulator-only settings.
   hands: 10 ** 5,
-  playerStrategy: 'basic-strategy-i18',
+  playerStrategy: 'basic-strategy',
 
   debug: false,
   playerTablePosition: 2,
@@ -113,9 +113,11 @@ export default class Simulator {
       autoConfirmNewGame: true,
       animationDelay: 0,
       disableEvents: true,
-      // TODO: Make this based on `playerStrategy`.
       playerStrategyOverride: {
-        2: PlayerStrategy.BASIC_STRATEGY,
+        [this.settings.playerTablePosition]:
+          this.settings.playerStrategy === 'basic-strategy'
+            ? PlayerStrategy.BASIC_STRATEGY
+            : PlayerStrategy.BASIC_STRATEGY_I18,
       },
     });
 

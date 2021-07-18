@@ -60,7 +60,10 @@ export default class HiLoDeviationChecker {
       return { correctMove: false };
     }
 
-    if (game.dealer.upcard.value === 11 && game.dealer.holeCard) {
+    if (
+      game.dealer.upcard.value === 11 &&
+      game.state.step === 'ask-insurance'
+    ) {
       deviationIndex = illustrious18Deviations.findIndex(
         (d) => d.insurance && Utils.compareRange(trueCount, d.index)
       );
@@ -90,8 +93,7 @@ export default class HiLoDeviationChecker {
       return { correctMove: false };
     }
 
-    const allowSplit =
-      hand.player.hands.length < game.settings.maxHandsAllowed;
+    const allowSplit = hand.player.hands.length < game.settings.maxHandsAllowed;
     if (correctMove === 'P' && !allowSplit) {
       return { correctMove: false };
     }

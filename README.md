@@ -55,14 +55,23 @@ import { Simulator } from '@blackjacktrainer/blackjack-simulator';
 
 // The following are default settings:
 const settings = {
+  // Simulator-only settings:
+  hands: 10 ** 5,
   // Can be one of:
   // 'basic-strategy': play perfect basic strategy
   // 'basic-strategy-i18': play perfect basic strategy plus illustrious 18
-  playerStrategy: 'basic-strategy-i18',
-  playerTablePosition: 2,
+  playerStrategy: 'basic-strategy',
 
-  allowLateSurrender: false,
+  debug: false,
+  playerTablePosition: 2,
+  playerBankroll: minimumBet * 1000 * 1000,
+
+  // Table rules
+  allowDoubleAfterSplit: true,
+  allowLateSurrender: true,
+  blackjackPayout: '3:2',
   deckCount: 2,
+  hitSoft17: true,
   maxHandsAllowed: 4,
   maximumBet: 1000 * 100,
   minimumBet: 10 * 100,
@@ -98,16 +107,27 @@ import { Game } from '@blackjacktrainer/blackjack-simulator';
 // The following are default settings:
 const settings = {
   animationDelay: 200,
+  disableEvents: false,
   autoDeclineInsurance: false,
+  autoConfirmNewGame: false,
   checkDeviations: false,
   checkTopNDeviations: 18,
+
   // Can be one of 'default', 'pairs', 'uncommon', 'illustrious18'. If the mode
   // is set to 'illustrious18', `checkDeviations` will be forced to true.
   mode: 'default',
-  playerTablePosition: 2,
+  debug: false,
 
+  playerBankroll: 10000 * 100,
+  playerTablePosition: 2,
+  playerStrategyOverride: {},
+
+  // Table rules
+  allowDoubleAfterSplit: true,
   allowLateSurrender: false,
+  blackjackPayout: '3:2',
   deckCount: 2,
+  hitSoft17: true,
   maxHandsAllowed: 4,
   maximumBet: 1000 * 100,
   minimumBet: 10 * 100,

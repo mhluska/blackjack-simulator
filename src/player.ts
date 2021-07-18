@@ -82,6 +82,7 @@ export default class Player extends GameObject {
         this.id,
         'dealer',
         game.dealer.upcard?.rank,
+        game.dealer.holeCard?.rank,
         'player',
         hand.cardTotal,
         correctMove

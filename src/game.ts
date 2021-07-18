@@ -57,7 +57,6 @@ export const SETTINGS_DEFAULTS: GameSettings = {
   mode: 'default',
   debug: false,
 
-  // TODO: Move these under a player prefix.
   playerBankroll: 10000 * 100,
   playerTablePosition: 2,
   playerStrategyOverride: {},
@@ -231,30 +230,32 @@ export default class Game extends EventEmitter {
 
     this.state.step = 'ask-insurance';
 
-    if (player.isNPC) {
-      input = player.getNPCInput(this, player.hands[0]);
-    } else {
-      if (this.settings.autoDeclineInsurance) {
-        input = 'no-insurance';
+    for (const hand of player.hands) {
+      if (player.isNPC) {
+        input = player.getNPCInput(this, hand);
       } else {
-        while (typeof input !== 'string' || !input?.includes('insurance')) {
-          input = await this._getPlayerInsuranceInput();
+        if (this.settings.autoDeclineInsurance) {
+          input = 'no-insurance';
+        } else {
+          while (typeof input !== 'string' || !input?.includes('insurance')) {
+            input = await this._getPlayerInsuranceInput();
+          }
+
+          this._validateInput(input, hand);
         }
-
-        this._validateInput(input, player.hands[0]);
       }
-    }
 
-    if (this.dealer.holeCard?.value !== 10) {
-      return;
-    }
+      if (this.dealer.holeCard?.value !== 10) {
+        continue;
+      }
 
-    player.setHandWinner({ winner: 'dealer' });
+      player.setHandWinner({ winner: 'dealer', hand });
 
-    // TODO: Make insurance amount configurable. Currently uses half the
-    // bet size as insurance to recover full bet amount.
-    if (input === 'ask-insurance') {
-      player.addChips(betAmount);
+      // TODO: Make insurance amount configurable. Currently uses half the
+      // bet size as insurance to recover full bet amount.
+      if (input === 'ask-insurance') {
+        player.addChips(betAmount);
+      }
     }
   }
 
