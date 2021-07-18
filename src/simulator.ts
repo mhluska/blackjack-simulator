@@ -27,16 +27,19 @@ export type SimulatorResult = {
 const minimumBet = 10 * 100;
 
 export const SETTINGS_DEFAULTS: SimulatorSettings = {
-  debug: false,
+  // Simulator-only settings.
+  hands: 10 ** 5,
   playerStrategy: 'basic-strategy-i18',
+
+  debug: false,
   playerTablePosition: 2,
   playerBankroll: minimumBet * 1000 * 1000,
-  hands: 10 ** 5,
 
   // Table rules
   // TODO: DRY with `game.ts`.
   allowDoubleAfterSplit: true,
   allowLateSurrender: true,
+  blackjackPayout: '3:2',
   deckCount: 2,
   hitSoft17: true,
   maxHandsAllowed: 4,
@@ -67,6 +70,7 @@ function formatTableRules(settings: GameSettings) {
       settings.maximumBet
     )}`,
     `${settings.deckCount}D`,
+    settings.blackjackPayout,
     settings.hitSoft17 ? 'H17' : 'S17',
     settings.allowDoubleAfterSplit ? 'DAS' : null,
     settings.allowLateSurrender ? 'LS' : null,
@@ -103,6 +107,8 @@ export default class Simulator {
     const startTime = Date.now();
 
     const game = new Game({
+      ...this.settings,
+
       debug: this.settings.debug,
       autoConfirmNewGame: true,
       animationDelay: 0,
@@ -111,17 +117,6 @@ export default class Simulator {
       playerStrategyOverride: {
         2: PlayerStrategy.BASIC_STRATEGY,
       },
-
-      playerTablePosition: this.settings.playerTablePosition,
-      playerBankroll: this.settings.playerBankroll,
-
-      hitSoft17: this.settings.hitSoft17,
-      allowLateSurrender: this.settings.allowLateSurrender,
-      deckCount: this.settings.deckCount,
-      maxHandsAllowed: this.settings.maxHandsAllowed,
-      maximumBet: this.settings.maximumBet,
-      minimumBet: this.settings.minimumBet,
-      playerCount: this.settings.playerCount,
     });
 
     const bankroll = [game.player.balance];

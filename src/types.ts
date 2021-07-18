@@ -72,6 +72,8 @@ export type playerTotal =
 
 export type dealerTotal = 2 | 3 | 4 | 5 | 6 | 7 | 8 | 9 | 10 | 11;
 
+export type blackjackPayouts = '3:2' | '6:5';
+
 export type cardValue = 1 | dealerTotal;
 
 type chartMoves =
@@ -218,6 +220,7 @@ export function actionDataKeyToAction(actionDataKey: actionDataKeys): actions {
 export type TableRules = {
   allowDoubleAfterSplit: boolean;
   allowLateSurrender: boolean;
+  blackjackPayout: blackjackPayouts;
   deckCount: deckCounts;
   hitSoft17: boolean;
   maxHandsAllowed: number;

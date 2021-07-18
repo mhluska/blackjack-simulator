@@ -10,7 +10,7 @@ import {
   actions,
   correctMoves,
   correctMoveToAction,
-  entries,
+  blackjackPayouts,
 } from './types';
 
 export enum PlayerStrategy {
@@ -29,30 +29,38 @@ type PlayerAttributes = {
 export default class Player extends GameObject {
   static entityName = 'player';
 
+  balance: number;
+  blackjackPayout: blackjackPayouts;
+  debug: boolean;
+  hands: Hand[];
+  handWinner: Map<string, handWinners>;
   id: string;
   strategy: PlayerStrategy;
-  balance: number;
-  handWinner: Map<string, handWinners>;
-  hands: Hand[];
-  debug: boolean;
 
   constructor(
     {
-      strategy,
       balance = 10000 * 100,
+      blackjackPayout = '3:2',
       debug = false,
-    }: { strategy: PlayerStrategy; balance?: number; debug?: boolean } = {
+      strategy,
+    }: {
+      balance?: number;
+      blackjackPayout?: blackjackPayouts;
+      debug?: boolean;
+      strategy: PlayerStrategy;
+    } = {
       strategy: PlayerStrategy.USER_INPUT,
     }
   ) {
     super();
 
+    this.balance = balance;
+    this.blackjackPayout = blackjackPayout;
+    this.debug = debug;
+    this.hands = [];
+    this.handWinner = new Map();
     this.id = Utils.randomId();
     this.strategy = strategy;
-    this.balance = balance;
-    this.handWinner = new Map();
-    this.hands = [];
-    this.debug = debug;
   }
 
   getNPCInput(game: Game, hand: Hand): actions | void {
@@ -198,8 +206,12 @@ export default class Player extends GameObject {
     }
 
     if (winner === 'player') {
+      const [ratioNumerator, ratioDenominator] = hand.blackjack
+        ? this.blackjackPayout.split(':').map((num) => parseInt(num))
+        : [1, 1];
+
       this.addChips(
-        hand.blackjack ? hand.betAmount * (5 / 2) : hand.betAmount * 2
+        hand.betAmount + hand.betAmount * (ratioNumerator / ratioDenominator)
       );
     } else if (winner === 'push') {
       this.addChips(hand.betAmount);

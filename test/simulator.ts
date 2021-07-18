@@ -16,15 +16,16 @@ describe('Simulator', function () {
       const result = await simulator.run();
 
       expect(result).to.have.all.keys(
-        'timeElapsed',
-        'amountEarned',
-        'amountEarnedVariance',
         'amountWagered',
-        'handsWon',
+        'expectedValue',
         'handsLost',
-        'handsPushed',
         'handsPlayed',
-        'houseEdge'
+        'handsPushed',
+        'handsWon',
+        'houseEdge',
+        'tableRules',
+        'timeElapsed',
+        'variance',
       );
     });
   });

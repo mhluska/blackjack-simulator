@@ -65,6 +65,7 @@ export const SETTINGS_DEFAULTS: GameSettings = {
   // Table rules
   allowDoubleAfterSplit: true,
   allowLateSurrender: false,
+  blackjackPayout: '3:2',
   deckCount: 2,
   hitSoft17: true,
   maxHandsAllowed: 4,
@@ -115,11 +116,9 @@ export default class Game extends EventEmitter {
     this.emit('resetState');
   }
 
-  async run({ betAmount = this.settings.minimumBet } = {}): Promise<
-    void
-  > {
+  async run({ betAmount = this.settings.minimumBet } = {}): Promise<void> {
     if (this.settings.debug) {
-      console.log('> Starting new game');
+      console.log(`> Starting new game (player ID ${this.player.id})`);
     }
 
     this.players.forEach((player) => {
@@ -167,9 +166,7 @@ export default class Game extends EventEmitter {
       for (const player of this.players) {
         await this._handleInsurance(
           player,
-          player === this.player
-            ? betAmount
-            : this.settings.minimumBet
+          player === this.player ? betAmount : this.settings.minimumBet
         );
       }
     }
@@ -281,9 +278,10 @@ export default class Game extends EventEmitter {
       (_item, index) =>
         this._chainEmitChange(
           new Player({
+            balance: this.settings.playerBankroll,
+            blackjackPayout: this.settings.blackjackPayout,
             debug: this.settings.debug,
             // TODO: Make this configurable for each player.
-            balance: this.settings.playerBankroll,
             strategy:
               this.settings.playerStrategyOverride[index + 1] ??
               (index === this.settings.playerTablePosition - 1
