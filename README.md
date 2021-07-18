@@ -86,6 +86,7 @@ Result contains the following data:
 
 ```
 {
+  amountEarned: string;
   amountWagered: string;
   expectedValue: string;
   handsLost: string;

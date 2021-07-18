@@ -12,6 +12,7 @@ export type SimulatorSettings = {
 } & TableRules;
 
 export type SimulatorResult = {
+  amountEarned: string;
   amountWagered: string;
   expectedValue: string;
   handsLost: string;
@@ -167,6 +168,7 @@ export default class Simulator {
     const hoursPlayed = handsPlayed / handsPerHour;
 
     return {
+      amountEarned: Utils.formatCents(amountEarned),
       amountWagered: Utils.formatCents(amountWagered),
       expectedValue: `${Utils.formatCents(amountEarned / hoursPlayed)}/hour`,
       handsLost: Utils.abbreviateNumber(handsLost),

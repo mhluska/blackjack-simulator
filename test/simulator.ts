@@ -16,6 +16,7 @@ describe('Simulator', function () {
       const result = await simulator.run();
 
       expect(result).to.have.all.keys(
+        'amountEarned',
         'amountWagered',
         'expectedValue',
         'handsLost',
