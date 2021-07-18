@@ -111,7 +111,7 @@ export default class BasicStrategyChecker {
       const allowSurrender = this._allowSurrender(hand, game.settings);
 
       if (correctMove === 'Rp') {
-        return allowSurrender && game.settings.allowDoubleAfterSplit
+        return allowSurrender && !game.settings.allowDoubleAfterSplit
           ? 'R'
           : 'P';
       }

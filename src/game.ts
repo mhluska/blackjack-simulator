@@ -515,6 +515,10 @@ export default class Game extends EventEmitter {
     }
 
     if (hand.busted) {
+      if (this.settings.debug) {
+        console.log(`Busted ${player.id} ${hand.cardTotal}`);
+      }
+
       return player.setHandWinner({ winner: 'dealer', hand });
     }
   }
