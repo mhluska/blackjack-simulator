@@ -6,6 +6,7 @@ import { DeepPartial, TableRules } from './types';
 export type SimulatorSettings = {
   debug: boolean;
   playerStrategy: 'basic-strategy' | 'basic-strategy-i18';
+  playerBetSpread?: number[];
   playerTablePosition: number;
   playerBankroll: number;
   hands: number;
@@ -31,6 +32,7 @@ export const SETTINGS_DEFAULTS: SimulatorSettings = {
   // Simulator-only settings.
   hands: 10 ** 5,
   playerStrategy: 'basic-strategy',
+  playerBetSpread: undefined,
 
   debug: false,
   playerTablePosition: 1,
@@ -79,8 +81,21 @@ function formatTableRules(settings: GameSettings) {
   ].join(' ');
 }
 
+function parsePlayerStrategy(strategy: string): PlayerStrategy {
+  switch (strategy) {
+    case 'basic-strategy-betspread':
+      return PlayerStrategy.BASIC_STRATEGY_BETSPREAD;
+    case 'basic-strategy-betspread-i18':
+      return PlayerStrategy.BASIC_STRATEGY_BETSPREAD_I18;
+    default:
+    case 'basic-strategy':
+      return PlayerStrategy.BASIC_STRATEGY;
+  }
+}
+
 export default class Simulator {
   settings: SimulatorSettings;
+  playerStrategy: PlayerStrategy;
 
   constructor(settings: DeepPartial<SimulatorSettings>) {
     // TODO: Avoid `as` here. Otherwise returns `Partial<SimulatorSettings>`.
@@ -88,16 +103,32 @@ export default class Simulator {
       SETTINGS_DEFAULTS,
       settings
     ) as SimulatorSettings;
+
+    this.playerStrategy = parsePlayerStrategy(this.settings.playerStrategy);
   }
 
-  // TODO: Allow computing optimal bet spreads.
-  // Simple bet spread strategy, for $10 minimum:
-  // TC < 1: $10
-  // TC 1: $10 * 2^0 = $10
-  // TC 2: $10 * 2^1 = $20
-  // TC 3: $10 * 2^2 = $40
-  // TC 4: $10 * 2^3 = $80
-  betAmount(hiLoTrueCount: number, minimumBet: number): number {
+  betAmount(hiLoTrueCount: number, settings: GameSettings): number {
+    if (this.playerStrategy === PlayerStrategy.BASIC_STRATEGY) {
+      return settings.minimumBet;
+    }
+
+    if (this.settings.playerBetSpread) {
+      return this.settings.playerBetSpread[
+        Utils.clamp(
+          Math.floor(hiLoTrueCount),
+          0,
+          this.settings.playerBetSpread.length - 1
+        )
+      ];
+    }
+
+    // TODO: Allow computing optimal bet spreads.
+    // Simple bet spread strategy, for $10 minimum:
+    // TC < 1: $10
+    // TC 1: $10 * 2^0 = $10
+    // TC 2: $10 * 2^1 = $20
+    // TC 3: $10 * 2^2 = $40
+    // TC 4: $10 * 2^3 = $80
     return hiLoTrueCount < 1
       ? minimumBet
       : minimumBet * 2 ** (Math.min(5, hiLoTrueCount) - 1);
@@ -114,10 +145,7 @@ export default class Simulator {
       animationDelay: 0,
       disableEvents: true,
       playerStrategyOverride: {
-        [this.settings.playerTablePosition]:
-          this.settings.playerStrategy === 'basic-strategy'
-            ? PlayerStrategy.BASIC_STRATEGY
-            : PlayerStrategy.BASIC_STRATEGY_I18,
+        [this.settings.playerTablePosition]: this.playerStrategy,
       },
     });
 
@@ -129,12 +157,7 @@ export default class Simulator {
     let amountWagered = 0;
 
     while (handsPlayed < this.settings.hands) {
-      // const betAmount = this.betAmount(
-      //   game.shoe.hiLoTrueCount,
-      //   game.settings.minimumBet
-      // );
-
-      const betAmount = game.settings.minimumBet;
+      const betAmount = this.betAmount(game.shoe.hiLoTrueCount, game.settings);
 
       await game.run({
         betAmount,

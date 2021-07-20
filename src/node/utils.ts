@@ -17,11 +17,16 @@ export function printUsageOptions<T extends SimpleObject>(
     if (typeof value === 'object') {
       printUsageOptions(value, valueOverrides);
     } else {
-      console.log(
-        [`  --${kebabCase(key.toString())}`, value, valueOverrides[key]].join(
-          ' '
-        )
-      );
+      const items = [`  --${kebabCase(key.toString())}`];
+
+      if (value) {
+        items.push(value);
+      }
+      if (valueOverrides[key]) {
+        items.push(valueOverrides[key] as string);
+      }
+
+      console.log(items.join(' '));
     }
   });
 }

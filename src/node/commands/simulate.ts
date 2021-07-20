@@ -17,7 +17,9 @@ export default async function (
     console.log('Options:');
 
     printUsageOptions<SimulatorSettings>(SETTINGS_DEFAULTS, {
-      playerStrategy: '[basic-strategy | basic-strategy-i18]',
+      playerStrategy:
+        '[basic-strategy | basic-strategy-betspread | basic-strategy-betspread-i18]',
+      playerBetSpread: '1000,1000,2000,4000,8000 (bets at TC 0, 1, 2 etc)',
     });
 
     return;
