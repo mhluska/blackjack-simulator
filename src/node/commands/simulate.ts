@@ -4,8 +4,9 @@ import Simulator, {
   SETTINGS_DEFAULTS,
 } from '../../simulator';
 
-import { CliSettings, printUsageOptions, titleCase } from '../utils';
+import { CliSettings, printUsageOptions } from '../utils';
 import { entries } from '../../types';
+import Utils from '../../utils';
 
 export default async function (
   options: Partial<SimulatorSettings & CliSettings>
@@ -35,7 +36,7 @@ export default async function (
 
   // TODO: Format without tabs (format table with spaces).
   const print = (key: string, value: string | number) =>
-    console.log(`${titleCase(key)}:\t${value}`);
+    console.log(`${Utils.titleCase(key)}:\t${value}`);
 
   // Print the most relevant options first (iteration order of a POJO is not
   // guaranteed).

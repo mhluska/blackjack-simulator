@@ -19,7 +19,7 @@ export default class Hand extends GameObject {
   player: Player;
   fromSplit: boolean;
   betAmount: number;
-  cardTotal: number;
+  cardHighTotal: number;
   cardLowTotal: number;
   acesCount: number;
   cards: Card[];
@@ -31,7 +31,7 @@ export default class Hand extends GameObject {
     this.player = player;
     this.fromSplit = false;
     this.betAmount = 0;
-    this.cardTotal = 0;
+    this.cardHighTotal = 0;
     this.cardLowTotal = 0;
     this.acesCount = 0;
     this.cards = [];
@@ -43,15 +43,9 @@ export default class Hand extends GameObject {
     card.on('change', () => this.emitChange());
 
     this.cards[prepend ? 'unshift' : 'push'](card);
-    this.cardTotal += card.value;
-    this.cardLowTotal += card.rank === 'A' ? 1 : card.value;
 
-    if (card.rank === 'A') {
-      this.acesCount += 1;
-    }
-
-    if (this.cardTotal > 21 && card.rank === 'A') {
-      this.cardTotal -= 10;
+    if (card.visible) {
+      this.incrementTotalsForCard(card);
     }
 
     this.emitChange();
@@ -64,25 +58,34 @@ export default class Hand extends GameObject {
       return;
     }
 
-    this.cardTotal -= card.value;
+    this.decrementTotalsForCard(card);
+
+    return card;
+  }
+
+  incrementTotalsForCard(card: Card): void {
+    this.cardHighTotal += card.value;
+    this.cardLowTotal += card.rank === 'A' ? 1 : card.value;
+
+    if (card.rank === 'A') {
+      this.acesCount += 1;
+    }
+  }
+
+  decrementTotalsForCard(card: Card): void {
+    this.cardHighTotal -= card.value;
     this.cardLowTotal -= card.rank === 'A' ? 1 : card.value;
 
     if (card.rank === 'A') {
       this.acesCount -= 1;
-
-      if (this.cardTotal + 10 <= 21) {
-        this.cardTotal += 10;
-      }
     }
-
-    return card;
   }
 
   // TODO: Remove change handler when removing cards.
   removeCards(): Card[] {
     const cards = this.cards.slice();
     this.cards = [];
-    this.cardTotal = 0;
+    this.cardHighTotal = 0;
     this.cardLowTotal = 0;
     this.acesCount = 0;
 
@@ -108,6 +111,10 @@ export default class Hand extends GameObject {
     };
   }
 
+  get cardTotal(): number {
+    return this.cardHighTotal > 21 ? this.cardLowTotal : this.cardHighTotal;
+  }
+
   get firstMove(): boolean {
     return this.cards.length <= 2;
   }
@@ -117,7 +124,9 @@ export default class Hand extends GameObject {
   }
 
   get blackjack(): boolean {
-    return this.cards.length === 2 && this.cardTotal === 21 && !this.fromSplit;
+    return (
+      this.cards.length === 2 && this.cardHighTotal === 21 && !this.fromSplit
+    );
   }
 
   get finished(): boolean {

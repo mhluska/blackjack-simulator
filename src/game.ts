@@ -58,7 +58,7 @@ export const SETTINGS_DEFAULTS: GameSettings = {
   debug: false,
 
   playerBankroll: 10000 * 100,
-  playerTablePosition: 2,
+  playerTablePosition: 1,
   playerStrategyOverride: {},
 
   // Table rules
@@ -70,7 +70,7 @@ export const SETTINGS_DEFAULTS: GameSettings = {
   maxHandsAllowed: 4,
   maximumBet: 1000 * 100,
   minimumBet: 10 * 100,
-  playerCount: 6,
+  playerCount: 1,
 };
 
 export default class Game extends EventEmitter {
@@ -117,7 +117,8 @@ export default class Game extends EventEmitter {
 
   async run({ betAmount = this.settings.minimumBet } = {}): Promise<void> {
     if (this.settings.debug) {
-      console.log(`> Starting new game (player ID ${this.player.id})`);
+      console.log(`> Starting new hand (player ID ${this.player.id})`);
+      console.log('Shoe:', this.shoe.serialize());
     }
 
     this.players.forEach((player) => {
@@ -179,17 +180,18 @@ export default class Game extends EventEmitter {
     }
 
     this.dealer.cards[0].flip();
+    this.dealer.hands[0].incrementTotalsForCard(this.dealer.cards[0]);
 
     // Dealer draws cards until they reach 17. However, if all player hands have
     // busted, this step is skipped.
+    // TODO: Move this into `getNPCInput()` for `PlayerStrategy.DEALER`.
     if (!this._allPlayerHandsFinished()) {
-      while (this.dealer.cardTotal <= 17) {
-        if (this.dealer.cardTotal === 17) {
-          if (this.dealer.isHard) {
-            break;
-          } else if (!this.settings.hitSoft17) {
-            break;
-          }
+      while (this.dealer.cardTotal <= 17 && !this.dealer.blackjack) {
+        if (
+          this.dealer.cardTotal === 17 &&
+          (this.dealer.isHard || !this.settings.hitSoft17)
+        ) {
+          break;
         }
 
         this.dealer.takeCard(this.shoe.drawCard());
@@ -213,6 +215,9 @@ export default class Game extends EventEmitter {
     this.discardTray.addCards(this.dealer.removeCards());
 
     if (this.shoe.needsReset) {
+      if (this.settings.debug) {
+        console.log('Cut card reached');
+      }
       this.shoe.addCards(
         this.discardTray.removeCards().concat(this.shoe.removeCards())
       );
@@ -221,6 +226,7 @@ export default class Game extends EventEmitter {
     }
 
     if (this.settings.debug) {
+      console.log('End of hand', this.shoe.serialize());
       console.log();
     }
   }
@@ -271,9 +277,16 @@ export default class Game extends EventEmitter {
     // wrong moves in the database.
     this.gameId = Utils.randomId();
 
-    this.shoe = this._chainEmitChange(new Shoe(this));
+    this.shoe = this._chainEmitChange(
+      new Shoe({ game: this, debug: this.settings.debug })
+    );
     this.discardTray = this._chainEmitChange(new DiscardTray());
-    this.dealer = this._chainEmitChange(new Dealer());
+    this.dealer = this._chainEmitChange(
+      new Dealer({
+        debug: this.settings.debug,
+        strategy: PlayerStrategy.DEALER,
+      })
+    );
     this.players = Array.from(
       { length: this.settings.playerCount },
       (_item, index) =>

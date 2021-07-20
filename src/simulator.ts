@@ -33,11 +33,10 @@ export const SETTINGS_DEFAULTS: SimulatorSettings = {
   playerStrategy: 'basic-strategy',
 
   debug: false,
-  playerTablePosition: 2,
+  playerTablePosition: 1,
   playerBankroll: minimumBet * 1000 * 1000,
 
   // Table rules
-  // TODO: DRY with `game.ts`.
   allowDoubleAfterSplit: true,
   allowLateSurrender: true,
   blackjackPayout: '3:2',

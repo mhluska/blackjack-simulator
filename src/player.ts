@@ -17,6 +17,7 @@ export enum PlayerStrategy {
   USER_INPUT = 'USER_INPUT',
   BASIC_STRATEGY = 'BASIC_STRATEGY',
   BASIC_STRATEGY_I18 = 'BASIC_STRATEGY_I18',
+  DEALER = 'DEALER',
 }
 
 type PlayerAttributes = {
@@ -37,21 +38,17 @@ export default class Player extends GameObject {
   id: string;
   strategy: PlayerStrategy;
 
-  constructor(
-    {
-      balance = 10000 * 100,
-      blackjackPayout = '3:2',
-      debug = false,
-      strategy,
-    }: {
-      balance?: number;
-      blackjackPayout?: blackjackPayouts;
-      debug?: boolean;
-      strategy: PlayerStrategy;
-    } = {
-      strategy: PlayerStrategy.USER_INPUT,
-    }
-  ) {
+  constructor({
+    balance = 10000 * 100,
+    blackjackPayout = '3:2',
+    debug = false,
+    strategy,
+  }: {
+    balance?: number;
+    blackjackPayout?: blackjackPayouts;
+    debug?: boolean;
+    strategy: PlayerStrategy;
+  }) {
     super();
 
     this.balance = balance;
@@ -81,10 +78,10 @@ export default class Player extends GameObject {
         this.strategy,
         this.id,
         'dealer',
-        game.dealer.upcard?.rank,
-        game.dealer.holeCard?.rank,
+        game.dealer.hands[0].serialize(),
         'player',
-        hand.cardTotal,
+        hand.serialize(),
+        `(${hand.cardTotal})`,
         correctMove
       );
     }
@@ -101,7 +98,10 @@ export default class Player extends GameObject {
     hand.on('change', () => this.emitChange());
 
     this.hands.push(hand);
-    this.useChips(betAmount, { hand });
+
+    if (betAmount !== 0) {
+      this.useChips(betAmount, { hand });
+    }
 
     this.emitChange();
 
@@ -118,6 +118,16 @@ export default class Player extends GameObject {
 
     const targetHand = hand ?? this.hands[0] ?? this.addHand();
     targetHand.takeCard(card, { prepend });
+
+    if (this.debug) {
+      console.log(
+        Utils.titleCase((this.constructor as typeof GameObject).entityName),
+        this.id,
+        'draws card',
+        targetHand.serialize({ showHidden: true }),
+        `(${targetHand.cardTotal})`
+      );
+    }
 
     this.emitChange();
   }
@@ -174,7 +184,14 @@ export default class Player extends GameObject {
     this.balance -= betAmount;
 
     if (this.debug) {
-      console.log('Subtracting balance', this.id, this.balance, hand.betAmount);
+      console.log(
+        'Subtracted',
+        betAmount,
+        'from player',
+        this.id,
+        'balance:',
+        this.balance
+      );
     }
   }
 
@@ -201,6 +218,7 @@ export default class Player extends GameObject {
       console.log(
         'Hand result',
         this.id,
+        'winner:',
         winner,
         hand.blackjack ? 'blackjack' : ''
       );

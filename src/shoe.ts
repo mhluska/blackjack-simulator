@@ -30,20 +30,23 @@ type ShoeAttributes = {
 export default class Shoe extends DiscardTray {
   static entityName = 'shoe';
 
-  hiLoRunningCount: number;
-  deckCount: GameSettings['deckCount'];
-  mode: GameSettings['mode'];
-  checkTopNDeviations: GameSettings['checkTopNDeviations'];
   cards: Card[];
+  checkTopNDeviations: GameSettings['checkTopNDeviations'];
+  debug: boolean;
+  deckCount: GameSettings['deckCount'];
+  hiLoRunningCount: number;
+  mode: GameSettings['mode'];
 
-  constructor(game: Game) {
+  constructor({ game, debug = false }: { game: Game; debug?: boolean }) {
     super();
 
-    this.hiLoRunningCount = 0;
-    this.deckCount = game.settings.deckCount;
-    this.mode = game.settings.mode;
+    this.cards = this._setupCards(game.settings.deckCount);
     this.checkTopNDeviations = game.settings.checkTopNDeviations;
-    this.cards = this._setupCards();
+    this.debug = debug;
+    this.deckCount = game.settings.deckCount;
+    this.hiLoRunningCount = 0;
+    this.mode = game.settings.mode;
+
     this.shuffle();
   }
 
@@ -60,6 +63,10 @@ export default class Shoe extends DiscardTray {
 
     if (this.mode === 'illustrious18') {
       this._setupIllustrious18Mode();
+    }
+
+    if (this.debug) {
+      console.log('Shoe shuffled');
     }
   }
 
@@ -98,6 +105,16 @@ export default class Shoe extends DiscardTray {
     });
   }
 
+  serialize(): string {
+    return (
+      `(${this.cards.length} card${this.cards.length > 1 ? 's' : ''}): ` +
+      this.cards
+        .map((card) => card.rank)
+        .reverse()
+        .join(' ')
+    );
+  }
+
   get maxCards(): number {
     return this.deckCount * 52;
   }
@@ -126,9 +143,9 @@ export default class Shoe extends DiscardTray {
     return this.hiLoRunningCount / this.decksRemaining;
   }
 
-  _setupCards(): Card[] {
+  _setupCards(deckCount: Shoe['deckCount']): Card[] {
     const decks = [];
-    for (let i = 0; i < this.deckCount; i += 1) {
+    for (let i = 0; i < deckCount; i += 1) {
       decks.push(new Deck(this));
     }
 

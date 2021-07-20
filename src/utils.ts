@@ -44,6 +44,14 @@ export default class Utils {
     return Math.random().toString(36).substring(2);
   }
 
+  // See https://stackoverflow.com/a/52584017/659910
+  static titleCase(str: string): string {
+    return str
+      .replace(/([A-Z])/g, (match) => ` ${match}`)
+      .replace(/^./, (match) => match.toUpperCase())
+      .trim();
+  }
+
   static clamp(number: number, min: number, max: number): number {
     return Math.max(Math.min(number, max), min);
   }

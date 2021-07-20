@@ -79,7 +79,8 @@ export default class CLIRenderer implements Renderer {
       question = 'Y (buy insurance), N (no insurance)? ';
     } else {
       const getGameResult = (hand: Hand) => {
-        const blackjack = hand.blackjack ? 'Blackjack! ' : '';
+        const blackjack =
+          hand.blackjack && !this.game.dealer.blackjack ? 'Blackjack! ' : '';
 
         switch (this.game.player.handWinner.get(hand.id)) {
           case 'player':
