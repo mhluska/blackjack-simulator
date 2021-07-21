@@ -130,8 +130,8 @@ export default class Simulator {
     // TC 3: $10 * 2^2 = $40
     // TC 4: $10 * 2^3 = $80
     return hiLoTrueCount < 1
-      ? minimumBet
-      : minimumBet * 2 ** (Math.min(5, hiLoTrueCount) - 1);
+      ? settings.minimumBet
+      : settings.minimumBet * 2 ** (Math.min(5, hiLoTrueCount) - 1);
   }
 
   async run(): Promise<SimulatorResult> {
