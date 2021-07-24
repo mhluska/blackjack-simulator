@@ -91,6 +91,7 @@ export default class Player extends GameObject {
     }
 
     if (!correctMove) {
+      throw new Error('shit');
       return;
     }
 

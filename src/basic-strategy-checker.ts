@@ -1,49 +1,32 @@
 import Utils from './utils';
 import Game, { GameSettings } from './game';
 import Hand from './hand';
-import { singleDeck, doubleDeck } from './charts';
+import selectCharts from './charts/utils';
 import {
-  deckCounts,
   chartTypes,
   CheckResult,
   actions,
   correctMoves,
-  BasicStrategyData,
-  keys,
+  UncommonChart,
 } from './types';
 
-const CHARTS = {
-  1: singleDeck,
-  2: doubleDeck,
-
-  // TODO: Add more basic strategy charts.
-  4: {
-    hitsSoft17: {
-      chart: { hard: {}, soft: {}, splits: {} },
-      uncommon: { hard: {}, soft: {}, splits: {} },
-    },
-  },
-  6: {
-    hitsSoft17: {
-      chart: { hard: {}, soft: {}, splits: {} },
-      uncommon: { hard: {}, soft: {}, splits: {} },
-    },
-  },
-  8: {
-    hitsSoft17: {
-      chart: { hard: {}, soft: {}, splits: {} },
-      uncommon: { hard: {}, soft: {}, splits: {} },
-    },
-  },
-};
+function chartMinMax(chartType: chartTypes) {
+  switch (chartType) {
+    case 'hard':
+      return [7, 18];
+    case 'soft':
+      return [13, 20];
+    case 'splits':
+      return [2, 11];
+  }
+}
 
 export default class BasicStrategyChecker {
-  static uncommonHands(
-    deckCount: deckCounts
-  ): BasicStrategyData['hitsSoft17']['uncommon'] {
-    return this._chartData(deckCount).uncommon;
+  static uncommonHands(settings: GameSettings): UncommonChart {
+    return selectCharts(settings).uncommon;
   }
 
+  // TODO: Remove `void` here. There should always be a correct move.
   static suggest(game: Game, hand: Hand): correctMoves | void {
     if (game.state.step === 'ask-insurance') {
       return 'N';
@@ -53,15 +36,11 @@ export default class BasicStrategyChecker {
       const allowSplit =
         hand.player.hands.length < game.settings.maxHandsAllowed;
 
-      const chartGroup = this._chartGroup(game.settings.deckCount);
+      const { chart: chartGroup } = selectCharts(game.settings);
       const chartType = this._chartType(hand, allowSplit);
       const chart = chartGroup[chartType];
+      const [chartMin, chartMax] = chartMinMax(chartType);
 
-      const chartKeys = keys(chart);
-      // TODO: Is there a way to avoid type casts here? Typescript doesn't seem
-      // to know that the min of a union type should still be that union type.
-      const chartMin = Math.min(...chartKeys) as typeof chartKeys[0];
-      const chartMax = Math.max(...chartKeys) as typeof chartKeys[0];
       const playerTotal = Utils.clamp(
         hand.hasPairs && allowSplit ? hand.cards[0].value : hand.cardTotal,
         chartMin,
@@ -73,12 +52,12 @@ export default class BasicStrategyChecker {
         return;
       }
 
-      const dealerHints = chart[playerTotal];
+      const dealerHints = chart[playerTotal - chartMin];
       if (!dealerHints) {
         return;
       }
 
-      const correctMove = dealerHints[dealersCard];
+      const correctMove = dealerHints[dealersCard - 2];
 
       if (correctMove === 'Dh' || correctMove === 'Ds') {
         const allowDouble = hand.firstMove;
@@ -175,25 +154,6 @@ export default class BasicStrategyChecker {
 
   static _allowSurrender(hand: Hand, settings: GameSettings): boolean {
     return hand.firstMove && settings.allowLateSurrender;
-  }
-
-  static _chartData(deckCount: deckCounts): BasicStrategyData['hitsSoft17'] {
-    // TODO: Allow configuring hits/stands soft 17. Not too important since most
-    // tables hit soft 17.
-    // TODO: Add charts for remaining deck counts!
-    // - 2 deck (stays soft 17)
-    // - 4 deck (stays/hits soft 17)
-    // - 6 deck (stays/hits soft 17)
-    // - 8 deck (stays/hits soft 17)
-    // Add an assert that the chart exists.
-
-    return (CHARTS[deckCount] || CHARTS['2']).hitsSoft17;
-  }
-
-  static _chartGroup(
-    deckCount: deckCounts
-  ): BasicStrategyData['hitsSoft17']['chart'] {
-    return this._chartData(deckCount).chart;
   }
 
   static _chartType(hand: Hand, allowSplit: boolean): chartTypes {

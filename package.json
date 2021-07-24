@@ -10,7 +10,7 @@
     "browser": "webpack serve --open",
     "start": "webpack --watch",
     "test": "mocha --require @babel/register --require ts-node/register --require tsconfig-paths/register ./test/**/*.ts",
-    "test:types": "tsc --noEmit --downlevelIteration --project .",
+    "test:types": "tsc --noEmit --project .",
     "lint": "eslint --fix ./src",
     "build": "webpack",
     "prepare": "npm run build"

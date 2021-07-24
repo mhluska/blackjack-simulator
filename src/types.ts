@@ -76,7 +76,7 @@ export type blackjackPayouts = '3:2' | '6:5';
 
 export type cardValue = 1 | dealerTotal;
 
-type chartMoves =
+export type chartMoves =
   | correctMoves
   | 'Dh'
   | 'Ds'
@@ -88,20 +88,11 @@ type chartMoves =
   | 'Rp';
 
 export type BasicStrategyChart = {
-  [key in chartTypes]: {
-    [total in playerTotal]?: { [total in dealerTotal]: chartMoves };
-  };
+  [key in chartTypes]: chartMoves[][];
 };
 
 export type UncommonChart = {
   [key in chartTypes]: { [total in playerTotal]?: dealerTotal[] };
-};
-
-export type BasicStrategyData = {
-  hitsSoft17: {
-    chart: BasicStrategyChart;
-    uncommon: UncommonChart;
-  };
 };
 
 // TODO: Avoid any here.

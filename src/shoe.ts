@@ -31,21 +31,19 @@ export default class Shoe extends DiscardTray {
   static entityName = 'shoe';
 
   cards: Card[];
-  checkTopNDeviations: GameSettings['checkTopNDeviations'];
   debug: boolean;
-  deckCount: GameSettings['deckCount'];
   hiLoRunningCount: number;
   mode: GameSettings['mode'];
+  settings: GameSettings;
 
   constructor({ game, debug = false }: { game: Game; debug?: boolean }) {
     super();
 
     this.cards = this._setupCards(game.settings.deckCount);
-    this.checkTopNDeviations = game.settings.checkTopNDeviations;
     this.debug = debug;
-    this.deckCount = game.settings.deckCount;
     this.hiLoRunningCount = 0;
     this.mode = game.settings.mode;
+    this.settings = game.settings;
 
     this.shuffle();
   }
@@ -116,7 +114,7 @@ export default class Shoe extends DiscardTray {
   }
 
   get maxCards(): number {
-    return this.deckCount * 52;
+    return this.settings.deckCount * 52;
   }
 
   get needsReset(): boolean {
@@ -136,14 +134,14 @@ export default class Shoe extends DiscardTray {
   }
 
   get decksRemaining(): number {
-    return this.cardsRemaining * this.deckCount;
+    return this.cardsRemaining * this.settings.deckCount;
   }
 
   get hiLoTrueCount(): number {
     return this.hiLoRunningCount / this.decksRemaining;
   }
 
-  _setupCards(deckCount: Shoe['deckCount']): Card[] {
+  _setupCards(deckCount: GameSettings['deckCount']): Card[] {
     const decks = [];
     for (let i = 0; i < deckCount; i += 1) {
       decks.push(new Deck(this));
@@ -222,7 +220,7 @@ export default class Shoe extends DiscardTray {
 
   _setupUncommonMode(): void {
     const [chartType, chart] = Utils.arraySample(
-      entries(BasicStrategyChecker.uncommonHands(this.deckCount))
+      entries(BasicStrategyChecker.uncommonHands(this.settings))
     );
     const [playerTotal, dealerUpcardValues] = Utils.arraySample(entries(chart));
 
@@ -248,7 +246,7 @@ export default class Shoe extends DiscardTray {
       index,
       pair,
     } = Utils.arraySample(
-      illustrious18Deviations.slice(0, this.checkTopNDeviations)
+      illustrious18Deviations.slice(0, this.settings.checkTopNDeviations)
     );
 
     let total = insurance ? (Utils.random(2, 20) as playerTotal) : playerTotal;
@@ -278,7 +276,7 @@ export default class Shoe extends DiscardTray {
     // are about to be drawn by the dealer.
     let runningCount =
       Utils.rangeBoundary(index) *
-        (((this.maxCards - 3) * this.deckCount) / this.maxCards) -
+        (((this.maxCards - 3) * this.settings.deckCount) / this.maxCards) -
       i1 -
       i2 -
       i3;
