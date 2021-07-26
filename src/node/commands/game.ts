@@ -15,11 +15,7 @@ function stepGame(
 ) {
   const step = game.step(input);
 
-  if (
-    step !== 'ask-insurance' &&
-    step !== 'play-hands' &&
-    step !== 'game-result'
-  ) {
+  if (!step.startsWith('waiting-for')) {
     return Promise.resolve(undefined);
   }
 

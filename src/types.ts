@@ -17,17 +17,14 @@ export type handWinners = 'player' | 'dealer' | 'push';
 
 export type chartTypes = 'hard' | 'soft' | 'splits';
 
-// TODO: Rename `ask-insurance` to `waiting-for-insurance-input`
-// TODO: Rename `waiting-for-move` to `waiting-for-play-input`
-// TODO: Rename `game-result` to `waiting-for-new-game-input`
 export type gameSteps =
-  | 'start'
   | 'ask-insurance-right'
-  | 'ask-insurance'
-  | 'play-hands-right'
-  | 'play-hands'
   | 'play-hands-left'
-  | 'game-result';
+  | 'play-hands-right'
+  | 'start'
+  | 'waiting-for-insurance-input'
+  | 'waiting-for-new-game-input'
+  | 'waiting-for-play-input';
 
 export type deckCounts = 1 | 2 | 4 | 6 | 8;
 

@@ -56,7 +56,7 @@ export default class CLIRenderer implements Renderer {
 
     let question;
 
-    if (this.game.state.step === 'play-hands') {
+    if (this.game.state.step === 'waiting-for-play-input') {
       const choices = ['H (hit)', 'S (stand)'];
 
       if (this.game.focusedHand.firstMove) {
@@ -75,9 +75,9 @@ export default class CLIRenderer implements Renderer {
       }
 
       question = choices.join(', ') + '? ';
-    } else if (this.game.state.step === 'ask-insurance') {
+    } else if (this.game.state.step === 'waiting-for-insurance-input') {
       question = 'Y (buy insurance), N (no insurance)? ';
-    } else if (this.game.state.step === 'game-result') {
+    } else if (this.game.state.step === 'waiting-for-new-game-input') {
       const getGameResult = (hand: Hand) => {
         const blackjack =
           hand.blackjack && !this.game.dealer.blackjack ? 'Blackjack! ' : '';

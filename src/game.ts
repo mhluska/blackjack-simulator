@@ -308,7 +308,7 @@ export default class Game extends EventEmitter {
   step(input?: actions): gameSteps {
     let step: gameSteps = this.state.step;
 
-    while (true) {
+    do {
       switch (step) {
         case 'start':
           step = this.dealInitialCards();
@@ -316,10 +316,10 @@ export default class Game extends EventEmitter {
 
         case 'ask-insurance-right':
           this.askInsurance(this.eachPlayerRight, input);
-          step = 'ask-insurance';
+          step = 'waiting-for-insurance-input';
           break;
 
-        case 'ask-insurance':
+        case 'waiting-for-insurance-input':
           if (
             this.player.isUser &&
             (!input || !['ask-insurance', 'no-insurance'].includes(input))
@@ -334,10 +334,12 @@ export default class Game extends EventEmitter {
 
         case 'play-hands-right':
           this.playNPCHands(this.eachPlayerRight);
-          step = this.focusedHand.blackjack ? 'play-hands-left' : 'play-hands';
+          step = this.focusedHand.blackjack
+            ? 'play-hands-left'
+            : 'waiting-for-play-input';
           break;
 
-        case 'play-hands':
+        case 'waiting-for-play-input':
           if (this.player.isUser) {
             if (this.isValidPlayHandsInput(input)) {
               step = this.playHandsUser(input);
@@ -351,27 +353,25 @@ export default class Game extends EventEmitter {
         case 'play-hands-left':
           this.playNPCHands(this.eachPlayerLeft);
           this.playDealer();
-          step = 'game-result';
+          step = 'waiting-for-new-game-input';
           break;
 
-        case 'game-result':
+        case 'waiting-for-new-game-input':
           if (this.player.isUser && !input) {
             break;
           }
-          this.cleanupGame();
+          this.removeCards();
           step = 'start';
       }
 
       this.state.step = step;
+    } while (
+      step !== 'waiting-for-insurance-input' &&
+      step !== 'waiting-for-new-game-input' &&
+      step !== 'waiting-for-play-input'
+    );
 
-      if (
-        step === 'ask-insurance' ||
-        step === 'play-hands' ||
-        step === 'game-result'
-      ) {
-        return step;
-      }
-    }
+    return step;
   }
 
   // TODO: Assert that all players are NPCs before running this.
@@ -382,7 +382,7 @@ export default class Game extends EventEmitter {
 
     do {
       nextStep = this.step();
-    } while (nextStep !== 'game-result');
+    } while (nextStep !== 'waiting-for-new-game-input');
   }
 
   dealInitialCards(): gameSteps {
@@ -423,7 +423,7 @@ export default class Game extends EventEmitter {
 
       this.eachPlayer((player) => player.setHandWinner({ winner: 'dealer' }));
 
-      return 'game-result';
+      return 'waiting-for-new-game-input';
     }
 
     // Dealer peeks at the hole card if the upcard is ace to ask insurance.
@@ -597,7 +597,7 @@ export default class Game extends EventEmitter {
       }
     }
 
-    return 'play-hands';
+    return 'waiting-for-play-input';
   }
 
   playDealer(): void {
@@ -623,7 +623,7 @@ export default class Game extends EventEmitter {
     this.eachPlayer((player) => this.setHandResults(player));
   }
 
-  cleanupGame(): void {
+  removeCards(): void {
     this.state.playCorrection = '';
     this.state.focusedHandIndex = 0;
 
