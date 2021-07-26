@@ -207,7 +207,6 @@ export default class Player extends GameObject {
     winner: handWinners;
     surrender?: boolean;
   }): void {
-    debugger;
     this.handWinner.set(hand.id, winner);
 
     if (this.debug) {

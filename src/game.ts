@@ -342,7 +342,7 @@ export default class Game extends EventEmitter {
         case 'waiting-for-play-input':
           if (this.player.isUser) {
             if (this.isValidPlayHandsInput(input)) {
-              step = this.playHandsUser(input);
+              step = this.playUserHands(input);
             }
           } else {
             this.playNPCHands(this.currentPlayer);
@@ -581,7 +581,7 @@ export default class Game extends EventEmitter {
     });
   }
 
-  playHandsUser(input: actions): gameSteps {
+  playUserHands(input: actions): gameSteps {
     const handFinished = this.playHand(
       this.player,
       this.focusedHand,
