@@ -17,6 +17,20 @@ export type handWinners = 'player' | 'dealer' | 'push';
 
 export type chartTypes = 'hard' | 'soft' | 'splits';
 
+// TODO: Rename `ask-insurance` to `waiting-for-insurance-input`
+// TODO: Rename `waiting-for-move` to `waiting-for-play-input`
+// TODO: Rename `game-result` to `waiting-for-new-game-input`
+export type gameSteps =
+  | 'start'
+  | 'ask-insurance-right'
+  | 'ask-insurance'
+  | 'ask-insurance-left'
+  | 'play-hands-right'
+  | 'play-hands'
+  | 'play-hands-left'
+  | 'play-dealer'
+  | 'game-result';
+
 export type deckCounts = 1 | 2 | 4 | 6 | 8;
 
 export enum Suits {
@@ -189,7 +203,7 @@ export function correctMoveToAction(correctMove: correctMoves): actions {
 }
 
 // TODO: Consolidate types so we can remove these converter functions?
-export function actionDataKeyToAction(actionDataKey: actionDataKeys): actions {
+export function actionDataKeyToAction(actionDataKey: string): actions | void {
   switch (actionDataKey) {
     case 'd':
       return 'double';

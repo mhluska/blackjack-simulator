@@ -26,85 +26,71 @@ export default class BasicStrategyChecker {
     return selectCharts(settings).uncommon;
   }
 
-  // TODO: Remove `void` here. There should always be a correct move.
-  static suggest(game: Game, hand: Hand): correctMoves | void {
-    if (game.state.step === 'ask-insurance') {
+  static suggest(game: Game, hand: Hand): correctMoves {
+    if (
+      game.state.step === 'ask-insurance-right' ||
+      game.state.step === 'ask-insurance' ||
+      game.state.step === 'ask-insurance-left'
+    ) {
       return 'N';
     }
 
-    if (game.state.step === 'waiting-for-move') {
-      const allowSplit =
-        hand.player.hands.length < game.settings.maxHandsAllowed;
+    const allowSplit = hand.player.hands.length < game.settings.maxHandsAllowed;
 
-      const { chart: chartGroup } = selectCharts(game.settings);
-      const chartType = this._chartType(hand, allowSplit);
-      const chart = chartGroup[chartType];
-      const [chartMin, chartMax] = chartMinMax(chartType);
+    const { chart: chartGroup } = selectCharts(game.settings);
+    const chartType = this._chartType(hand, allowSplit);
+    const chart = chartGroup[chartType];
+    const [chartMin, chartMax] = chartMinMax(chartType);
 
-      const playerTotal = Utils.clamp(
-        hand.hasPairs && allowSplit ? hand.cards[0].value : hand.cardTotal,
-        chartMin,
-        chartMax
-      ) as typeof chartMin;
+    const playerTotal = Utils.clamp(
+      hand.hasPairs && allowSplit ? hand.cards[0].value : hand.cardTotal,
+      chartMin,
+      chartMax
+    ) as typeof chartMin;
 
-      const dealersCard = game.dealer.upcard?.value;
-      if (!dealersCard) {
-        return;
+    const dealersCard = game.dealer.upcard.value;
+    const dealerHints = chart[playerTotal - chartMin];
+    const correctMove = dealerHints[dealersCard - 2];
+
+    if (correctMove === 'Dh' || correctMove === 'Ds') {
+      const allowDouble = hand.firstMove;
+      if (allowDouble) {
+        return 'D';
+      } else {
+        return correctMove === 'Dh' ? 'H' : 'S';
       }
-
-      const dealerHints = chart[playerTotal - chartMin];
-      if (!dealerHints) {
-        return;
-      }
-
-      const correctMove = dealerHints[dealersCard - 2];
-
-      if (correctMove === 'Dh' || correctMove === 'Ds') {
-        const allowDouble = hand.firstMove;
-        if (allowDouble) {
-          return 'D';
-        } else {
-          return correctMove === 'Dh' ? 'H' : 'S';
-        }
-      }
-
-      if (
-        correctMove === 'Ph' ||
-        correctMove === 'Pd' ||
-        correctMove === 'Ps'
-      ) {
-        if (game.settings.allowDoubleAfterSplit) {
-          return 'P';
-        } else {
-          switch (correctMove) {
-            case 'Ph':
-              return 'H';
-            case 'Pd':
-              return 'D';
-            case 'Ps':
-              return 'S';
-          }
-        }
-      }
-
-      const allowSurrender = this._allowSurrender(hand, game.settings);
-
-      if (correctMove === 'Rp') {
-        return allowSurrender && !game.settings.allowDoubleAfterSplit
-          ? 'R'
-          : 'P';
-      }
-
-      if (correctMove === 'Rh' || correctMove === 'Rs') {
-        if (allowSurrender) {
-          return 'R';
-        } else {
-          return correctMove == 'Rh' ? 'H' : 'S';
-        }
-      }
-
-      return correctMove;
     }
+
+    if (correctMove === 'Ph' || correctMove === 'Pd' || correctMove === 'Ps') {
+      if (game.settings.allowDoubleAfterSplit) {
+        return 'P';
+      } else {
+        switch (correctMove) {
+          case 'Ph':
+            return 'H';
+          case 'Pd':
+            return 'D';
+          case 'Ps':
+            return 'S';
+        }
+      }
+    }
+
+    const allowSurrender = this._allowSurrender(hand, game.settings);
+
+    if (correctMove === 'Rp') {
+      return allowSurrender && !game.settings.allowDoubleAfterSplit ? 'R' : 'P';
+    }
+
+    if (correctMove === 'Rh' || correctMove === 'Rs') {
+      if (allowSurrender) {
+        return 'R';
+      } else {
+        return correctMove == 'Rh' ? 'H' : 'S';
+      }
+    }
+
+    return correctMove;
   }
 
   // Returns true if basic strategy was followed correctly.

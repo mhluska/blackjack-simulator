@@ -50,16 +50,16 @@ export default class CLIRenderer implements Renderer {
   }
 
   _renderQuestion(): void {
-    if (!this.game.state.step || !this.game.state.focusedHand) {
+    if (!this.game.state.step || !this.game.focusedHand) {
       return;
     }
 
     let question;
 
-    if (this.game.state.step === 'waiting-for-move') {
+    if (this.game.state.step === 'play-hands') {
       const choices = ['H (hit)', 'S (stand)'];
 
-      if (this.game.state.focusedHand.firstMove) {
+      if (this.game.focusedHand.firstMove) {
         choices.push('D (double)');
 
         if (this.game.settings.allowLateSurrender) {
@@ -68,7 +68,7 @@ export default class CLIRenderer implements Renderer {
       }
 
       if (
-        this.game.state.focusedHand?.hasPairs &&
+        this.game.focusedHand.hasPairs &&
         this.game.player.hands.length < this.game.settings.maxHandsAllowed
       ) {
         choices.push('P (split)');
@@ -77,7 +77,7 @@ export default class CLIRenderer implements Renderer {
       question = choices.join(', ') + '? ';
     } else if (this.game.state.step === 'ask-insurance') {
       question = 'Y (buy insurance), N (no insurance)? ';
-    } else {
+    } else if (this.game.state.step === 'game-result') {
       const getGameResult = (hand: Hand) => {
         const blackjack =
           hand.blackjack && !this.game.dealer.blackjack ? 'Blackjack! ' : '';
@@ -100,7 +100,9 @@ export default class CLIRenderer implements Renderer {
       question = `${result} (press any key for next hand)`;
     }
 
-    this._renderLine(question);
+    if (question) {
+      this._renderLine(question);
+    }
   }
 
   _renderLine(text: string, yPosBottom = 0): void {
@@ -118,7 +120,7 @@ export default class CLIRenderer implements Renderer {
     const line = player.hands
       .map((hand) => {
         const padding = hand.cardTotal < 10 ? ' ' : '';
-        const handFocus = this.game.state.focusedHand === hand ? '>' : ' ';
+        const handFocus = this.game.focusedHand === hand ? '>' : ' ';
 
         return `${handFocus} (total ${
           hand.cardTotal

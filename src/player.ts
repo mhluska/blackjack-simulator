@@ -61,20 +61,15 @@ export default class Player extends GameObject {
     this.strategy = strategy;
   }
 
-  getNPCInput(game: Game, hand: Hand): actions | void {
-    let correctMove: correctMoves | void;
-
-    if (
-      this.strategy === PlayerStrategy.BASIC_STRATEGY ||
-      this.strategy === PlayerStrategy.BASIC_STRATEGY_BETSPREAD
-    ) {
-      correctMove = BasicStrategyChecker.suggest(game, hand);
-    }
+  getNPCInput(game: Game, hand: Hand): actions {
+    let correctMove: correctMoves;
 
     if (this.strategy === PlayerStrategy.BASIC_STRATEGY_BETSPREAD_I18) {
       correctMove =
         HiLoDeviationChecker.suggest(game, hand) ||
         BasicStrategyChecker.suggest(game, hand);
+    } else {
+      correctMove = BasicStrategyChecker.suggest(game, hand);
     }
 
     if (this.debug) {
@@ -88,10 +83,6 @@ export default class Player extends GameObject {
         `(${hand.cardTotal})`,
         correctMove
       );
-    }
-
-    if (!correctMove) {
-      return;
     }
 
     return correctMoveToAction(correctMove);
@@ -216,6 +207,7 @@ export default class Player extends GameObject {
     winner: handWinners;
     surrender?: boolean;
   }): void {
+    debugger;
     this.handWinner.set(hand.id, winner);
 
     if (this.debug) {
@@ -245,8 +237,12 @@ export default class Player extends GameObject {
     this.emit('hand-winner', hand, winner);
   }
 
+  get isUser(): boolean {
+    return this.strategy === PlayerStrategy.USER_INPUT;
+  }
+
   get isNPC(): boolean {
-    return this.strategy !== PlayerStrategy.USER_INPUT;
+    return !this.isUser;
   }
 
   // TODO: Consider using `Proxy`.

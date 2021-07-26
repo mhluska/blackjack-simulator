@@ -134,14 +134,13 @@ export default class Simulator {
       : settings.minimumBet * 2 ** (Math.min(5, hiLoTrueCount) - 1);
   }
 
-  async run(): Promise<SimulatorResult> {
+  run(): SimulatorResult {
     const startTime = Date.now();
 
     const game = new Game({
       ...this.settings,
 
       debug: this.settings.debug,
-      autoConfirmNewGame: true,
       animationDelay: 0,
       disableEvents: true,
       playerStrategyOverride: {
@@ -159,9 +158,7 @@ export default class Simulator {
     while (handsPlayed < this.settings.hands) {
       const betAmount = this.betAmount(game.shoe.hiLoTrueCount, game.settings);
 
-      await game.run({
-        betAmount,
-      });
+      game.run(betAmount);
 
       bankroll.push(game.player.balance);
 
