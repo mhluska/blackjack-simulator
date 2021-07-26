@@ -18,7 +18,6 @@ export type handWinners = 'player' | 'dealer' | 'push';
 export type chartTypes = 'hard' | 'soft' | 'splits';
 
 export type gameSteps =
-  | 'ask-insurance-right'
   | 'play-hands-left'
   | 'play-hands-right'
   | 'start'

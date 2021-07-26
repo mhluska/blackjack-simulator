@@ -121,6 +121,7 @@ export default class Game extends EventEmitter {
         strategy: PlayerStrategy.DEALER,
       })
     );
+
     this.players = Array.from(
       { length: this.settings.playerCount },
       (_item, index) =>
@@ -139,12 +140,16 @@ export default class Game extends EventEmitter {
         )
     );
 
-    this.player = this.players[this.settings.playerTablePosition - 1];
-    this.playersLeft = this.players.slice(
-      0,
-      this.settings.playerTablePosition - 1
-    );
-    this.playersRight = this.players.slice(this.settings.playerTablePosition);
+    // We reverse the players array for convenience since reverse iteration in
+    // JS is not possible.
+    this.players.reverse();
+
+    const reversedTablePosition =
+      this.players.length - this.settings.playerTablePosition + 1;
+
+    this.player = this.players[reversedTablePosition - 1];
+    this.playersLeft = this.players.slice(reversedTablePosition);
+    this.playersRight = this.players.slice(0, reversedTablePosition - 1);
 
     this.player.on('hand-winner', (hand, winner) => {
       this.emit('create-record', 'hand-result', {
@@ -196,32 +201,6 @@ export default class Game extends EventEmitter {
     this.emit('resetState');
   }
 
-  eachPlayer = (callback: EachPlayerCallback): void => {
-    for (let i = this.players.length - 1; i >= 0; i -= 1) {
-      callback(this.players[i], i, this.players[i].isUser);
-    }
-  };
-
-  eachPlayerLeft = (callback: EachPlayerCallback): void => {
-    for (let i = this.settings.playerTablePosition - 2; i >= 0; i -= 1) {
-      callback(this.players[i], i, this.players[i].isUser);
-    }
-  };
-
-  eachPlayerRight = (callback: EachPlayerCallback): void => {
-    for (
-      let i = this.players.length - 1;
-      i >= this.settings.playerTablePosition;
-      i -= 1
-    ) {
-      callback(this.players[i], i, this.players[i].isUser);
-    }
-  };
-
-  currentPlayer = (callback: EachPlayerCallback): void => {
-    callback(this.player, this.settings.playerTablePosition - 1, true);
-  };
-
   allPlayerHandsFinished(): boolean {
     return this.players.every((player) =>
       player.hands.every((hand) => hand.finished)
@@ -258,51 +237,37 @@ export default class Game extends EventEmitter {
     });
   }
 
-  setHandResults(player: Player): void {
-    for (const hand of player.hands) {
-      if (player.handWinner.get(hand.id)) {
-        continue;
-      }
-
-      if (this.dealer.busted) {
-        player.setHandWinner({ winner: 'player', hand });
-      } else if (this.dealer.cardTotal > hand.cardTotal) {
-        player.setHandWinner({ winner: 'dealer', hand });
-      } else if (hand.cardTotal > this.dealer.cardTotal) {
-        player.setHandWinner({ winner: 'player', hand });
-      } else {
-        player.setHandWinner({ winner: 'push', hand });
-      }
-    }
-  }
-
   isValidPlayHandsInput(input: actions | undefined): input is actions {
     if (
       !input ||
       !['hit', 'stand', 'double', 'split', 'surrender'].includes(input)
     ) {
-      return true;
+      return false;
     }
 
     if (
       input === 'surrender' &&
       (!this.settings.allowLateSurrender || !this.focusedHand.firstMove)
     ) {
-      return true;
+      return false;
     }
 
     if (
       input === 'split' &&
       (!this.focusedHand.hasPairs || !this.focusedHand.firstMove)
     ) {
-      return true;
+      return false;
     }
 
     if (input === 'double' && !this.focusedHand.firstMove) {
-      return true;
+      return false;
     }
 
-    return false;
+    return true;
+  }
+
+  isValidInsuranceInput(input: actions | undefined): input is actions {
+    return !!input && ['ask-insurance', 'no-insurance'].includes(input);
   }
 
   step(input?: actions): gameSteps {
@@ -314,27 +279,19 @@ export default class Game extends EventEmitter {
           step = this.dealInitialCards();
           break;
 
-        case 'ask-insurance-right':
-          this.askInsurance(this.eachPlayerRight, input);
-          step = 'waiting-for-insurance-input';
-          break;
-
         case 'waiting-for-insurance-input':
-          if (
-            this.player.isUser &&
-            (!input || !['ask-insurance', 'no-insurance'].includes(input))
-          ) {
+          if (this.player.isUser && !this.isValidInsuranceInput(input)) {
             break;
           }
-          this.askInsurance(this.currentPlayer, input);
-          this.askInsurance(this.eachPlayerLeft, input);
+
+          this.askInsurance(input, this.player, ...this.playersLeft);
           this.payoutInsurance(input);
           step = 'play-hands-right';
           break;
 
         case 'play-hands-right':
-          this.playNPCHands(this.eachPlayerRight);
-          step = this.focusedHand.blackjack
+          this.playNPCHands(...this.playersRight);
+          step = this.setBlackjackWinner(this.player, this.focusedHand)
             ? 'play-hands-left'
             : 'waiting-for-play-input';
           break;
@@ -345,13 +302,13 @@ export default class Game extends EventEmitter {
               step = this.playUserHands(input);
             }
           } else {
-            this.playNPCHands(this.currentPlayer);
+            this.playNPCHands(this.player);
             step = 'play-hands-left';
           }
           break;
 
         case 'play-hands-left':
-          this.playNPCHands(this.eachPlayerLeft);
+          this.playNPCHands(...this.playersLeft);
           this.playDealer();
           step = 'waiting-for-new-game-input';
           break;
@@ -391,25 +348,26 @@ export default class Game extends EventEmitter {
       console.log('Shoe:', this.shoe.serialize());
     }
 
-    this.eachPlayer((player, i, isUser) => {
+    for (const player of this.players) {
       // TODO: Make NPCs bet more realistically than minimum bet.
-      player.addHand(isUser ? this.betAmount : this.settings.minimumBet);
+      player.addHand(player.isUser ? this.betAmount : this.settings.minimumBet);
 
       // Clears the result from the previous iteration. Otherwise this object
       // will grow indefinitely over subsequent `run()` calls.
       player.handWinner = new Map();
-    });
 
-    // Draw card for each player face up (upcard).
-    this.eachPlayer((player) => player.takeCard(this.shoe.drawCard()));
-
-    this.dealer.addHand();
+      // Draw card for each player face up (upcard).
+      player.takeCard(this.shoe.drawCard());
+    }
 
     // Draw card for dealer face up.
+    this.dealer.addHand();
     this.dealer.takeCard(this.shoe.drawCard());
 
     // Draw card for each player face up again (upcard).
-    this.eachPlayer((player) => player.takeCard(this.shoe.drawCard()));
+    for (const player of this.players) {
+      player.takeCard(this.shoe.drawCard());
+    }
 
     // Draw card for dealer face down (hole card).
     this.dealer.takeCard(this.shoe.drawCard({ showingFace: false }), {
@@ -421,26 +379,32 @@ export default class Game extends EventEmitter {
       this.dealer.cards[0].flip();
       this.dealer.hands[0].incrementTotalsForCard(this.dealer.cards[0]);
 
-      this.eachPlayer((player) => player.setHandWinner({ winner: 'dealer' }));
+      for (const player of this.players) {
+        player.setHandWinner({ winner: 'dealer' });
+      }
 
       return 'waiting-for-new-game-input';
     }
 
     // Dealer peeks at the hole card if the upcard is ace to ask insurance.
     if (this.dealer.upcard.value === 11) {
-      return 'ask-insurance-right';
+      this.askInsurance(null, ...this.playersRight);
+      return 'waiting-for-insurance-input';
     }
 
     return 'play-hands-right';
   }
 
   askInsurance(
-    eachPlayer: (callback: EachPlayerCallback) => void,
-    userInput: actions | undefined
+    userInput: actions | null | undefined,
+    ...players: Player[]
   ): void {
-    eachPlayer((player, i, isUser) => {
+    for (const player of players) {
       for (const hand of player.hands) {
-        const input = isUser ? userInput : player.getNPCInput(this, hand);
+        const input =
+          player.isUser && userInput
+            ? userInput
+            : player.getNPCInput(this, hand);
 
         // TODO: Make insurance amount configurable. Currently uses half the bet
         // size as insurance to recover full bet amount.
@@ -451,7 +415,7 @@ export default class Game extends EventEmitter {
           player.useChips(amount / 2, { hand });
         }
       }
-    });
+    }
   }
 
   payoutInsurance(userInput: actions | undefined): void {
@@ -459,12 +423,14 @@ export default class Game extends EventEmitter {
       return;
     }
 
-    this.eachPlayer((player, i, isUser) => {
+    for (const player of this.players) {
       for (const hand of player.hands) {
         player.setHandWinner({ winner: 'dealer', hand });
 
         // TODO: Store this in state so we don't have to check it again.
-        const input = isUser ? userInput : player.getNPCInput(this, hand);
+        const input = player.isUser
+          ? userInput
+          : player.getNPCInput(this, hand);
 
         if (input === 'ask-insurance') {
           // TODO: Make insurance amount configurable. Currently uses half the
@@ -474,15 +440,10 @@ export default class Game extends EventEmitter {
           );
         }
       }
-    });
+    }
   }
 
-  playHand(
-    player: Player,
-    hand: Hand,
-    betAmount: number,
-    input: actions
-  ): boolean {
+  setBlackjackWinner(player: Player, hand: Hand): boolean {
     if (this.dealer.blackjack && hand.blackjack) {
       player.setHandWinner({ winner: 'push', hand });
       return true;
@@ -491,6 +452,19 @@ export default class Game extends EventEmitter {
       return true;
     } else if (hand.blackjack) {
       player.setHandWinner({ winner: 'player', hand });
+      return true;
+    }
+
+    return false;
+  }
+
+  stepHand(
+    player: Player,
+    hand: Hand,
+    betAmount: number,
+    input: actions
+  ): boolean {
+    if (this.setBlackjackWinner(player, hand)) {
       return true;
     }
 
@@ -565,12 +539,12 @@ export default class Game extends EventEmitter {
     return false;
   }
 
-  playNPCHands(eachPlayer: (callback: EachPlayerCallback) => void): void {
-    eachPlayer((player) => {
+  playNPCHands(...players: Player[]): void {
+    for (const player of players) {
       for (const hand of player.hands) {
         let handFinished = false;
         while (!handFinished) {
-          handFinished = this.playHand(
+          handFinished = this.stepHand(
             player,
             hand,
             player === this.player ? this.betAmount : this.settings.minimumBet,
@@ -578,11 +552,11 @@ export default class Game extends EventEmitter {
           );
         }
       }
-    });
+    }
   }
 
   playUserHands(input: actions): gameSteps {
-    const handFinished = this.playHand(
+    const handFinished = this.stepHand(
       this.player,
       this.focusedHand,
       this.betAmount,
@@ -620,7 +594,23 @@ export default class Game extends EventEmitter {
       }
     }
 
-    this.eachPlayer((player) => this.setHandResults(player));
+    for (const player of this.players) {
+      for (const hand of player.hands) {
+        if (player.handWinner.get(hand.id)) {
+          continue;
+        }
+
+        if (this.dealer.busted) {
+          player.setHandWinner({ winner: 'player', hand });
+        } else if (this.dealer.cardTotal > hand.cardTotal) {
+          player.setHandWinner({ winner: 'dealer', hand });
+        } else if (hand.cardTotal > this.dealer.cardTotal) {
+          player.setHandWinner({ winner: 'player', hand });
+        } else {
+          player.setHandWinner({ winner: 'push', hand });
+        }
+      }
+    }
   }
 
   removeCards(): void {
