@@ -24,11 +24,9 @@ export type gameSteps =
   | 'start'
   | 'ask-insurance-right'
   | 'ask-insurance'
-  | 'ask-insurance-left'
   | 'play-hands-right'
   | 'play-hands'
   | 'play-hands-left'
-  | 'play-dealer'
   | 'game-result';
 
 export type deckCounts = 1 | 2 | 4 | 6 | 8;

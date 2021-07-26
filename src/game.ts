@@ -327,12 +327,7 @@ export default class Game extends EventEmitter {
             break;
           }
           this.askInsurance(this.currentPlayer, input);
-          step = 'ask-insurance-left';
-          break;
-
-        case 'ask-insurance-left':
           this.askInsurance(this.eachPlayerLeft, input);
-          // TODO: Make this its own step?
           this.payoutInsurance(input);
           step = 'play-hands-right';
           break;
@@ -355,10 +350,6 @@ export default class Game extends EventEmitter {
 
         case 'play-hands-left':
           this.playNPCHands(this.eachPlayerLeft);
-          step = 'play-dealer';
-          break;
-
-        case 'play-dealer':
           this.playDealer();
           step = 'game-result';
           break;
@@ -453,7 +444,8 @@ export default class Game extends EventEmitter {
 
         // TODO: Make insurance amount configurable. Currently uses half the bet
         // size as insurance to recover full bet amount.
-        const amount = this.settings.minimumBet;
+        const amount =
+          player === this.player ? this.betAmount : this.settings.minimumBet;
 
         if (input === 'ask-insurance') {
           player.useChips(amount / 2, { hand });
@@ -477,7 +469,9 @@ export default class Game extends EventEmitter {
         if (input === 'ask-insurance') {
           // TODO: Make insurance amount configurable. Currently uses half the
           // bet size as insurance to recover full bet amount.
-          player.addChips(isUser ? this.betAmount : this.settings.minimumBet);
+          player.addChips(
+            player === this.player ? this.betAmount : this.settings.minimumBet
+          );
         }
       }
     });

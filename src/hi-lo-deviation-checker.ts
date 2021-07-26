@@ -63,8 +63,7 @@ export default class HiLoDeviationChecker {
     if (
       game.dealer.upcard.value === 11 &&
       (game.state.step === 'ask-insurance-right' ||
-        game.state.step === 'ask-insurance' ||
-        game.state.step === 'ask-insurance-left')
+        game.state.step === 'ask-insurance')
     ) {
       deviationIndex = illustrious18Deviations.findIndex(
         (d) => d.insurance && Utils.compareRange(trueCount, d.index)

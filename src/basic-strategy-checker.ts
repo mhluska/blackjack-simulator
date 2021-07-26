@@ -29,8 +29,7 @@ export default class BasicStrategyChecker {
   static suggest(game: Game, hand: Hand): correctMoves {
     if (
       game.state.step === 'ask-insurance-right' ||
-      game.state.step === 'ask-insurance' ||
-      game.state.step === 'ask-insurance-left'
+      game.state.step === 'ask-insurance'
     ) {
       return 'N';
     }
