@@ -1,216 +1,236 @@
-import * as sinon from 'sinon';
 import * as chai from 'chai';
 import Game, { GameSettings } from '../src/game';
 import Card from '../src/card';
 import Utils from '../src/utils';
-import { DeepPartial, Suits, Ranks, actions } from '../src/types';
-
-type PlayerInput = {
-  'game-result': 'next-game';
-  'waiting-for-move': actions;
-  'ask-insurance': 'ask-insurance' | 'no-insurance';
-};
+import { DeepPartial, Suits, Ranks, actions, gameSteps } from '../src/types';
 
 type GameSetupOptions = {
   settings: DeepPartial<GameSettings>;
-  repeatPlayerInput: boolean;
-  playerInput: PlayerInput[];
   cards: Ranks[];
 };
 
-// function setupGame(options: Partial<GameSetupOptions>) {
-//   const defaults: GameSetupOptions = {
-//     settings: {
-//       debug: !!process.env.DEBUG,
-//       animationDelay: 0,
-//       playerTablePosition: 1,
-//       playerCount: 1,
-//     },
-//     repeatPlayerInput: false,
-//     playerInput: [
-//       {
-//         'game-result': 'next-game',
-//         'waiting-for-move': 'hit',
-//         'ask-insurance': 'no-insurance',
-//       },
-//     ],
-//     cards: [],
-//   };
+function setupGame(options: Partial<GameSetupOptions> = {}) {
+  const defaults: GameSetupOptions = {
+    settings: {
+      debug: !!process.env.DEBUG,
+      animationDelay: 0,
+      playerTablePosition: 1,
+      playerCount: 1,
+    },
+    cards: [],
+  };
 
-//   // TODO: Avoid `as` here. Otherwise returns `Partial<GameSetupOptions>`.
-//   const mergedOptions = Utils.mergeDeep(defaults, options) as GameSetupOptions;
+  // TODO: Avoid `as` here. Otherwise returns `Partial<GameSetupOptions>`.
+  const mergedOptions = Utils.mergeDeep(defaults, options) as GameSetupOptions;
 
-//   const game = new Game(mergedOptions.settings);
-//   const length = game.shoe.cards.length;
+  const game = new Game(mergedOptions.settings);
+  const length = game.shoe.cards.length;
 
-//   mergedOptions.cards.forEach((cardRank: Ranks, index: number) => {
-//     game.shoe.cards[length - index - 1] = new Card(
-//       Suits.HEARTS,
-//       cardRank,
-//       game.shoe
-//     );
-//   });
+  mergedOptions.cards.forEach((cardRank: Ranks, index: number) => {
+    game.shoe.cards[length - index - 1] = new Card(
+      Suits.HEARTS,
+      cardRank,
+      game.shoe
+    );
+  });
 
-//   let callCount = 0;
+  return game;
+}
 
-//   sinon.stub(game.playerInputReader, 'readInput').callsFake(() => {
-//     const promise =
-//       mergedOptions.playerInput.length === 0 ||
-//       callCount > mergedOptions.playerInput.length - 1
-//         ? new Promise<actions>(() => undefined)
-//         : Promise.resolve(
-//             mergedOptions.playerInput[callCount][game.state.step]
-//           );
+function runGame(
+  game: Game,
+  {
+    repeatPlayerInput = false,
+    input = [],
+  }: {
+    repeatPlayerInput?: boolean;
+    input?: Partial<{ [key in gameSteps]: actions }>[];
+  } = {}
+) {
+  let callCount = 0;
 
-//     if (callCount < mergedOptions.playerInput.length) {
-//       if (
-//         callCount !== mergedOptions.playerInput.length - 1 ||
-//         !mergedOptions.repeatPlayerInput
-//       ) {
-//         callCount += 1;
-//       }
-//     }
+  do {
+    let playerInput: actions | undefined;
 
-//     return promise;
-//   });
+    const inputChoices = input[callCount];
+    if (inputChoices) {
+      playerInput = inputChoices[game.state.step];
+    } else if (!repeatPlayerInput) {
+      break;
+    }
 
-//   return game;
-// }
+    if (!repeatPlayerInput) {
+      if (playerInput) {
+        callCount += 1;
+      }
+    }
 
-// const expect = chai.expect;
+    game.step(playerInput);
 
-// describe('Game', function () {
-//   let game: Game;
+  } while (game.state.step !== 'start');
+}
 
-//   before(function () {
-//     game = setupGame({
-//       repeatPlayerInput: true,
-//     });
-//   });
+const expect = chai.expect;
 
-//   describe('#run()', function () {
-//     context('when the shoe needs to be reset', function () {
-//       let cardsBefore: number;
+describe('Game', function () {
+  let game: Game;
 
-//       before(async function () {
-//         cardsBefore = game.shoe.cards.length;
+  before(function () {
+    game = setupGame();
+  });
 
-//         let shuffled = false;
-//         game.on('shuffle', () => (shuffled = true));
-//         while (!shuffled) {
-//           await game.run();
-//         }
-//       });
+  describe('#run()', function () {
+    const betAmount = 10 * 100;
 
-//       it('should move all the cards from the discard tray back to the shoe', function () {
-//         expect(cardsBefore).to.equal(game.shoe.cards.length);
-//       });
+    context('when the shoe needs to be reset', function () {
+      let cardsBefore: number;
 
-//       it('should reset the hi-lo running count', function () {
-//         expect(game.shoe.hiLoRunningCount).to.equal(0);
-//       });
-//     });
+      before(function () {
+        cardsBefore = game.shoe.cards.length;
 
-//     context('when the player bets and wins', function () {
-//       let playerBalanceBefore: number;
+        let shuffled = false;
+        game.on('shuffle', () => (shuffled = true));
 
-//       const betAmount = 10 * 100;
+        while (!shuffled) {
+          runGame(game, {
+            repeatPlayerInput: true,
+            input: [
+              {
+                'waiting-for-new-game-input': 'hit',
+                'waiting-for-play-input': 'hit',
+                'waiting-for-insurance-input': 'no-insurance',
+              },
+            ],
+          });
+        }
+      });
 
-//       const game = setupGame({
-//         // Force a winning hand for the player (Blackjack with A-J).
-//         cards: [Ranks.ACE, Ranks.TWO, Ranks.JACK, Ranks.TWO],
-//       });
+      it('should move all the cards from the discard tray back to the shoe', function () {
+        expect(cardsBefore).to.equal(game.shoe.cards.length);
+      });
 
-//       before(async function () {
-//         playerBalanceBefore = game.player.balance;
+      it('should reset the hi-lo running count', function () {
+        expect(game.shoe.hiLoRunningCount).to.equal(0);
+      });
+    });
 
-//         await game.run({ betAmount });
-//       });
+    context('when the player bets and wins', function () {
+      let playerBalanceBefore: number;
 
-//       it('should increase the player balance', function () {
-//         expect(game.player.balance).to.equal(
-//           playerBalanceBefore + betAmount * (3 / 2)
-//         );
-//       });
-//     });
+      const game = setupGame({
+        // Force a winning hand for the player (Blackjack with A-J).
+        cards: [Ranks.ACE, Ranks.TWO, Ranks.JACK, Ranks.TWO],
+      });
 
-//     context('when autoDeclineInsurance is enabled', function () {
-//       let game: Game;
+      before(function () {
+        playerBalanceBefore = game.player.balance;
 
-//       before(function () {
-//         game = setupGame({
-//           settings: { autoDeclineInsurance: true },
-//           playerInput: [],
-//           // Force a hand that prompts for insurance (dealer Ace).
-//           cards: [Ranks.TWO, Ranks.ACE],
-//         });
+        game.betAmount = betAmount;
 
-//         game.run();
-//       });
+        runGame(game, {
+          input: [
+            {
+              'waiting-for-new-game-input': 'hit',
+            },
+          ],
+        });
+      });
 
-//       it('should not pause for player input', function () {
-//         expect(game.state.step).not.to.equal('ask-insurance');
-//       });
-//     });
+      it('should increase the player balance', function () {
+        expect(game.player.balance).to.equal(
+          playerBalanceBefore + betAmount * (3 / 2)
+        );
+      });
+    });
 
-//     context('when late surrender is enabled', function () {
-//       context('when only two cards are dealt', function () {
-//         before(async function () {
-//           game = setupGame({
-//             settings: {
-//               allowLateSurrender: true,
-//             },
-//             playerInput: [
-//               {
-//                 'game-result': 'next-game',
-//                 'waiting-for-move': 'surrender',
-//                 'ask-insurance': 'no-insurance',
-//               },
-//             ],
-//             cards: [Ranks.SIX, Ranks.QUEEN, Ranks.JACK, Ranks.JACK],
-//           });
+    context('when autoDeclineInsurance is enabled', function () {
+      let game: Game;
 
-//           game.run();
-//         });
+      before(function () {
+        game = setupGame({
+          settings: { autoDeclineInsurance: true },
+          // Force a hand that prompts for insurance (dealer Ace).
+          cards: [Ranks.TWO, Ranks.ACE],
+        });
 
-//         it('should allow late surrender', function () {
-//           expect(game.state.step).to.equal('game-result');
-//           expect(game.player.handWinner.values().next().value).to.equal(
-//             'dealer'
-//           );
-//         });
-//       });
+        game.betAmount = betAmount;
+        runGame(game, {
+          repeatPlayerInput: true,
+          input: [
+            {
+              'waiting-for-play-input': 'hit',
+              'waiting-for-new-game-input': 'hit',
+            },
+          ],
+        });
+      });
 
-//       context('when more than two cards are dealt', function () {
-//         before(function () {
-//           game = setupGame({
-//             settings: {
-//               allowLateSurrender: true,
-//             },
-//             playerInput: [
-//               {
-//                 'game-result': 'next-game',
-//                 'waiting-for-move': 'hit',
-//                 'ask-insurance': 'no-insurance',
-//               },
-//               {
-//                 'game-result': 'next-game',
-//                 'waiting-for-move': 'surrender',
-//                 'ask-insurance': 'no-insurance',
-//               },
-//             ],
-//             // Force a hand where the player has 16v10 and the next card will
-//             // not bust the player.
-//             cards: [Ranks.SIX, Ranks.QUEEN, Ranks.JACK, Ranks.JACK, Ranks.TWO],
-//           });
+      it('should not pause for player input', function () {
+        expect(game.state.step).not.to.equal('ask-insurance');
+      });
+    });
 
-//           game.run();
-//         });
+    context('when late surrender is enabled', function () {
+      context('when only two cards are dealt', function () {
+        before(async function () {
+          game = setupGame({
+            settings: {
+              allowLateSurrender: true,
+            },
+            cards: [Ranks.SIX, Ranks.QUEEN, Ranks.JACK, Ranks.JACK],
+          });
 
-//         it('should not allow late surrender', function () {
-//           expect(game.state.step).to.equal('waiting-for-move');
-//         });
-//       });
-//     });
-//   });
-// });
+          game.betAmount = betAmount;
+
+          runGame(game, {
+            input: [
+              {
+                'waiting-for-play-input': 'surrender',
+              },
+              {
+                'waiting-for-new-game-input': 'hit',
+              },
+            ],
+          });
+        });
+
+        it('should allow late surrender', function () {
+          expect(game.state.step).to.equal('start');
+          expect(game.player.handWinner.values().next().value).to.equal(
+            'dealer'
+          );
+        });
+      });
+
+      context('when more than two cards are dealt', function () {
+        before(function () {
+          game = setupGame({
+            settings: {
+              allowLateSurrender: true,
+            },
+            // Force a hand where the player has 16v10 and the next card will
+            // not bust the player.
+            cards: [Ranks.SIX, Ranks.QUEEN, Ranks.JACK, Ranks.JACK, Ranks.TWO],
+          });
+
+          game.betAmount = betAmount;
+
+          runGame(game, {
+            input: [
+              {
+                'waiting-for-play-input': 'hit',
+              },
+              {
+                'waiting-for-play-input': 'surrender',
+              },
+            ],
+          });
+        });
+
+        it('should not allow late surrender', function () {
+          expect(game.state.step).to.equal('waiting-for-play-input');
+        });
+      });
+    });
+  });
+});

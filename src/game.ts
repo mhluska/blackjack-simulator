@@ -17,6 +17,7 @@ import {
 
 export type GameSettings = {
   animationDelay: number;
+  autoDeclineInsurance: boolean;
   disableEvents: boolean;
   checkDeviations: boolean;
   checkTopNDeviations: number;
@@ -39,14 +40,9 @@ type GameState = {
   focusedHandIndex: number;
 };
 
-type EachPlayerCallback = (
-  player: Player,
-  index: number,
-  isUser: boolean
-) => void;
-
 export const SETTINGS_DEFAULTS: GameSettings = {
   animationDelay: 200,
+  autoDeclineInsurance: false,
   disableEvents: false,
   checkDeviations: false,
   checkTopNDeviations: 18,
@@ -238,6 +234,10 @@ export default class Game extends EventEmitter {
   }
 
   isValidPlayHandsInput(input: actions | undefined): input is actions {
+    if (this.player.isNPC) {
+      return true;
+    }
+
     if (
       !input ||
       !['hit', 'stand', 'double', 'split', 'surrender'].includes(input)
@@ -267,71 +267,70 @@ export default class Game extends EventEmitter {
   }
 
   isValidInsuranceInput(input: actions | undefined): input is actions {
+    if (this.player.isNPC) {
+      return true;
+    }
+
     return !!input && ['ask-insurance', 'no-insurance'].includes(input);
   }
 
   step(input?: actions): gameSteps {
     let step: gameSteps = this.state.step;
 
-    do {
-      switch (step) {
-        case 'start':
-          step = this.dealInitialCards();
+    switch (step) {
+      case 'start':
+        step = this.dealInitialCards();
+        break;
+
+      case 'waiting-for-insurance-input':
+        if (!this.isValidInsuranceInput(input)) {
           break;
+        }
 
-        case 'waiting-for-insurance-input':
-          if (this.player.isUser && !this.isValidInsuranceInput(input)) {
-            break;
-          }
+        this.askInsurance(input, this.player, ...this.playersLeft);
+        this.payoutInsurance(input);
+        step = 'play-hands-right';
+        break;
 
-          this.askInsurance(input, this.player, ...this.playersLeft);
-          this.payoutInsurance(input);
-          step = 'play-hands-right';
+      case 'play-hands-right':
+        this.playNPCHands(...this.playersRight);
+        step = this.setBlackjackWinner(this.player, this.focusedHand)
+          ? 'play-hands-left'
+          : 'waiting-for-play-input';
+        break;
+
+      case 'waiting-for-play-input':
+        if (!this.isValidPlayHandsInput(input)) {
           break;
+        }
 
-        case 'play-hands-right':
-          this.playNPCHands(...this.playersRight);
-          step = this.setBlackjackWinner(this.player, this.focusedHand)
-            ? 'play-hands-left'
-            : 'waiting-for-play-input';
+        if (this.player.isUser) {
+          step = this.playUserHands(input);
+        } else {
+          this.playNPCHands(this.player);
+          step = 'play-hands-left';
+        }
+        break;
+
+      case 'play-hands-left':
+        this.playNPCHands(...this.playersLeft);
+        this.playDealer();
+        step = 'waiting-for-new-game-input';
+        break;
+
+      case 'waiting-for-new-game-input':
+        if (this.player.isUser && !input) {
           break;
+        }
+        this.removeCards();
+        step = 'start';
+    }
 
-        case 'waiting-for-play-input':
-          if (this.player.isUser) {
-            if (this.isValidPlayHandsInput(input)) {
-              step = this.playUserHands(input);
-            }
-          } else {
-            this.playNPCHands(this.player);
-            step = 'play-hands-left';
-          }
-          break;
-
-        case 'play-hands-left':
-          this.playNPCHands(...this.playersLeft);
-          this.playDealer();
-          step = 'waiting-for-new-game-input';
-          break;
-
-        case 'waiting-for-new-game-input':
-          if (this.player.isUser && !input) {
-            break;
-          }
-          this.removeCards();
-          step = 'start';
-      }
-
-      this.state.step = step;
-    } while (
-      step !== 'waiting-for-insurance-input' &&
-      step !== 'waiting-for-new-game-input' &&
-      step !== 'waiting-for-play-input'
-    );
+    this.state.step = step;
 
     return step;
   }
 
-  // TODO: Assert that all players are NPCs before running this.
   run(betAmount: number): void {
     this.betAmount = betAmount;
 
@@ -339,7 +338,7 @@ export default class Game extends EventEmitter {
 
     do {
       nextStep = this.step();
-    } while (nextStep !== 'waiting-for-new-game-input');
+    } while (nextStep !== 'start');
   }
 
   dealInitialCards(): gameSteps {
@@ -389,7 +388,10 @@ export default class Game extends EventEmitter {
     // Dealer peeks at the hole card if the upcard is ace to ask insurance.
     if (this.dealer.upcard.value === 11) {
       this.askInsurance(null, ...this.playersRight);
-      return 'waiting-for-insurance-input';
+
+      if (!this.settings.autoDeclineInsurance) {
+        return 'waiting-for-insurance-input';
+      }
     }
 
     return 'play-hands-right';
@@ -617,9 +619,9 @@ export default class Game extends EventEmitter {
     this.state.playCorrection = '';
     this.state.focusedHandIndex = 0;
 
-    this.players.forEach((player) =>
-      this.discardTray.addCards(player.removeCards())
-    );
+    for (const player of this.players) {
+      this.discardTray.addCards(player.removeCards());
+    }
 
     this.discardTray.addCards(this.dealer.removeCards());
 
