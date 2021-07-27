@@ -1,5 +1,3 @@
-import PlayerInputReader from 'player-input-reader';
-
 import EventEmitter from './event-emitter';
 import Utils from './utils';
 import Shoe from './shoe';
@@ -12,17 +10,15 @@ import Hand from './hand';
 import {
   actions,
   DeepPartial,
-  actionDataKeys,
   SimpleObject,
-  actionDataKeyToAction,
   TableRules,
+  gameSteps,
 } from './types';
 
 export type GameSettings = {
   animationDelay: number;
-  disableEvents: boolean;
   autoDeclineInsurance: boolean;
-  autoConfirmNewGame: boolean;
+  disableEvents: boolean;
   checkDeviations: boolean;
   checkTopNDeviations: number;
   mode: 'default' | 'pairs' | 'uncommon' | 'illustrious18';
@@ -38,17 +34,16 @@ export type GameSettings = {
 
 type GameState = {
   playCorrection: string;
-  step: 'waiting-for-move' | 'game-result' | 'ask-insurance';
+  step: gameSteps;
   sessionMovesTotal: number;
   sessionMovesCorrect: number;
-  focusedHand: Hand;
+  focusedHandIndex: number;
 };
 
 export const SETTINGS_DEFAULTS: GameSettings = {
   animationDelay: 200,
-  disableEvents: false,
   autoDeclineInsurance: false,
-  autoConfirmNewGame: false,
+  disableEvents: false,
   checkDeviations: false,
   checkTopNDeviations: 18,
 
@@ -74,223 +69,59 @@ export const SETTINGS_DEFAULTS: GameSettings = {
 };
 
 export default class Game extends EventEmitter {
-  settings: GameSettings;
-
-  playerInputReader: PlayerInputReader;
-  players!: Player[];
-  player!: Player;
-  gameId!: string;
-  dealer!: Dealer;
-  shoe!: Shoe;
   _state!: GameState;
-  state!: GameState;
+  betAmount!: number;
+  dealer!: Dealer;
   discardTray!: DiscardTray;
+  gameId!: string;
+  player!: Player;
+  players!: Player[];
+  playersLeft!: Player[];
+  playersRight!: Player[];
+  settings: GameSettings;
+  shoe!: Shoe;
+  state!: GameState;
 
-  constructor(
-    settings: DeepPartial<GameSettings> = SETTINGS_DEFAULTS,
-    playerInputReader?: PlayerInputReader
-  ) {
+  constructor(settings: DeepPartial<GameSettings> = SETTINGS_DEFAULTS) {
     super();
 
-    // TODO: Avoid using `as` here
-    const InputReader = (playerInputReader ??
-      PlayerInputReader) as typeof PlayerInputReader;
-
-    this.playerInputReader = new InputReader(this);
     this.settings = Utils.mergeDeep(SETTINGS_DEFAULTS, settings);
 
     if (this.settings.disableEvents) {
       EventEmitter.disableEvents = true;
     }
 
-    this._setupState();
+    this.setupState();
+  }
+
+  get focusedHand(): Hand {
+    return this.player.hands[this.state.focusedHandIndex];
   }
 
   updateSettings(settings: GameSettings): void {
     this.settings = settings;
   }
 
-  resetState(): void {
-    this._setupState();
-    this.emit('resetState');
-  }
-
-  async run({ betAmount = this.settings.minimumBet } = {}): Promise<void> {
-    if (this.settings.debug) {
-      console.log(`> Starting new hand (player ID ${this.player.id})`);
-      console.log('Shoe:', this.shoe.serialize());
-    }
-
-    this.players.forEach((player) => {
-      // TODO: Make NPCs bet more realistically than minimum bet.
-      player.addHand(
-        player === this.player ? betAmount : this.settings.minimumBet
-      );
-
-      // Clears the result from the previous iteration. Otherwise this object
-      // will grow indefinitely over subsequent `run()` calls.
-      player.handWinner = new Map();
-    });
-
-    // Draw card for each player face up (upcard).
-    this.players.forEach((player) => player.takeCard(this.shoe.drawCard()));
-
-    this.dealer.addHand();
-
-    // Draw card for dealer face up.
-    this.dealer.takeCard(this.shoe.drawCard());
-
-    // Draw card for each player face up again (upcard).
-    this.players.forEach((player) => player.takeCard(this.shoe.drawCard()));
-
-    // Draw card for dealer face down (hole card).
-    this.dealer.takeCard(this.shoe.drawCard({ showingFace: false }), {
-      prepend: true,
-    });
-
-    // This will never happen since we take a visible card on the previous line
-    // but we have to make TypeScript happy.
-    if (!this.dealer.upcard || !this.dealer.holeCard) {
-      return;
-    }
-
-    // Dealer peeks at the hole card if the upcard is 10 to check blackjack.
-    if (this.dealer.upcard.value === 10 && this.dealer.holeCard.value === 11) {
-      this.players.forEach((player) =>
-        player.setHandWinner({ winner: 'dealer' })
-      );
-    }
-
-    // Dealer peeks at the hole card if the upcard is ace to ask insurance.
-    if (this.dealer.upcard.value === 11) {
-      for (const player of this.players) {
-        await this._handleInsurance(
-          player,
-          player === this.player ? betAmount : this.settings.minimumBet
-        );
-      }
-    }
-
-    for (const player of this.players) {
-      await this._playHands(
-        player,
-        // TODO: Make NPCs bet more realistically than minimum bet.
-        player === this.player ? betAmount : this.settings.minimumBet
-      );
-    }
-
-    this.dealer.cards[0].flip();
-    this.dealer.hands[0].incrementTotalsForCard(this.dealer.cards[0]);
-
-    // Dealer draws cards until they reach 17. However, if all player hands have
-    // busted, this step is skipped.
-    // TODO: Move this into `getNPCInput()` for `PlayerStrategy.DEALER`.
-    if (!this._allPlayerHandsFinished()) {
-      while (this.dealer.cardTotal <= 17 && !this.dealer.blackjack) {
-        if (
-          this.dealer.cardTotal === 17 &&
-          (this.dealer.isHard || !this.settings.hitSoft17)
-        ) {
-          break;
-        }
-
-        this.dealer.takeCard(this.shoe.drawCard());
-      }
-    }
-
-    this.players.forEach((player) => this._setHandResults(player));
-
-    this.state.step = 'game-result';
-
-    if (!this.settings.autoConfirmNewGame) {
-      await this._getPlayerNewGameInput();
-    }
-
-    this.state.playCorrection = '';
-
-    this.players.forEach((player) =>
-      this.discardTray.addCards(player.removeCards())
-    );
-
-    this.discardTray.addCards(this.dealer.removeCards());
-
-    if (this.shoe.needsReset) {
-      if (this.settings.debug) {
-        console.log('Cut card reached');
-      }
-      this.shoe.addCards(
-        this.discardTray.removeCards().concat(this.shoe.removeCards())
-      );
-      this.shoe.shuffle();
-      this.emit('shuffle');
-    }
-
-    if (this.settings.debug) {
-      console.log('End of hand', this.shoe.serialize());
-      console.log();
-    }
-  }
-
-  async _handleInsurance(player: Player, betAmount: number): Promise<void> {
-    let input: actions | void | boolean;
-
-    this.state.step = 'ask-insurance';
-
-    for (const hand of player.hands) {
-      if (player.isNPC) {
-        input = player.getNPCInput(this, hand);
-      } else {
-        if (this.settings.autoDeclineInsurance) {
-          input = 'no-insurance';
-        } else {
-          while (typeof input !== 'string' || !input?.includes('insurance')) {
-            input = await this._getPlayerInsuranceInput();
-          }
-
-          this._validateInput(input, hand);
-        }
-      }
-
-      if (this.dealer.holeCard?.value !== 10) {
-        continue;
-      }
-
-      player.setHandWinner({ winner: 'dealer', hand });
-
-      // TODO: Make insurance amount configurable. Currently uses half the
-      // bet size as insurance to recover full bet amount.
-      if (input === 'ask-insurance') {
-        player.addChips(betAmount);
-      }
-    }
-  }
-
-  _chainEmitChange<T extends EventEmitter>(object: T): T {
-    object.on('change', (name: string, value: SimpleObject) =>
-      this.emit('change', name, value)
-    );
-    return object;
-  }
-
-  _setupState(): void {
+  setupState(): void {
     // We assign a random ID to each game so that we can link hand results with
     // wrong moves in the database.
     this.gameId = Utils.randomId();
 
-    this.shoe = this._chainEmitChange(
+    this.shoe = this.chainEmitChange(
       new Shoe({ game: this, debug: this.settings.debug })
     );
-    this.discardTray = this._chainEmitChange(new DiscardTray());
-    this.dealer = this._chainEmitChange(
+    this.discardTray = this.chainEmitChange(new DiscardTray());
+    this.dealer = this.chainEmitChange(
       new Dealer({
         debug: this.settings.debug,
         strategy: PlayerStrategy.DEALER,
       })
     );
+
     this.players = Array.from(
       { length: this.settings.playerCount },
       (_item, index) =>
-        this._chainEmitChange(
+        this.chainEmitChange(
           new Player({
             balance: this.settings.playerBankroll,
             blackjackPayout: this.settings.blackjackPayout,
@@ -305,7 +136,16 @@ export default class Game extends EventEmitter {
         )
     );
 
-    this.player = this.players[this.settings.playerTablePosition - 1];
+    // We reverse the players array for convenience since reverse iteration in
+    // JS is not possible.
+    this.players.reverse();
+
+    const reversedTablePosition =
+      this.players.length - this.settings.playerTablePosition + 1;
+
+    this.player = this.players[reversedTablePosition - 1];
+    this.playersLeft = this.players.slice(reversedTablePosition);
+    this.playersRight = this.players.slice(0, reversedTablePosition - 1);
 
     this.player.on('hand-winner', (hand, winner) => {
       this.emit('create-record', 'hand-result', {
@@ -318,11 +158,11 @@ export default class Game extends EventEmitter {
     });
 
     this._state = {
-      step: 'waiting-for-move',
-      focusedHand: this.player.hands[0],
+      focusedHandIndex: 0,
       playCorrection: '',
-      sessionMovesTotal: 0,
       sessionMovesCorrect: 0,
+      sessionMovesTotal: 0,
+      step: 'start',
     };
 
     const hasKey = <T extends SimpleObject>(
@@ -352,55 +192,25 @@ export default class Game extends EventEmitter {
         });
   }
 
-  _getPlayerMoveInput(): Promise<void | actions> {
-    if (this.settings.debug) {
-      console.log('Getting player move input');
-    }
-
-    const inputHandler = (str: actionDataKeys) => actionDataKeyToAction(str);
-
-    return this.playerInputReader.readInput({
-      keypress: inputHandler,
-      click: inputHandler,
-    });
+  resetState(): void {
+    this.setupState();
+    this.emit('resetState');
   }
 
-  _getPlayerNewGameInput(): Promise<void | actions> {
-    if (this.settings.debug) {
-      console.log('Getting player new game input');
-    }
-
-    return this.playerInputReader.readInput({
-      keypress: () => 'next-game',
-      click: (str: actionDataKeys) => {
-        if (str.toLowerCase() === 'd') {
-          return 'next-game';
-        }
-      },
-    });
-  }
-
-  _getPlayerInsuranceInput(): Promise<void | actions> {
-    if (this.settings.debug) {
-      console.log('Getting player insurance input');
-    }
-
-    const inputHandler = (str: actionDataKeys): actions =>
-      actionDataKeyToAction(str);
-
-    return this.playerInputReader.readInput({
-      keypress: inputHandler,
-      click: inputHandler,
-    });
-  }
-
-  _allPlayerHandsFinished(): boolean {
+  allPlayerHandsFinished(): boolean {
     return this.players.every((player) =>
       player.hands.every((hand) => hand.finished)
     );
   }
 
-  _validateInput(input: actions, hand: Hand): void {
+  chainEmitChange<T extends EventEmitter>(object: T): T {
+    object.on('change', (name: string, value: SimpleObject) =>
+      this.emit('change', name, value)
+    );
+    return object;
+  }
+
+  validateInput(input: actions, hand: Hand): void {
     const checkerResult =
       HiLoDeviationChecker.check(this, hand, input) ||
       BasicStrategyChecker.check(this, hand, input);
@@ -417,84 +227,265 @@ export default class Game extends EventEmitter {
       createdAt: Date.now(),
       gameId: this.gameId,
       dealerHand: this.dealer.hands[0].serialize({ showHidden: true }),
-      playerHand: this.state.focusedHand.serialize(),
+      playerHand: this.focusedHand.serialize(),
       move: input,
       correction: typeof checkerResult === 'object' ? checkerResult.code : null,
     });
   }
 
-  async _playHands(player: Player, betAmount: number): Promise<void> {
-    for (const hand of player.hands) {
-      if (player.handWinner.get(hand.id)) {
-        continue;
+  isValidPlayHandsInput(input: actions | undefined): input is actions {
+    if (this.player.isNPC) {
+      return true;
+    }
+
+    if (
+      !input ||
+      !['hit', 'stand', 'double', 'split', 'surrender'].includes(input)
+    ) {
+      return false;
+    }
+
+    if (
+      input === 'surrender' &&
+      (!this.settings.allowLateSurrender || !this.focusedHand.firstMove)
+    ) {
+      return false;
+    }
+
+    if (
+      input === 'split' &&
+      (!this.focusedHand.hasPairs || !this.focusedHand.firstMove)
+    ) {
+      return false;
+    }
+
+    if (input === 'double' && !this.focusedHand.firstMove) {
+      return false;
+    }
+
+    return true;
+  }
+
+  isValidInsuranceInput(input: actions | undefined): input is actions {
+    if (this.player.isNPC) {
+      return true;
+    }
+
+    return !!input && ['ask-insurance', 'no-insurance'].includes(input);
+  }
+
+  step(input?: actions): gameSteps {
+    let step: gameSteps = this.state.step;
+
+    switch (step) {
+      case 'start':
+        step = this.dealInitialCards();
+        break;
+
+      case 'waiting-for-insurance-input':
+        if (!this.isValidInsuranceInput(input)) {
+          break;
+        }
+
+        this.askInsurance(input, this.player, ...this.playersLeft);
+        this.payoutInsurance(input);
+        step = 'play-hands-right';
+        break;
+
+      case 'play-hands-right':
+        this.playNPCHands(...this.playersRight);
+        step = this.setBlackjackWinner(this.player, this.focusedHand)
+          ? 'play-hands-left'
+          : 'waiting-for-play-input';
+        break;
+
+      case 'waiting-for-play-input':
+        if (!this.isValidPlayHandsInput(input)) {
+          break;
+        }
+
+        if (this.player.isUser) {
+          step = this.playUserHands(input);
+        } else {
+          this.playNPCHands(this.player);
+          step = 'play-hands-left';
+        }
+        break;
+
+      case 'play-hands-left':
+        this.playNPCHands(...this.playersLeft);
+        this.playDealer();
+        step = 'waiting-for-new-game-input';
+        break;
+
+      case 'waiting-for-new-game-input':
+        if (this.player.isUser && !input) {
+          break;
+        }
+        this.removeCards();
+        step = 'start';
+    }
+
+    this.state.step = step;
+
+    return step;
+  }
+
+  run(betAmount: number): void {
+    this.betAmount = betAmount;
+
+    let nextStep: gameSteps = this.state.step;
+
+    do {
+      nextStep = this.step();
+    } while (nextStep !== 'start');
+  }
+
+  dealInitialCards(): gameSteps {
+    if (this.settings.debug) {
+      console.log(`> Starting new hand (player ID ${this.player.id})`);
+      console.log('Shoe:', this.shoe.serialize());
+    }
+
+    for (const player of this.players) {
+      // TODO: Make NPCs bet more realistically than minimum bet.
+      player.addHand(player.isUser ? this.betAmount : this.settings.minimumBet);
+
+      // Clears the result from the previous iteration. Otherwise this object
+      // will grow indefinitely over subsequent `run()` calls.
+      player.handWinner = new Map();
+
+      // Draw card for each player face up (upcard).
+      player.takeCard(this.shoe.drawCard());
+    }
+
+    // Draw card for dealer face up.
+    this.dealer.addHand();
+    this.dealer.takeCard(this.shoe.drawCard());
+
+    // Draw card for each player face up again (upcard).
+    for (const player of this.players) {
+      player.takeCard(this.shoe.drawCard());
+    }
+
+    // Draw card for dealer face down (hole card).
+    this.dealer.takeCard(this.shoe.drawCard({ showingFace: false }), {
+      prepend: true,
+    });
+
+    // Dealer peeks at the hole card if the upcard is 10 to check blackjack.
+    if (this.dealer.upcard.value === 10 && this.dealer.holeCard.value === 11) {
+      this.dealer.cards[0].flip();
+      this.dealer.hands[0].incrementTotalsForCard(this.dealer.cards[0]);
+
+      for (const player of this.players) {
+        player.setHandWinner({ winner: 'dealer' });
       }
 
-      await this._playHand(player, hand, betAmount);
+      return 'waiting-for-new-game-input';
+    }
+
+    // Dealer peeks at the hole card if the upcard is ace to ask insurance.
+    if (this.dealer.upcard.value === 11) {
+      this.askInsurance(null, ...this.playersRight);
+
+      if (!this.settings.autoDeclineInsurance) {
+        return 'waiting-for-insurance-input';
+      }
+    }
+
+    return 'play-hands-right';
+  }
+
+  askInsurance(
+    userInput: actions | null | undefined,
+    ...players: Player[]
+  ): void {
+    for (const player of players) {
+      for (const hand of player.hands) {
+        const input =
+          player.isUser && userInput
+            ? userInput
+            : player.getNPCInput(this, hand);
+
+        // TODO: Make insurance amount configurable. Currently uses half the bet
+        // size as insurance to recover full bet amount.
+        const amount =
+          player === this.player ? this.betAmount : this.settings.minimumBet;
+
+        if (input === 'ask-insurance') {
+          player.useChips(amount / 2, { hand });
+        }
+      }
     }
   }
 
-  async _playHand(
+  payoutInsurance(userInput: actions | undefined): void {
+    if (this.dealer.holeCard?.value !== 10) {
+      return;
+    }
+
+    for (const player of this.players) {
+      for (const hand of player.hands) {
+        player.setHandWinner({ winner: 'dealer', hand });
+
+        // TODO: Store this in state so we don't have to check it again.
+        const input = player.isUser
+          ? userInput
+          : player.getNPCInput(this, hand);
+
+        if (input === 'ask-insurance') {
+          // TODO: Make insurance amount configurable. Currently uses half the
+          // bet size as insurance to recover full bet amount.
+          player.addChips(
+            player === this.player ? this.betAmount : this.settings.minimumBet
+          );
+        }
+      }
+    }
+  }
+
+  setBlackjackWinner(player: Player, hand: Hand): boolean {
+    if (this.dealer.blackjack && hand.blackjack) {
+      player.setHandWinner({ winner: 'push', hand });
+      return true;
+    } else if (this.dealer.blackjack) {
+      player.setHandWinner({ winner: 'dealer', hand });
+      return true;
+    } else if (hand.blackjack) {
+      player.setHandWinner({ winner: 'player', hand });
+      return true;
+    }
+
+    return false;
+  }
+
+  stepHand(
     player: Player,
     hand: Hand,
-    betAmount: number
-  ): Promise<void> {
-    if (player === this.player) {
-      this.state.focusedHand = hand;
+    betAmount: number,
+    input: actions
+  ): boolean {
+    if (this.setBlackjackWinner(player, hand)) {
+      return true;
     }
 
-    if (this.dealer.blackjack && hand.blackjack) {
-      return player.setHandWinner({ winner: 'push', hand });
-    } else if (this.dealer.blackjack) {
-      return player.setHandWinner({ winner: 'dealer', hand });
-    } else if (hand.blackjack) {
-      return player.setHandWinner({ winner: 'player', hand });
-    }
-
-    let input;
-
-    while (hand.cardTotal < 21) {
-      this.state.step = 'waiting-for-move';
-
-      input = player.isNPC
-        ? player.getNPCInput(this, hand)
-        : await this._getPlayerMoveInput();
-
-      // TODO: Skip this validation logic for NPC?
-      if (!input) {
-        continue;
-      }
-
-      if (
-        input === 'surrender' &&
-        (!this.settings.allowLateSurrender || !hand.firstMove)
-      ) {
-        continue;
-      }
-
-      if (input === 'split' && (!hand.hasPairs || !hand.firstMove)) {
-        continue;
-      }
-
-      if (input === 'double' && !hand.firstMove) {
-        continue;
-      }
-
+    if (hand.cardTotal < 21) {
       if (!player.isNPC) {
-        this._validateInput(input, hand);
-      }
-
-      if (input === 'stand') {
-        break;
+        this.validateInput(input, hand);
       }
 
       if (input === 'hit') {
         player.takeCard(this.shoe.drawCard(), { hand });
       }
 
+      if (input === 'stand') {
+        return true;
+      }
+
       if (input === 'double') {
         player.useChips(betAmount, { hand });
         player.takeCard(this.shoe.drawCard(), { hand });
-        break;
       }
 
       if (
@@ -506,7 +497,7 @@ export default class Game extends EventEmitter {
         // In practice this will never happen since the hand will always have
         // a card at this point. It just makes TypeScript happy.
         if (!newHandCard) {
-          continue;
+          return true;
         }
 
         const newHand = player.addHand(betAmount, [newHandCard]);
@@ -519,11 +510,13 @@ export default class Game extends EventEmitter {
       }
 
       if (input === 'surrender') {
-        return player.setHandWinner({
+        player.setHandWinner({
           winner: 'dealer',
           hand,
           surrender: true,
         });
+
+        return true;
       }
     }
 
@@ -532,25 +525,120 @@ export default class Game extends EventEmitter {
         console.log(`Busted ${player.id} ${hand.cardTotal}`);
       }
 
-      return player.setHandWinner({ winner: 'dealer', hand });
+      player.setHandWinner({ winner: 'dealer', hand });
+
+      return true;
+    }
+
+    if (input === 'double') {
+      return true;
+    }
+
+    if (hand.cardTotal === 21) {
+      return true;
+    }
+
+    return false;
+  }
+
+  playNPCHands(...players: Player[]): void {
+    for (const player of players) {
+      for (const hand of player.hands) {
+        let handFinished = false;
+        while (!handFinished) {
+          handFinished = this.stepHand(
+            player,
+            hand,
+            player === this.player ? this.betAmount : this.settings.minimumBet,
+            player.getNPCInput(this, hand)
+          );
+        }
+      }
     }
   }
 
-  _setHandResults(player: Player): void {
-    for (const hand of player.hands) {
-      if (player.handWinner.get(hand.id)) {
-        continue;
-      }
+  playUserHands(input: actions): gameSteps {
+    const handFinished = this.stepHand(
+      this.player,
+      this.focusedHand,
+      this.betAmount,
+      input
+    );
 
-      if (this.dealer.busted) {
-        player.setHandWinner({ winner: 'player', hand });
-      } else if (this.dealer.cardTotal > hand.cardTotal) {
-        player.setHandWinner({ winner: 'dealer', hand });
-      } else if (hand.cardTotal > this.dealer.cardTotal) {
-        player.setHandWinner({ winner: 'player', hand });
+    if (handFinished) {
+      if (this.state.focusedHandIndex < this.player.hands.length - 1) {
+        this.state.focusedHandIndex += 1;
       } else {
-        player.setHandWinner({ winner: 'push', hand });
+        return 'play-hands-left';
       }
+    }
+
+    return 'waiting-for-play-input';
+  }
+
+  playDealer(): void {
+    this.dealer.cards[0].flip();
+    this.dealer.hands[0].incrementTotalsForCard(this.dealer.cards[0]);
+
+    // Dealer draws cards until they reach 17. However, if all player hands have
+    // busted, this step is skipped.
+    // TODO: Move this into `getNPCInput()` for `PlayerStrategy.DEALER`.
+    if (!this.allPlayerHandsFinished()) {
+      while (this.dealer.cardTotal <= 17 && !this.dealer.blackjack) {
+        if (
+          this.dealer.cardTotal === 17 &&
+          (this.dealer.isHard || !this.settings.hitSoft17)
+        ) {
+          break;
+        }
+
+        this.dealer.takeCard(this.shoe.drawCard());
+      }
+    }
+
+    for (const player of this.players) {
+      for (const hand of player.hands) {
+        if (player.handWinner.get(hand.id)) {
+          continue;
+        }
+
+        if (this.dealer.busted) {
+          player.setHandWinner({ winner: 'player', hand });
+        } else if (this.dealer.cardTotal > hand.cardTotal) {
+          player.setHandWinner({ winner: 'dealer', hand });
+        } else if (hand.cardTotal > this.dealer.cardTotal) {
+          player.setHandWinner({ winner: 'player', hand });
+        } else {
+          player.setHandWinner({ winner: 'push', hand });
+        }
+      }
+    }
+  }
+
+  removeCards(): void {
+    this.state.playCorrection = '';
+    this.state.focusedHandIndex = 0;
+
+    for (const player of this.players) {
+      this.discardTray.addCards(player.removeCards());
+    }
+
+    this.discardTray.addCards(this.dealer.removeCards());
+
+    if (this.shoe.needsReset) {
+      if (this.settings.debug) {
+        console.log('Cut card reached');
+      }
+      this.shoe.addCards(
+        this.discardTray.removeCards().concat(this.shoe.removeCards())
+      );
+      this.shoe.shuffle();
+      this.emit('shuffle');
+    }
+
+    if (this.settings.debug) {
+      console.log('End of hand', this.shoe.serialize());
+      console.log();
     }
   }
 }

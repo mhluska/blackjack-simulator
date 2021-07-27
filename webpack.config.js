@@ -27,19 +27,6 @@ const common = {
   devtool: process.env.NODE_ENV === 'development' ? 'eval-source-map' : false,
 };
 
-function resolutions(target) {
-  return {
-    alias: {
-      'player-input-reader': path.resolve(
-        __dirname,
-        'src',
-        target,
-        'player-input-reader.ts'
-      ),
-    },
-  };
-}
-
 const serverConfig = merge(common, {
   entry: {
     game: './src/node/commands/game.ts',
@@ -49,7 +36,6 @@ const serverConfig = merge(common, {
   output: {
     filename: '[name].js',
   },
-  resolve: resolutions('node'),
 });
 
 const serverMinConfig = merge(serverConfig, {
@@ -68,7 +54,6 @@ const clientConfig = merge(common, {
     filename: '[name].js',
     library: 'BlackjackSimulator',
   },
-  resolve: resolutions('browser'),
   devServer: {
     contentBase: './dist',
   },
@@ -79,7 +64,6 @@ const clientMinConfig = merge(common, {
     filename: '[name].min.js',
     library: 'BlackjackSimulator',
   },
-  resolve: resolutions('browser'),
   optimization: {
     minimize: true,
   },

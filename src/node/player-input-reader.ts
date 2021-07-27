@@ -1,29 +1,21 @@
 import PlayerInputReader from '../player-input-reader';
-import Game from '../game';
-import { actions, actionDataKeys } from '../types';
+import { actions, actionDataKeyToAction } from '../types';
 
 export default class CLIPlayerInputReader implements PlayerInputReader {
-  game: Game;
+  readInput(callback: (action: actions) => void): void {
+    const handler = (str: string, key: { [key: string]: string | boolean }) => {
+      if (key && key.ctrl && key.name === 'c') {
+        process.stdin.pause();
+        return;
+      }
 
-  constructor(game: Game) {
-    this.game = game;
-  }
+      const action = actionDataKeyToAction(str);
+      if (action) {
+        process.stdin.off('keypress', handler);
+        callback(action);
+      }
+    };
 
-  readInput({
-    keypress = (): actions | void => undefined,
-  }: {
-    keypress: (action: actionDataKeys) => actions | void;
-    click: (action: actionDataKeys) => actions | void;
-  }): Promise<actions | void> {
-    return new Promise((resolve) => {
-      process.stdin.once('keypress', (str, key) => {
-        if (key && key.ctrl && key.name === 'c') {
-          process.stdin.pause();
-          return;
-        }
-
-        resolve(keypress(str));
-      });
-    });
+    process.stdin.on('keypress', handler);
   }
 }
