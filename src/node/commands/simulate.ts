@@ -8,9 +8,9 @@ import { CliSettings, printUsageOptions } from '../utils';
 import { entries } from '../../types';
 import Utils from '../../utils';
 
-export default async function (
+export default function (
   options: Partial<SimulatorSettings & CliSettings>
-): Promise<void> {
+): void {
   if (options.help) {
     console.log('Usage: simulator simulate [options]');
     console.log();
@@ -27,7 +27,7 @@ export default async function (
 
   const simulator = new Simulator(options);
 
-  const result = await simulator.run();
+  const result = simulator.run();
   const displayOrder: (keyof SimulatorResult)[] = [
     'tableRules',
     'expectedValue',

@@ -12,8 +12,8 @@ describe('Simulator', function () {
   });
 
   describe('#run()', function () {
-    it('runs', async function () {
-      const result = await simulator.run();
+    it('runs', function () {
+      const result = simulator.run();
 
       expect(result).to.have.all.keys(
         'amountEarned',

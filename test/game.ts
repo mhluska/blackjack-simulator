@@ -172,7 +172,7 @@ describe('Game', function () {
 
     context('when late surrender is enabled', function () {
       context('when only two cards are dealt', function () {
-        before(async function () {
+        before(function () {
           game = setupGame({
             settings: {
               allowLateSurrender: true,

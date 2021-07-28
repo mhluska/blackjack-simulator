@@ -103,14 +103,13 @@ Result contains the following data:
 ### Use as a library (game mode)
 
 ```js
-import { Game } from '@blackjacktrainer/blackjack-simulator';
+import { Game, PlayerInputReader } from '@blackjacktrainer/blackjack-simulator';
 
 // The following are default settings:
 const settings = {
   animationDelay: 200,
   disableEvents: false,
   autoDeclineInsurance: false,
-  autoConfirmNewGame: false,
   checkDeviations: false,
   checkTopNDeviations: 18,
 
@@ -174,22 +173,28 @@ game.on('create-record', (entityName, data) => {
   });
 });
 
-async function startGame(game) {
-  while (true) {
-    try {
-      // `betAmount` is a cent value.
-      await game.run({ betAmount: 100 * 100 });
-    } catch (error) {
-      if (error.message === 'Game reset') {
-        continue;
-      }
+function stepGame(game, playerInputReader, input) {
+  const step = game.step(input);
 
-      throw error;
-    }
+  if (!step.startsWith('waiting-for')) {
+    return Promise.resolve();
+  }
+
+  return new Promise((resolve) => playerInputReader.readInput(resolve));
+}
+
+async function runGame(game) {
+  game.betAmount = 100 * 100;
+
+  const playerInputReader = new PlayerInputReader();
+  let input;
+
+  while (true) {
+    input = await stepGame(game, playerInputReader, input);
   }
 }
 
-startGame(game);
+runGame(game);
 ```
 
 ```
