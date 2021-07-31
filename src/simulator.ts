@@ -42,7 +42,7 @@ export const SETTINGS_DEFAULTS: SimulatorSettings = {
 
   // Table rules
   allowDoubleAfterSplit: true,
-  allowLateSurrender: true,
+  allowLateSurrender: false,
   blackjackPayout: '3:2',
   deckCount: 2,
   hitSoft17: true,
