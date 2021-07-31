@@ -80,7 +80,9 @@ function formatTableRules(settings: GameSettings) {
     settings.allowLateSurrender ? 'LS' : null,
     // TODO: Add a setting for resplit aces.
     'RSA',
-  ].join(' ');
+  ]
+    .filter(Boolean)
+    .join(' ');
 }
 
 function parsePlayerStrategy(strategy: string): PlayerStrategy {

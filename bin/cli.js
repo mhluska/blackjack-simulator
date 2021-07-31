@@ -16,7 +16,7 @@ function parseArgValue(value) {
     return true;
   }
 
-  // Consider it as an array.
+  // Parse as an array.
   if (value.includes(',')) {
     return value
       .split(',')
@@ -24,9 +24,17 @@ function parseArgValue(value) {
       .map((number) => parseInt(number));
   }
 
-  // Consider it as an integer, commas can be represented with `_`.
+  // Parse as an integer, commas can be represented with `_`.
   if (value[0] >= '0' && value[0] <= '9') {
     return parseInt(value.replace(/_/g, ''));
+  }
+
+  if (value === 'false') {
+    return false;
+  }
+
+  if (value === 'true') {
+    return true;
   }
 
   return value;
