@@ -71,6 +71,7 @@ export const SETTINGS_DEFAULTS: GameSettings = {
 export default class Game extends EventEmitter {
   _state!: GameState;
   betAmount!: number;
+  spotCount!: number;
   dealer!: Dealer;
   discardTray!: DiscardTray;
   gameId!: string;
@@ -86,6 +87,8 @@ export default class Game extends EventEmitter {
     super();
 
     this.settings = Utils.mergeDeep(SETTINGS_DEFAULTS, settings);
+    this.betAmount = this.settings.minimumBet;
+    this.spotCount = 1;
 
     if (this.settings.disableEvents) {
       EventEmitter.disableEvents = true;
@@ -137,7 +140,7 @@ export default class Game extends EventEmitter {
     );
 
     // We reverse the players array for convenience since reverse iteration in
-    // JS is not possible.
+    // JS is difficult.
     this.players.reverse();
 
     const reversedTablePosition =
@@ -331,8 +334,9 @@ export default class Game extends EventEmitter {
     return step;
   }
 
-  run(betAmount: number): void {
+  run(betAmount: number, spotCount: number): void {
     this.betAmount = betAmount;
+    this.spotCount = spotCount;
 
     let nextStep: gameSteps = this.state.step;
 
@@ -348,15 +352,23 @@ export default class Game extends EventEmitter {
     }
 
     for (const player of this.players) {
-      // TODO: Make NPCs bet more realistically than minimum bet.
-      player.addHand(player.isUser ? this.betAmount : this.settings.minimumBet);
-
       // Clears the result from the previous iteration. Otherwise this object
-      // will grow indefinitely over subsequent `run()` calls.
+      // will grow indefinitely over subsequent `step()` calls.
       player.handWinner = new Map();
 
-      // Draw card for each player face up (upcard).
-      player.takeCard(this.shoe.drawCard());
+      for (
+        let i = 0;
+        i < (player === this.player ? this.spotCount : 1);
+        i += 1
+      ) {
+        // TODO: Make NPCs bet more realistically than minimum bet.
+        const hand = player.addHand(
+          player === this.player ? this.betAmount : this.settings.minimumBet
+        );
+
+        // Draw card for each player face up (upcard).
+        player.takeCard(this.shoe.drawCard(), { hand });
+      }
     }
 
     // Draw card for dealer face up.
@@ -365,7 +377,9 @@ export default class Game extends EventEmitter {
 
     // Draw card for each player face up again (upcard).
     for (const player of this.players) {
-      player.takeCard(this.shoe.drawCard());
+      for (const hand of player.hands) {
+        player.takeCard(this.shoe.drawCard(), { hand });
+      }
     }
 
     // Draw card for dealer face down (hole card).
@@ -379,7 +393,9 @@ export default class Game extends EventEmitter {
       this.dealer.hands[0].incrementTotalsForCard(this.dealer.cards[0]);
 
       for (const player of this.players) {
-        player.setHandWinner({ winner: 'dealer' });
+        for (const hand of player.hands) {
+          player.setHandWinner({ winner: 'dealer', hand });
+        }
       }
 
       return 'waiting-for-new-game-input';
@@ -545,6 +561,7 @@ export default class Game extends EventEmitter {
     for (const player of players) {
       for (const hand of player.hands) {
         let handFinished = false;
+
         while (!handFinished) {
           handFinished = this.stepHand(
             player,

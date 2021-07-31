@@ -16,8 +16,7 @@ import {
 export enum PlayerStrategy {
   USER_INPUT = 'USER_INPUT',
   BASIC_STRATEGY = 'BASIC_STRATEGY',
-  BASIC_STRATEGY_BETSPREAD = 'BASIC_STRATEGY_BETSPREAD',
-  BASIC_STRATEGY_BETSPREAD_I18 = 'BASIC_STRATEGY_BETSPREAD_I18',
+  BASIC_STRATEGY_I18 = 'BASIC_STRATEGY_I18',
   DEALER = 'DEALER',
 }
 
@@ -64,7 +63,7 @@ export default class Player extends GameObject {
   getNPCInput(game: Game, hand: Hand): actions {
     let correctMove: correctMoves;
 
-    if (this.strategy === PlayerStrategy.BASIC_STRATEGY_BETSPREAD_I18) {
+    if (this.strategy === PlayerStrategy.BASIC_STRATEGY_I18) {
       correctMove =
         HiLoDeviationChecker.suggest(game, hand) ||
         BasicStrategyChecker.suggest(game, hand);

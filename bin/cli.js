@@ -18,7 +18,10 @@ function parseArgValue(value) {
 
   // Consider it as an array.
   if (value.includes(',')) {
-    return value.split(',').map((number) => parseInt(number));
+    return value
+      .split(',')
+      .filter(Boolean)
+      .map((number) => parseInt(number));
   }
 
   // Consider it as an integer, commas can be represented with `_`.

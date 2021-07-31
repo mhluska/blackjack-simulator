@@ -7,6 +7,7 @@ export type SimulatorSettings = {
   debug: boolean;
   playerStrategy: 'basic-strategy' | 'basic-strategy-i18';
   playerBetSpread?: number[];
+  playerSpots?: number[];
   playerTablePosition: number;
   playerBankroll: number;
   hands: number;
@@ -33,6 +34,7 @@ export const SETTINGS_DEFAULTS: SimulatorSettings = {
   hands: 10 ** 5,
   playerStrategy: 'basic-strategy',
   playerBetSpread: undefined,
+  playerSpots: undefined,
 
   debug: false,
   playerTablePosition: 1,
@@ -83,10 +85,8 @@ function formatTableRules(settings: GameSettings) {
 
 function parsePlayerStrategy(strategy: string): PlayerStrategy {
   switch (strategy) {
-    case 'basic-strategy-betspread':
-      return PlayerStrategy.BASIC_STRATEGY_BETSPREAD;
-    case 'basic-strategy-betspread-i18':
-      return PlayerStrategy.BASIC_STRATEGY_BETSPREAD_I18;
+    case 'basic-strategy-i18':
+      return PlayerStrategy.BASIC_STRATEGY_I18;
     default:
     case 'basic-strategy':
       return PlayerStrategy.BASIC_STRATEGY;
@@ -107,19 +107,15 @@ export default class Simulator {
     this.playerStrategy = parsePlayerStrategy(this.settings.playerStrategy);
   }
 
-  betAmount(hiLoTrueCount: number, settings: GameSettings): number {
-    if (this.playerStrategy === PlayerStrategy.BASIC_STRATEGY) {
-      return settings.minimumBet;
-    }
+  clampToArray(index: number, array: number[]): number {
+    return array[Utils.clamp(Math.floor(index), 0, array.length - 1)];
+  }
 
+  betAmount(hiLoTrueCount: number): number {
+    // Each array index corresponds to a true count. For example, index 0 = TC
+    // 0, index 1 = TC 1 and so on.
     if (this.settings.playerBetSpread) {
-      return this.settings.playerBetSpread[
-        Utils.clamp(
-          Math.floor(hiLoTrueCount),
-          0,
-          this.settings.playerBetSpread.length - 1
-        )
-      ];
+      return this.clampToArray(hiLoTrueCount, this.settings.playerBetSpread);
     }
 
     // TODO: Allow computing optimal bet spreads.
@@ -130,8 +126,20 @@ export default class Simulator {
     // TC 3: $10 * 2^2 = $40
     // TC 4: $10 * 2^3 = $80
     return hiLoTrueCount < 1
-      ? settings.minimumBet
-      : settings.minimumBet * 2 ** (Math.min(5, hiLoTrueCount) - 1);
+      ? this.settings.minimumBet
+      : this.settings.minimumBet * 2 ** (Math.min(5, hiLoTrueCount) - 1);
+  }
+
+  spotCount(hiLoTrueCount: number): number {
+    // Each array index corresponds to a true count. For example, index 0 = TC
+    // 0, index 1 = TC 1 and so on.
+    if (this.settings.playerSpots) {
+      return this.clampToArray(hiLoTrueCount, this.settings.playerSpots);
+    }
+
+    // TODO: Allow computing optimal number of spots.
+    // By default, we just play one spot regardless of the true count.
+    return 1;
   }
 
   run(): SimulatorResult {
@@ -156,9 +164,10 @@ export default class Simulator {
     let amountWagered = 0;
 
     while (handsPlayed < this.settings.hands) {
-      const betAmount = this.betAmount(game.shoe.hiLoTrueCount, game.settings);
+      const betAmount = this.betAmount(game.shoe.hiLoTrueCount);
+      const spotCount = this.spotCount(game.shoe.hiLoRunningCount);
 
-      game.run(betAmount);
+      game.run(betAmount, spotCount);
 
       bankroll.push(game.player.balance);
 
