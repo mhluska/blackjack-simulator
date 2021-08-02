@@ -161,7 +161,10 @@ export default class Simulator {
     });
 
     const bankrollStart = game.player.balance;
-    const bankrollChanges = [];
+
+    let bankrollChangesMean = 0;
+    let bankrollChangesVariance = 0;
+    let bankrollValues = 1;
 
     let handsWon = 0;
     let handsLost = 0;
@@ -177,9 +180,22 @@ export default class Simulator {
 
       game.run(betAmount, spotCount);
 
+      // We calculate mean and variance from a stream of values since a large
+      // dataset (100M+ hands) will not fit in memory.
+      // See https://math.stackexchange.com/a/116344
       // TODO: Update this value per `handWinner`. Currently one change can
       // correspond to multiple hands due to splits.
-      bankrollChanges.push(game.player.balance - prevBalance);
+      const bankrollChangeValue = game.player.balance - prevBalance;
+      const prevBankrollChangesMean = bankrollChangesMean;
+      bankrollValues += 1;
+      bankrollChangesMean =
+        bankrollChangesMean +
+        (bankrollChangeValue - bankrollChangesMean) / bankrollValues;
+
+      bankrollChangesVariance =
+        bankrollChangesVariance +
+        (bankrollChangeValue - prevBankrollChangesMean) *
+          (bankrollChangeValue - bankrollChangesMean);
 
       for (const result of game.player.handWinner.values()) {
         handsPlayed += 1;
@@ -199,12 +215,13 @@ export default class Simulator {
       }
     }
 
+    bankrollChangesVariance /= bankrollValues - 1;
+
     const amountEarned = game.player.balance - bankrollStart;
 
     // TODO: Estimate this based on number of players at the table.
     const handsPerHour = 50;
     const hoursPlayed = handsPlayed / handsPerHour;
-    const bankrollChangesVariance = variance(bankrollChanges);
 
     // TODO: Make RoR configurable.
     const riskOfRuin = 0.05;
@@ -219,9 +236,7 @@ export default class Simulator {
     return {
       amountEarned: Utils.formatCents(amountEarned),
       amountWagered: Utils.formatCents(amountWagered),
-      bankrollRqd: `${formattedBankrollRequired} (${
-        riskOfRuin * 100
-      }% RoR)`,
+      bankrollRqd: `${formattedBankrollRequired} (${riskOfRuin * 100}% RoR)`,
       betSpread: Utils.arrayToRangeString(
         this.settings.playerBetSpread,
         (amount) => Utils.formatCents(amount, { stripZeroCents: true })
@@ -233,7 +248,7 @@ export default class Simulator {
       handsWon: Utils.abbreviateNumber(handsWon),
       houseEdge: `${((-amountEarned / amountWagered) * 100).toFixed(2)}%`,
       spotsPlayed: Utils.arrayToRangeString(this.settings.playerSpots),
-      stdDeviation: Utils.formatCents(Math.sqrt(variance(bankrollChanges))),
+      stdDeviation: Utils.formatCents(Math.sqrt(bankrollChangesVariance)),
       tableRules: formatTableRules(game.settings),
       timeElapsed: Utils.formatTime(Date.now() - startTime),
     };
