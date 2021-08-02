@@ -193,20 +193,12 @@ export default class Simulator {
     const handsPerHour = 50;
     const hoursPlayed = handsPlayed / handsPerHour;
 
-    const expectedValue = amountEarned / hoursPlayed;
-    const sd = standardDeviation(bankroll) / hoursPlayed;
-
-    const riskOfRuin = () =>
-      (1 - expectedValue / sd / (1 + expectedValue / sd)) ** ((100 * 100) / sd);
-
-    console.log('risk of ruin', riskOfRuin());
-
     return {
       amountEarned: Utils.formatCents(amountEarned),
       amountWagered: Utils.formatCents(amountWagered),
       betSpread: Utils.arrayToRangeString(
         this.settings.playerBetSpread,
-        Utils.formatCents
+        (amount) => Utils.formatCents(amount, { stripZeroCents: true })
       ),
       expectedValue: `${Utils.formatCents(amountEarned / hoursPlayed)}/hour`,
       handsLost: Utils.abbreviateNumber(handsLost),

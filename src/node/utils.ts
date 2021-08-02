@@ -27,7 +27,12 @@ export function printUsageOptions<T extends SimpleObject>(
       const items = [`  --${kebabCase(key.toString())}`];
 
       if (value) {
-        items.push(options[key]?.formatter?.(value) ?? value);
+        let formattedValue = options[key]?.formatter?.(value);
+        if (formattedValue && formattedValue.includes('$')) {
+          formattedValue = `'${formattedValue}'`;
+        }
+
+        items.push(formattedValue ?? value);
       }
       if (options[key]?.hint) {
         items.push(options[key]?.hint as string);
