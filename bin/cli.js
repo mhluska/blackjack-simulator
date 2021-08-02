@@ -16,6 +16,11 @@ function parseArgValue(value) {
     return true;
   }
 
+  // Parse as a dollar value.
+  if (value[0] === '$') {
+    return parseFloat(value.replace(/[^\d\.]/g, '')) * 100;
+  }
+
   // Parse as an array.
   if (value.includes(',')) {
     return value

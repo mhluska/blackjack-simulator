@@ -18,8 +18,8 @@ export default function (
 
     printUsageOptions<SimulatorSettings>(SETTINGS_DEFAULTS, {
       playerStrategy: '[basic-strategy | basic-strategy-i18]',
-      playerBetSpread: '1000,1000,2000,4000,8000 (bets at TC 0, 1, 2 etc)',
-      playerSpots: '1,1,1,1,1 (spots at TC 0, 1, 2 etc)',
+      playerBetSpread: '(bets at TC 0, 1, 2 etc)',
+      playerSpots: '(spots played at TC 0, 1, 2 etc)',
     });
 
     return;
@@ -30,6 +30,8 @@ export default function (
   const result = simulator.run();
   const displayOrder: (keyof SimulatorResult)[] = [
     'tableRules',
+    'betSpread',
+    'spotsPlayed',
     'expectedValue',
     'houseEdge',
     'handsPlayed',

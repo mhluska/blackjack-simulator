@@ -14,7 +14,7 @@ export function printUsageOptions<T extends SimpleObject>(
 ): void {
   keys(defaultSettings).forEach((key) => {
     const value = defaultSettings[key];
-    if (typeof value === 'object') {
+    if (typeof value === 'object' && !Array.isArray(value)) {
       printUsageOptions(value, valueOverrides);
     } else {
       const items = [`  --${kebabCase(key.toString())}`];

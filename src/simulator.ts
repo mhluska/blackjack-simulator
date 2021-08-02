@@ -6,8 +6,8 @@ import { DeepPartial, TableRules } from './types';
 export type SimulatorSettings = {
   debug: boolean;
   playerStrategy: 'basic-strategy' | 'basic-strategy-i18';
-  playerBetSpread?: number[];
-  playerSpots?: number[];
+  playerBetSpread: number[];
+  playerSpots: number[];
   playerTablePosition: number;
   playerBankroll: number;
   hands: number;
@@ -16,6 +16,8 @@ export type SimulatorSettings = {
 export type SimulatorResult = {
   amountEarned: string;
   amountWagered: string;
+  betSpread: string;
+  spotsPlayed: string;
   expectedValue: string;
   handsLost: string;
   handsPlayed: string;
@@ -27,18 +29,30 @@ export type SimulatorResult = {
   variance: string;
 };
 
-const minimumBet = 10 * 100;
+const MINIMUM_BET = 10 * 100;
+const MAX_TRUE_COUNT = 5;
 
 export const SETTINGS_DEFAULTS: SimulatorSettings = {
   // Simulator-only settings.
   hands: 10 ** 5,
   playerStrategy: 'basic-strategy',
-  playerBetSpread: undefined,
-  playerSpots: undefined,
+
+  // TODO: Allow computing optimal bet spreads.
+  // Simple bet spread strategy, for $10 minimum:
+  // TC < 1: $10
+  // TC 1: $10 * 2^0 = $10
+  // TC 2: $10 * 2^1 = $20
+  // TC 3: $10 * 2^2 = $40
+  // TC 4: $10 * 2^3 = $80
+  playerBetSpread: Array.from(
+    { length: MAX_TRUE_COUNT },
+    (item, hiLoTrueCount) => MINIMUM_BET * 2 ** hiLoTrueCount
+  ),
+  playerSpots: Array.from({ length: MAX_TRUE_COUNT }, () => 1),
 
   debug: false,
   playerTablePosition: 1,
-  playerBankroll: minimumBet * 1000 * 1000,
+  playerBankroll: MINIMUM_BET * 1000 * 1000,
 
   // Table rules
   allowDoubleAfterSplit: true,
@@ -48,7 +62,7 @@ export const SETTINGS_DEFAULTS: SimulatorSettings = {
   hitSoft17: true,
   maxHandsAllowed: 4,
   maximumBet: 1000 * 100,
-  minimumBet,
+  minimumBet: MINIMUM_BET,
   playerCount: 6,
 };
 
@@ -114,34 +128,11 @@ export default class Simulator {
   }
 
   betAmount(hiLoTrueCount: number): number {
-    // Each array index corresponds to a true count. For example, index 0 = TC
-    // 0, index 1 = TC 1 and so on.
-    if (this.settings.playerBetSpread) {
-      return this.clampToArray(hiLoTrueCount, this.settings.playerBetSpread);
-    }
-
-    // TODO: Allow computing optimal bet spreads.
-    // Simple bet spread strategy, for $10 minimum:
-    // TC < 1: $10
-    // TC 1: $10 * 2^0 = $10
-    // TC 2: $10 * 2^1 = $20
-    // TC 3: $10 * 2^2 = $40
-    // TC 4: $10 * 2^3 = $80
-    return hiLoTrueCount < 1
-      ? this.settings.minimumBet
-      : this.settings.minimumBet * 2 ** (Math.min(5, hiLoTrueCount) - 1);
+    return this.clampToArray(hiLoTrueCount, this.settings.playerBetSpread);
   }
 
   spotCount(hiLoTrueCount: number): number {
-    // Each array index corresponds to a true count. For example, index 0 = TC
-    // 0, index 1 = TC 1 and so on.
-    if (this.settings.playerSpots) {
-      return this.clampToArray(hiLoTrueCount, this.settings.playerSpots);
-    }
-
-    // TODO: Allow computing optimal number of spots.
-    // By default, we just play one spot regardless of the true count.
-    return 1;
+    return this.clampToArray(hiLoTrueCount, this.settings.playerSpots);
   }
 
   run(): SimulatorResult {
@@ -200,6 +191,11 @@ export default class Simulator {
     return {
       amountEarned: Utils.formatCents(amountEarned),
       amountWagered: Utils.formatCents(amountWagered),
+      betSpread: Utils.arrayToRangeString(
+        this.settings.playerBetSpread,
+        Utils.formatCents
+      ),
+      spotsPlayed: Utils.arrayToRangeString(this.settings.playerSpots),
       expectedValue: `${Utils.formatCents(amountEarned / hoursPlayed)}/hour`,
       handsLost: Utils.abbreviateNumber(handsLost),
       handsPlayed: Utils.abbreviateNumber(handsPlayed),

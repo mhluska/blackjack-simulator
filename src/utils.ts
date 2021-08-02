@@ -1,6 +1,8 @@
 import Card from './card';
 import { SimpleObject, DeepPartial } from './types';
 
+type Range<T> = { start: number; end: number; value: T };
+
 export default class Utils {
   static arraySum(array: number[]): number {
     return array.reduce((acc, current) => acc + current, 0);
@@ -150,5 +152,70 @@ export default class Utils {
     }
 
     return this.mergeDeep(target, ...sources);
+  }
+
+  static arrayToRanges<T>(array: T[]): Range<T>[] {
+    const ranges: Range<T>[] = [];
+
+    let rangeStart = 0;
+    let rangeEnd = 0;
+    let prevItem = array[0];
+
+    const pushRange = () => {
+      ranges.push({
+        start: rangeStart,
+        end: rangeEnd - 1,
+        value: prevItem,
+      });
+    };
+
+    for (const item of array) {
+      if (item !== prevItem) {
+        pushRange();
+        rangeStart = rangeEnd;
+        prevItem = item;
+      }
+
+      rangeEnd += 1;
+    }
+
+    pushRange();
+
+    return ranges;
+  }
+
+  static rangeToString<T>(
+    range: Range<T>,
+    isOnly: boolean,
+    isLast: boolean
+  ): string {
+    if (isOnly) {
+      return `${range.start}+`;
+    }
+
+    const rangeString =
+      range.start === range.end
+        ? range.start.toString()
+        : `${range.start}–${range.end}`;
+
+    return `${rangeString}${isLast ? '+' : ''}`;
+  }
+
+  static arrayToRangeString<T>(
+    array: T[],
+    formatter = (value: T): string => String(value)
+  ): string {
+    const ranges = Utils.arrayToRanges(array);
+
+    return Utils.arrayToRanges(array)
+      .map(
+        (range, index) =>
+          `TC ${Utils.rangeToString(
+            range,
+            ranges.length === 1,
+            index === ranges.length - 1
+          )}: ${formatter(range.value)}`
+      )
+      .join(' ');
   }
 }
