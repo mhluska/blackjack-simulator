@@ -36,7 +36,9 @@ export default class Hand extends GameObject {
     this.acesCount = 0;
     this.cards = [];
 
-    cards.forEach((card) => this.takeCard(card));
+    for (const card of cards) {
+      this.takeCard(card);
+    }
   }
 
   takeCard(card: Card, { prepend = false } = {}): void {

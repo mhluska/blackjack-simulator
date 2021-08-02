@@ -63,7 +63,7 @@ export const SETTINGS_DEFAULTS: SimulatorSettings = {
   maxHandsAllowed: 4,
   maximumBet: MINIMUM_BET * 100,
   minimumBet: MINIMUM_BET,
-  playerCount: 6,
+  playerCount: 1,
 };
 
 // TODO: Move to stats utils.

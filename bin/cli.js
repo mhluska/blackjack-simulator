@@ -12,6 +12,10 @@ function isDollarValue(str) {
   return !!str.match(/^\$\d+(,\d{3})*(\.[0-9]{2})?$/);
 }
 
+function isIntegerValue(str) {
+  return !!str.match(/^\d+$/);
+}
+
 function parseDollar(str) {
   return parseFloat(str.replace(/[^\d\.]/g, '')) * 100;
 }
@@ -24,9 +28,12 @@ function parseArgValue(value) {
     return true;
   }
 
-  // Parse as a dollar value.
   if (isDollarValue(value)) {
     return parseDollar(value);
+  }
+
+  if (isIntegerValue(value)) {
+    return parseInt(value);
   }
 
   // Parse as an array.
@@ -37,11 +44,6 @@ function parseArgValue(value) {
       .map((number) =>
         isDollarValue(number) ? parseDollar(number) : parseInt(number)
       );
-  }
-
-  // Parse as an integer, commas can be represented with `_`.
-  if (value[0] >= '0' && value[0] <= '9') {
-    return parseInt(value.replace(/_/g, ''));
   }
 
   if (value === 'false') {
