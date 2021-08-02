@@ -18,6 +18,7 @@ describe('Simulator', function () {
       expect(result).to.have.all.keys(
         'amountEarned',
         'amountWagered',
+        'bankrollRqd',
         'betSpread',
         'expectedValue',
         'handsLost',

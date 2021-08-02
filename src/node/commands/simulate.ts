@@ -5,7 +5,7 @@ import Simulator, {
 } from '../../simulator';
 
 import { CliSettings, printUsageOptions } from '../utils';
-import { entries } from '../../types';
+import { entries, keys } from '../../types';
 import Utils from '../../utils';
 
 export default function (
@@ -48,15 +48,19 @@ export default function (
     'tableRules',
     'betSpread',
     'spotsPlayed',
+    'bankrollRqd',
     'expectedValue',
     'stdDeviation',
     'houseEdge',
     'handsPlayed',
   ];
 
-  // TODO: Format without tabs (format table with spaces).
-  const print = (key: string, value: string | number) =>
-    console.log(`${Utils.titleCase(key)}:\t${value}`);
+  const longestLabelLength = Math.max(...keys(result).map((key) => key.length));
+
+  const print = (key: string, value: string | number) => {
+    const label = `${Utils.titleCase(key)}:`;
+    console.log(`${label.padEnd(longestLabelLength + 3, ' ')}${value}`);
+  };
 
   // Print the most relevant options first (iteration order of a POJO is not
   // guaranteed).

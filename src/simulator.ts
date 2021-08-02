@@ -16,6 +16,7 @@ export type SimulatorSettings = {
 export type SimulatorResult = {
   amountEarned: string;
   amountWagered: string;
+  bankrollRqd: string;
   betSpread: string;
   expectedValue: string;
   handsLost: string;
@@ -82,9 +83,14 @@ function variance(data: number[]) {
   return sum(data.map((num) => (num - dataMean) ** 2)) / (data.length - 1);
 }
 
-// TODO: Move to stats utils.
-function standardDeviation(data: number[]) {
-  return Math.sqrt(variance(data));
+// Calculates bankroll required given a risk of ruin. Based on equation 9 in
+// Sileo's paper: http://www12.plala.or.jp/doubledown/poker/sileo.pdf
+function bankrollRequired(
+  riskOfRuin: number,
+  variancePerHand: number,
+  expectationPerHand: number
+) {
+  return -(variancePerHand / (2 * expectationPerHand)) * Math.log(riskOfRuin);
 }
 
 function formatTableRules(settings: GameSettings) {
@@ -198,10 +204,24 @@ export default class Simulator {
     // TODO: Estimate this based on number of players at the table.
     const handsPerHour = 50;
     const hoursPlayed = handsPlayed / handsPerHour;
+    const bankrollChangesVariance = variance(bankrollChanges);
+
+    // TODO: Make RoR configurable.
+    const riskOfRuin = 0.05;
+    const formattedBankrollRequired = Utils.formatCents(
+      bankrollRequired(
+        riskOfRuin,
+        bankrollChangesVariance,
+        amountEarned / handsPlayed
+      )
+    );
 
     return {
       amountEarned: Utils.formatCents(amountEarned),
       amountWagered: Utils.formatCents(amountWagered),
+      bankrollRqd: `${formattedBankrollRequired} (${
+        riskOfRuin * 100
+      }% RoR)`,
       betSpread: Utils.arrayToRangeString(
         this.settings.playerBetSpread,
         (amount) => Utils.formatCents(amount, { stripZeroCents: true })
@@ -213,7 +233,7 @@ export default class Simulator {
       handsWon: Utils.abbreviateNumber(handsWon),
       houseEdge: `${((-amountEarned / amountWagered) * 100).toFixed(2)}%`,
       spotsPlayed: Utils.arrayToRangeString(this.settings.playerSpots),
-      stdDeviation: Utils.formatCents(standardDeviation(bankrollChanges)),
+      stdDeviation: Utils.formatCents(Math.sqrt(variance(bankrollChanges))),
       tableRules: formatTableRules(game.settings),
       timeElapsed: Utils.formatTime(Date.now() - startTime),
     };
