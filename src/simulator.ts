@@ -154,7 +154,9 @@ export default class Simulator {
       },
     });
 
-    const bankroll = [game.player.balance];
+    const bankrollStart = game.player.balance;
+    const bankrollChanges = [];
+
     let handsWon = 0;
     let handsLost = 0;
     let handsPushed = 0;
@@ -165,9 +167,13 @@ export default class Simulator {
       const betAmount = this.betAmount(game.shoe.hiLoTrueCount);
       const spotCount = this.spotCount(game.shoe.hiLoRunningCount);
 
+      const prevBalance = game.player.balance;
+
       game.run(betAmount, spotCount);
 
-      bankroll.push(game.player.balance);
+      // TODO: Update this value per `handWinner`. Currently one change can
+      // correspond to multiple hands due to splits.
+      bankrollChanges.push(game.player.balance - prevBalance);
 
       for (const result of game.player.handWinner.values()) {
         handsPlayed += 1;
@@ -187,7 +193,7 @@ export default class Simulator {
       }
     }
 
-    const amountEarned = bankroll[bankroll.length - 1] - bankroll[0];
+    const amountEarned = game.player.balance - bankrollStart;
 
     // TODO: Estimate this based on number of players at the table.
     const handsPerHour = 50;
@@ -207,7 +213,7 @@ export default class Simulator {
       handsWon: Utils.abbreviateNumber(handsWon),
       houseEdge: `${((-amountEarned / amountWagered) * 100).toFixed(2)}%`,
       spotsPlayed: Utils.arrayToRangeString(this.settings.playerSpots),
-      stdDeviation: Utils.formatCents(standardDeviation(bankroll)),
+      stdDeviation: Utils.formatCents(standardDeviation(bankrollChanges)),
       tableRules: formatTableRules(game.settings),
       timeElapsed: Utils.formatTime(Date.now() - startTime),
     };

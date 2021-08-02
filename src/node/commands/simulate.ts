@@ -49,9 +49,9 @@ export default function (
     'betSpread',
     'spotsPlayed',
     'expectedValue',
+    'stdDeviation',
     'houseEdge',
     'handsPlayed',
-    'stdDeviation',
   ];
 
   // TODO: Format without tabs (format table with spaces).
