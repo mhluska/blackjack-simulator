@@ -223,6 +223,6 @@ export default class Utils {
             index === ranges.length - 1
           )}: ${formatter(range.value)}`
       )
-      .join(' ');
+      .join(', ');
   }
 }

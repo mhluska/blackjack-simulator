@@ -9,7 +9,7 @@ function camelize(str) {
 }
 
 function isDollarValue(str) {
-  return !!str.match(/^\$?\d+(,\d{3})*(\.[0-9]{2})?$/);
+  return !!str.match(/^\$\d+(,\d{3})*(\.[0-9]{2})?$/);
 }
 
 function parseDollar(str) {
