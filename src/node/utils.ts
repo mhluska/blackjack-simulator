@@ -10,20 +10,27 @@ export function kebabCase(str: string): string {
 
 export function printUsageOptions<T extends SimpleObject>(
   defaultSettings: T,
-  valueOverrides: Partial<{ [key in keyof T]: string | string[] }> = {}
+  options: Partial<
+    {
+      [key in keyof T]: {
+        hint?: string;
+        formatter?: (value: T[key]) => string;
+      };
+    }
+  > = {}
 ): void {
   keys(defaultSettings).forEach((key) => {
     const value = defaultSettings[key];
     if (typeof value === 'object' && !Array.isArray(value)) {
-      printUsageOptions(value, valueOverrides);
+      printUsageOptions(value, options);
     } else {
       const items = [`  --${kebabCase(key.toString())}`];
 
       if (value) {
-        items.push(value);
+        items.push(options[key]?.formatter?.(value) ?? value);
       }
-      if (valueOverrides[key]) {
-        items.push(valueOverrides[key] as string);
+      if (options[key]?.hint) {
+        items.push(options[key]?.hint as string);
       }
 
       console.log(items.join(' '));

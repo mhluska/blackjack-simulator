@@ -40,6 +40,8 @@ type GameState = {
   focusedHandIndex: number;
 };
 
+const MINIMUM_BET = 10 * 100;
+
 export const SETTINGS_DEFAULTS: GameSettings = {
   animationDelay: 200,
   autoDeclineInsurance: false,
@@ -52,7 +54,7 @@ export const SETTINGS_DEFAULTS: GameSettings = {
   mode: 'default',
   debug: false,
 
-  playerBankroll: 10000 * 100,
+  playerBankroll: MINIMUM_BET * 1000 * 1000,
   playerTablePosition: 1,
   playerStrategyOverride: {},
 
@@ -63,8 +65,8 @@ export const SETTINGS_DEFAULTS: GameSettings = {
   deckCount: 2,
   hitSoft17: true,
   maxHandsAllowed: 4,
-  maximumBet: 1000 * 100,
-  minimumBet: 10 * 100,
+  maximumBet: MINIMUM_BET * 100,
+  minimumBet: MINIMUM_BET,
   playerCount: 1,
 };
 

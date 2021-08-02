@@ -3,7 +3,7 @@ import CLIRenderer from '../../cli-renderer';
 import FileStorage from '../../file-storage';
 import PlayerInputReader from '../player-input-reader';
 import { actions } from '../../types';
-
+import Utils from '../../utils';
 import { CliSettings, printUsageOptions } from '../utils';
 
 // TODO: Move commands out of the /src directory once we move to WebAssembly.
@@ -33,7 +33,10 @@ export default async function (
     console.log('Options:');
 
     printUsageOptions<GameSettings>(SETTINGS_DEFAULTS, {
-      mode: '[default | pairs | uncommon | illustrious18]',
+      mode: { hint: '[default | pairs | uncommon | illustrious18]' },
+      playerBankroll: { formatter: Utils.formatCents },
+      maximumBet: { formatter: Utils.formatCents },
+      minimumBet: { formatter: Utils.formatCents },
     });
 
     return;

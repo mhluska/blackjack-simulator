@@ -17,16 +17,16 @@ export type SimulatorResult = {
   amountEarned: string;
   amountWagered: string;
   betSpread: string;
-  spotsPlayed: string;
   expectedValue: string;
   handsLost: string;
   handsPlayed: string;
   handsPushed: string;
   handsWon: string;
   houseEdge: string;
+  spotsPlayed: string;
+  stdDeviation: string;
   tableRules: string;
   timeElapsed: string;
-  variance: string;
 };
 
 const MINIMUM_BET = 10 * 100;
@@ -61,7 +61,7 @@ export const SETTINGS_DEFAULTS: SimulatorSettings = {
   deckCount: 2,
   hitSoft17: true,
   maxHandsAllowed: 4,
-  maximumBet: 1000 * 100,
+  maximumBet: MINIMUM_BET * 100,
   minimumBet: MINIMUM_BET,
   playerCount: 6,
 };
@@ -80,6 +80,11 @@ function mean(data: number[]) {
 function variance(data: number[]) {
   const dataMean = mean(data);
   return sum(data.map((num) => (num - dataMean) ** 2)) / (data.length - 1);
+}
+
+// TODO: Move to stats utils.
+function standardDeviation(data: number[]) {
+  return Math.sqrt(variance(data));
 }
 
 function formatTableRules(settings: GameSettings) {
@@ -188,6 +193,14 @@ export default class Simulator {
     const handsPerHour = 50;
     const hoursPlayed = handsPlayed / handsPerHour;
 
+    const expectedValue = amountEarned / hoursPlayed;
+    const sd = standardDeviation(bankroll) / hoursPlayed;
+
+    const riskOfRuin = () =>
+      (1 - expectedValue / sd / (1 + expectedValue / sd)) ** ((100 * 100) / sd);
+
+    console.log('risk of ruin', riskOfRuin());
+
     return {
       amountEarned: Utils.formatCents(amountEarned),
       amountWagered: Utils.formatCents(amountWagered),
@@ -195,16 +208,16 @@ export default class Simulator {
         this.settings.playerBetSpread,
         Utils.formatCents
       ),
-      spotsPlayed: Utils.arrayToRangeString(this.settings.playerSpots),
       expectedValue: `${Utils.formatCents(amountEarned / hoursPlayed)}/hour`,
       handsLost: Utils.abbreviateNumber(handsLost),
       handsPlayed: Utils.abbreviateNumber(handsPlayed),
       handsPushed: Utils.abbreviateNumber(handsPushed),
       handsWon: Utils.abbreviateNumber(handsWon),
       houseEdge: `${((-amountEarned / amountWagered) * 100).toFixed(2)}%`,
+      spotsPlayed: Utils.arrayToRangeString(this.settings.playerSpots),
+      stdDeviation: Utils.formatCents(standardDeviation(bankroll)),
       tableRules: formatTableRules(game.settings),
       timeElapsed: Utils.formatTime(Date.now() - startTime),
-      variance: Utils.formatCents(variance(bankroll)),
     };
   }
 }

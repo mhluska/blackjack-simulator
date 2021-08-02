@@ -26,9 +26,9 @@ describe('Simulator', function () {
         'handsWon',
         'houseEdge',
         'spotsPlayed',
+        'stdDeviation',
         'tableRules',
-        'timeElapsed',
-        'variance'
+        'timeElapsed'
       );
     });
   });

@@ -8,6 +8,14 @@ function camelize(str) {
     .replace(/^(.)/, (char) => char.toLowerCase());
 }
 
+function isDollarValue(str) {
+  return !!str.match(/^\$?\d+(,\d{3})*(\.[0-9]{2})?$/);
+}
+
+function parseDollar(str) {
+  return parseFloat(str.replace(/[^\d\.]/g, '')) * 100;
+}
+
 function parseArgValue(value) {
   // If the value is empty or is actually the next arg, this means the previous
   // arg had no value and should be treated as true.
@@ -17,8 +25,8 @@ function parseArgValue(value) {
   }
 
   // Parse as a dollar value.
-  if (value[0] === '$') {
-    return parseFloat(value.replace(/[^\d\.]/g, '')) * 100;
+  if (isDollarValue(value)) {
+    return parseDollar(value);
   }
 
   // Parse as an array.
@@ -26,7 +34,9 @@ function parseArgValue(value) {
     return value
       .split(',')
       .filter(Boolean)
-      .map((number) => parseInt(number));
+      .map((number) =>
+        isDollarValue(number) ? parseDollar(number) : parseInt(number)
+      );
   }
 
   // Parse as an integer, commas can be represented with `_`.
@@ -51,6 +61,10 @@ function parseArgs(args) {
   for (let i = 0; i < args.length; i += 1) {
     const arg = camelize(args[i]);
     const value = parseArgValue(args[i + 1]);
+
+    if (!value || value.length === 0) {
+      throw new Error(`Invalid value for arg ${args[i]}: ${value}`);
+    }
 
     options[arg] = value;
 

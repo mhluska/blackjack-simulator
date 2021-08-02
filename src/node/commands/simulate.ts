@@ -17,9 +17,25 @@ export default function (
     console.log('Options:');
 
     printUsageOptions<SimulatorSettings>(SETTINGS_DEFAULTS, {
-      playerStrategy: '[basic-strategy | basic-strategy-i18]',
-      playerBetSpread: '(bets at TC 0, 1, 2 etc)',
-      playerSpots: '(spots played at TC 0, 1, 2 etc)',
+      playerStrategy: {
+        hint: '[basic-strategy | basic-strategy-i18]',
+      },
+      playerBetSpread: {
+        hint: '(bets at TC 0, 1, 2 etc)',
+        formatter: (array) =>
+          array
+            .map((item) =>
+              Utils.formatCents(item, {
+                stripCommas: true,
+                stripZeroCents: true,
+              })
+            )
+            .join(','),
+      },
+      playerSpots: { hint: '(spots played at TC 0, 1, 2 etc)' },
+      playerBankroll: { formatter: Utils.formatCents },
+      maximumBet: { formatter: Utils.formatCents },
+      minimumBet: { formatter: Utils.formatCents },
     });
 
     return;
@@ -35,7 +51,7 @@ export default function (
     'expectedValue',
     'houseEdge',
     'handsPlayed',
-    'variance',
+    'stdDeviation',
   ];
 
   // TODO: Format without tabs (format table with spaces).

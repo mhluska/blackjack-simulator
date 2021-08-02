@@ -103,12 +103,19 @@ export default class Utils {
 
   static formatCents(
     cents: number,
-    { stripZeroCents = false }: { stripZeroCents?: boolean } = {}
+    {
+      stripZeroCents = false,
+      stripCommas = false,
+    }: { stripZeroCents?: boolean; stripCommas?: boolean } = {}
   ): string {
-    const value = new Intl.NumberFormat('en-US', {
+    let value = new Intl.NumberFormat('en-US', {
       style: 'currency',
       currency: 'USD',
     }).format(cents / 100);
+
+    if (stripCommas) {
+      value = value.replace(/,/g, '');
+    }
 
     if (stripZeroCents && value.endsWith('.00')) {
       return value.slice(0, value.length - 3);
