@@ -3,7 +3,6 @@ import Utils from './utils';
 import Shoe from './shoe';
 import Dealer from './dealer';
 import Player, { PlayerStrategy } from './player';
-import DiscardTray from './discard-tray';
 import BasicStrategyChecker from './basic-strategy-checker';
 import HiLoDeviationChecker from './hi-lo-deviation-checker';
 import Hand from './hand';
@@ -75,7 +74,6 @@ export default class Game extends EventEmitter {
   betAmount!: number;
   spotCount!: number;
   dealer!: Dealer;
-  discardTray!: DiscardTray;
   gameId!: string;
   player!: Player;
   players!: Player[];
@@ -112,10 +110,7 @@ export default class Game extends EventEmitter {
     // wrong moves in the database.
     this.gameId = Utils.randomId();
 
-    this.shoe = this.chainEmitChange(
-      new Shoe({ game: this, debug: this.settings.debug })
-    );
-    this.discardTray = this.chainEmitChange(new DiscardTray());
+    this.shoe = this.chainEmitChange(new Shoe({ settings: this.settings }));
     this.dealer = this.chainEmitChange(
       new Dealer({
         debug: this.settings.debug,
@@ -639,19 +634,16 @@ export default class Game extends EventEmitter {
     this.state.focusedHandIndex = 0;
 
     for (const player of this.players) {
-      this.discardTray.addCards(player.removeCards());
+      player.removeCards();
     }
 
-    this.discardTray.addCards(this.dealer.removeCards());
+    this.dealer.removeCards();
 
     if (this.shoe.needsReset) {
       if (this.settings.debug) {
         console.log('Cut card reached');
       }
-      this.shoe.addCards(
-        this.discardTray.removeCards().concat(this.shoe.removeCards())
-      );
-      this.shoe.shuffle();
+      this.shoe.resetCards();
       this.emit('shuffle');
     }
 

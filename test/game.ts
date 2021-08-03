@@ -66,7 +66,6 @@ function runGame(
     }
 
     game.step(playerInput);
-
   } while (game.state.step !== 'start');
 }
 

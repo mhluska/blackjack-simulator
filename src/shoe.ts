@@ -1,8 +1,7 @@
 import Utils from './utils';
 import Deck from './deck';
-import Game from './game';
-import DiscardTray, { DiscardTrayAttributes } from './discard-tray';
-import Card from './card';
+import Card, { CardAttributes } from './card';
+import GameObject from './game-object';
 import BasicStrategyChecker from './basic-strategy-checker';
 import { illustrious18Deviations } from './hi-lo-deviation-checker';
 import { GameSettings } from './game';
@@ -21,30 +20,44 @@ import {
 const RESET_THRESHOLD = 0.35;
 
 type ShoeAttributes = {
-  penetration: number;
+  cards: CardAttributes[];
   hiLoRunningCount: number;
   hiLoTrueCount: number;
+  penetration: number;
 };
 
-// TODO: Make this mix in functionality from `DiscardTray` instead of extending.
-export default class Shoe extends DiscardTray {
+export default class Shoe extends GameObject {
   static entityName = 'shoe';
 
-  cards: Card[];
-  debug: boolean;
-  hiLoRunningCount: number;
-  mode: GameSettings['mode'];
+  cards!: Card[];
+  currentCardIndex!: number;
+  hiLoRunningCount!: number;
   settings: GameSettings;
 
-  constructor({ game, debug = false }: { game: Game; debug?: boolean }) {
+  constructor({ settings }: { settings: GameSettings }) {
     super();
 
-    this.cards = this._setupCards(game.settings.deckCount);
-    this.debug = debug;
-    this.hiLoRunningCount = 0;
-    this.mode = game.settings.mode;
-    this.settings = game.settings;
+    this.settings = settings;
+    this.setCards(this._setupCards(settings.deckCount));
+    this.shuffle();
+  }
 
+  setCards(cards: Card[]): void {
+    this.hiLoRunningCount = 0;
+    this.currentCardIndex = cards.length - 1;
+
+    for (const card of cards) {
+      this.hiLoRunningCount -= card.hiLoValue;
+      card.showingFace = false;
+    }
+
+    this.cards = cards;
+    this.emitChange();
+  }
+
+  resetCards(): void {
+    this.hiLoRunningCount = 0;
+    this.currentCardIndex = this.cards.length - 1;
     this.shuffle();
   }
 
@@ -69,10 +82,12 @@ export default class Shoe extends DiscardTray {
   }
 
   drawCard({ showingFace = true } = {}): Card | void {
-    const card = this.cards.pop();
+    const card = this.cards[this.currentCardIndex];
     if (!card) {
       return;
     }
+
+    this.currentCardIndex -= 1;
 
     card.showingFace = showingFace;
 
@@ -85,32 +100,42 @@ export default class Shoe extends DiscardTray {
     return card;
   }
 
-  addCards(cards: Card[]): void {
-    this.hiLoRunningCount -= Utils.hiLoValue(cards);
-    super.addCards(cards);
+  remainingCards(): Card[] {
+    return this.cards.slice(0, this.currentCardIndex + 1);
   }
 
-  removeCards(): Card[] {
-    this.hiLoRunningCount += Utils.hiLoValue(this.cards);
-    return super.removeCards();
-  }
-
-  attributes(): ShoeAttributes & DiscardTrayAttributes {
-    return Object.assign({}, super.attributes(), {
-      penetration: Utils.round(this.penetration, 2),
-      hiLoRunningCount: this.hiLoRunningCount,
-      hiLoTrueCount: Utils.round(this.hiLoTrueCount, 2),
-    });
+  attributes(): ShoeAttributes {
+    return Object.assign(
+      {},
+      {
+        penetration: Utils.round(this.penetration, 2),
+        hiLoRunningCount: this.hiLoRunningCount,
+        hiLoTrueCount: Utils.round(this.hiLoTrueCount, 2),
+        cards: this.remainingCards().map((card) => card.attributes()),
+      }
+    );
   }
 
   serialize(): string {
     return (
-      `(${this.cards.length} card${this.cards.length > 1 ? 's' : ''}): ` +
-      this.cards
+      `(${this.cardCount} card${this.cardCount > 1 ? 's' : ''}): ` +
+      this.remainingCards()
         .map((card) => card.rank)
         .reverse()
         .join(' ')
     );
+  }
+
+  get cardCount(): number {
+    return this.currentCardIndex + 1;
+  }
+
+  get mode(): GameSettings['mode'] {
+    return this.settings.mode;
+  }
+
+  get debug(): GameSettings['debug'] {
+    return this.settings.debug;
   }
 
   get maxCards(): number {
@@ -122,19 +147,19 @@ export default class Shoe extends DiscardTray {
       return true;
     }
 
-    return this.cards.length / this.maxCards < RESET_THRESHOLD;
+    return this.cardCount / this.maxCards < RESET_THRESHOLD;
   }
 
-  get cardsRemaining(): number {
-    return this.cards.length / this.maxCards;
+  get cardsRemainingRatio(): number {
+    return this.cardCount / this.maxCards;
   }
 
   get penetration(): number {
-    return (1 - this.cardsRemaining) * 100;
+    return (1 - this.cardsRemainingRatio) * 100;
   }
 
   get decksRemaining(): number {
-    return this.cardsRemaining * this.settings.deckCount;
+    return this.cardsRemainingRatio * this.settings.deckCount;
   }
 
   get hiLoTrueCount(): number {
