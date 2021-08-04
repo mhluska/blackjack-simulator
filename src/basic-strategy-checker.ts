@@ -31,7 +31,7 @@ export default class BasicStrategyChecker {
       return 'N';
     }
 
-    const allowSplit = hand.player.hands.length < game.settings.maxHandsAllowed;
+    const allowSplit = hand.player.handsCount < game.settings.maxHandsAllowed;
 
     const { chart: chartGroup } = selectCharts(game.settings);
     const chartType = this._chartType(hand, allowSplit);

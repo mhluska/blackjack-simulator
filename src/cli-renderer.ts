@@ -69,7 +69,7 @@ export default class CLIRenderer implements Renderer {
 
       if (
         this.game.focusedHand.hasPairs &&
-        this.game.player.hands.length < this.game.settings.maxHandsAllowed
+        this.game.player.handsCount < this.game.settings.maxHandsAllowed
       ) {
         choices.push('P (split)');
       }

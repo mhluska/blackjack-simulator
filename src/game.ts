@@ -98,7 +98,7 @@ export default class Game extends EventEmitter {
   }
 
   get focusedHand(): Hand {
-    return this.player.hands[this.state.focusedHandIndex];
+    return this.player.getHand(this.state.focusedHandIndex);
   }
 
   updateSettings(settings: GameSettings): void {
@@ -113,6 +113,7 @@ export default class Game extends EventEmitter {
     this.shoe = this.chainEmitChange(new Shoe({ settings: this.settings }));
     this.dealer = this.chainEmitChange(
       new Dealer({
+        handsMax: this.settings.maxHandsAllowed,
         debug: this.settings.debug,
         strategy: PlayerStrategy.DEALER,
       })
@@ -123,6 +124,7 @@ export default class Game extends EventEmitter {
       (_item, index) =>
         this.chainEmitChange(
           new Player({
+            handsMax: this.settings.maxHandsAllowed,
             balance: this.settings.playerBankroll,
             blackjackPayout: this.settings.blackjackPayout,
             debug: this.settings.debug,
@@ -151,7 +153,7 @@ export default class Game extends EventEmitter {
       this.emit('create-record', 'hand-result', {
         createdAt: Date.now(),
         gameId: this.gameId,
-        dealerHand: this.dealer.hands[0].serialize({ showHidden: true }),
+        dealerHand: this.dealer.firstHand.serialize({ showHidden: true }),
         playerHand: hand.serialize(),
         winner,
       });
@@ -226,7 +228,7 @@ export default class Game extends EventEmitter {
     this.emit('create-record', 'move', {
       createdAt: Date.now(),
       gameId: this.gameId,
-      dealerHand: this.dealer.hands[0].serialize({ showHidden: true }),
+      dealerHand: this.dealer.firstHand.serialize({ showHidden: true }),
       playerHand: this.focusedHand.serialize(),
       move: input,
       correction: typeof checkerResult === 'object' ? checkerResult.code : null,
@@ -374,9 +376,9 @@ export default class Game extends EventEmitter {
 
     // Draw card for each player face up again (upcard).
     for (const player of this.players) {
-      for (const hand of player.hands) {
+      player.eachHand((hand) => {
         player.takeCard(this.shoe.drawCard(), { hand });
-      }
+      });
     }
 
     // Draw card for dealer face down (hole card).
@@ -387,12 +389,12 @@ export default class Game extends EventEmitter {
     // Dealer peeks at the hole card if the upcard is 10 to check blackjack.
     if (this.dealer.upcard.value === 10 && this.dealer.holeCard.value === 11) {
       this.dealer.cards[0].flip();
-      this.dealer.hands[0].incrementTotalsForCard(this.dealer.cards[0]);
+      this.dealer.firstHand.incrementTotalsForCard(this.dealer.cards[0]);
 
       for (const player of this.players) {
-        for (const hand of player.hands) {
+        player.eachHand((hand) => {
           player.setHandWinner({ winner: 'dealer', hand });
-        }
+        });
       }
 
       return 'waiting-for-new-game-input';
@@ -415,7 +417,7 @@ export default class Game extends EventEmitter {
     ...players: Player[]
   ): void {
     for (const player of players) {
-      for (const hand of player.hands) {
+      player.eachHand((hand) => {
         const input =
           player.isUser && userInput
             ? userInput
@@ -429,7 +431,7 @@ export default class Game extends EventEmitter {
         if (input === 'ask-insurance') {
           player.useChips(amount / 2, { hand });
         }
-      }
+      });
     }
   }
 
@@ -439,7 +441,7 @@ export default class Game extends EventEmitter {
     }
 
     for (const player of this.players) {
-      for (const hand of player.hands) {
+      player.eachHand((hand) => {
         player.setHandWinner({ winner: 'dealer', hand });
 
         // TODO: Store this in state so we don't have to check it again.
@@ -454,7 +456,7 @@ export default class Game extends EventEmitter {
             player === this.player ? this.betAmount : this.settings.minimumBet
           );
         }
-      }
+      });
     }
   }
 
@@ -503,7 +505,7 @@ export default class Game extends EventEmitter {
 
       if (
         input === 'split' &&
-        player.hands.length < this.settings.maxHandsAllowed
+        player.handsCount < this.settings.maxHandsAllowed
       ) {
         const newHandCard = hand.removeCard();
 
@@ -556,7 +558,7 @@ export default class Game extends EventEmitter {
 
   playNPCHands(...players: Player[]): void {
     for (const player of players) {
-      for (const hand of player.hands) {
+      player.eachHand((hand) => {
         let handFinished = false;
 
         while (!handFinished) {
@@ -567,7 +569,7 @@ export default class Game extends EventEmitter {
             player.getNPCInput(this, hand)
           );
         }
-      }
+      });
     }
   }
 
@@ -580,7 +582,7 @@ export default class Game extends EventEmitter {
     );
 
     if (handFinished) {
-      if (this.state.focusedHandIndex < this.player.hands.length - 1) {
+      if (this.state.focusedHandIndex < this.player.handsCount - 1) {
         this.state.focusedHandIndex += 1;
       } else {
         return 'play-hands-left';
@@ -592,7 +594,7 @@ export default class Game extends EventEmitter {
 
   playDealer(): void {
     this.dealer.cards[0].flip();
-    this.dealer.hands[0].incrementTotalsForCard(this.dealer.cards[0]);
+    this.dealer.firstHand.incrementTotalsForCard(this.dealer.cards[0]);
 
     // Dealer draws cards until they reach 17. However, if all player hands have
     // busted, this step is skipped.
@@ -611,9 +613,9 @@ export default class Game extends EventEmitter {
     }
 
     for (const player of this.players) {
-      for (const hand of player.hands) {
+      player.eachHand((hand) => {
         if (player.handWinner.get(hand.id)) {
-          continue;
+          return;
         }
 
         if (this.dealer.busted) {
@@ -625,7 +627,7 @@ export default class Game extends EventEmitter {
         } else {
           player.setHandWinner({ winner: 'push', hand });
         }
-      }
+      });
     }
   }
 

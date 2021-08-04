@@ -15,30 +15,35 @@ export type HandAttributes = {
 export default class Hand extends GameObject {
   static entity = 'hand';
 
+  acesCount!: number;
+  betAmount!: number;
+  cardHighTotal!: number;
+  cardLowTotal!: number;
+  cards!: Card[];
+  fromSplit!: boolean;
   id: string;
   player: Player;
-  fromSplit: boolean;
-  betAmount: number;
-  cardHighTotal: number;
-  cardLowTotal: number;
-  acesCount: number;
-  cards: Card[];
 
   constructor(player: Player, cards: Card[] = []) {
     super();
 
+    this.reset();
+
     this.id = Utils.randomId();
     this.player = player;
-    this.fromSplit = false;
-    this.betAmount = 0;
-    this.cardHighTotal = 0;
-    this.cardLowTotal = 0;
-    this.acesCount = 0;
-    this.cards = [];
 
     for (const card of cards) {
       this.takeCard(card);
     }
+  }
+
+  reset(): void {
+    this.acesCount = 0;
+    this.betAmount = 0;
+    this.cardHighTotal = 0;
+    this.cardLowTotal = 0;
+    this.cards = [];
+    this.fromSplit = false;
   }
 
   takeCard(card: Card, { prepend = false } = {}): void {
@@ -85,12 +90,9 @@ export default class Hand extends GameObject {
 
   // TODO: Remove change handler when removing cards.
   removeCards(): Card[] {
-    const cards = this.cards.slice();
-    this.cards = [];
-    this.cardHighTotal = 0;
-    this.cardLowTotal = 0;
-    this.acesCount = 0;
+    const cards = this.cards;
 
+    this.reset();
     this.emitChange();
 
     return cards;

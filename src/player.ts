@@ -33,20 +33,25 @@ export default class Player extends GameObject {
   balance: number;
   blackjackPayout: blackjackPayouts;
   debug: boolean;
-  hands: Hand[];
+  handsCount: number;
+  handsMax: number;
   handWinner: Map<string, handWinners>;
   id: string;
   strategy: PlayerStrategy;
+
+  _hands: Hand[];
 
   constructor({
     balance = 10000 * 100,
     blackjackPayout = '3:2',
     debug = false,
+    handsMax,
     strategy,
   }: {
     balance?: number;
     blackjackPayout?: blackjackPayouts;
     debug?: boolean;
+    handsMax: number;
     strategy: PlayerStrategy;
   }) {
     super();
@@ -54,10 +59,28 @@ export default class Player extends GameObject {
     this.balance = balance;
     this.blackjackPayout = blackjackPayout;
     this.debug = debug;
-    this.hands = [];
+    this.handsCount = 0;
+    this.handsMax = handsMax;
     this.handWinner = new Map();
     this.id = Utils.randomId();
     this.strategy = strategy;
+
+    this._hands = Array.from({ length: handsMax }, () => {
+      // TODO: Use `chainEmitChange`.
+      const hand = new Hand(this);
+      hand.on('change', () => this.emitChange());
+      return hand;
+    });
+  }
+
+  getHand(index: number): Hand {
+    return this._hands[index];
+  }
+
+  eachHand(callback: (hand: Hand) => void): void {
+    for (let i = 0; i < this.handsCount; i += 1) {
+      callback(this._hands[i]);
+    }
   }
 
   getNPCInput(game: Game, hand: Hand): actions {
@@ -76,7 +99,7 @@ export default class Player extends GameObject {
         this.strategy,
         this.id,
         'dealer',
-        game.dealer.hands[0].serialize(),
+        game.dealer.firstHand.serialize(),
         'player',
         hand.serialize(),
         `(${hand.cardTotal})`,
@@ -88,10 +111,10 @@ export default class Player extends GameObject {
   }
 
   addHand(betAmount = 0, cards: Card[] = []): Hand {
-    const hand = new Hand(this, cards);
-    hand.on('change', () => this.emitChange());
+    this.handsCount += 1;
 
-    this.hands.push(hand);
+    const hand = this._hands[this.handsCount - 1];
+    hand.cards = cards;
 
     if (betAmount !== 0) {
       this.useChips(betAmount, { hand });
@@ -110,7 +133,7 @@ export default class Player extends GameObject {
       return;
     }
 
-    const targetHand = hand ?? this.hands[0] ?? this.addHand();
+    const targetHand = hand ?? this._hands[0];
     targetHand.takeCard(card, { prepend });
 
     if (this.debug) {
@@ -126,17 +149,12 @@ export default class Player extends GameObject {
     this.emitChange();
   }
 
-  removeCards({ hand }: { hand?: Hand } = {}): Card[] {
-    if (hand) {
-      return hand.removeCards();
-    } else {
-      const cards = Utils.arrayFlatten(
-        this.hands.map((hand) => hand.removeCards())
-      );
-      this.hands = [];
-      this.emitChange();
-      return cards;
+  removeCards(): void {
+    for (let i = 0; i < this.handsCount; i += 1) {
+      this._hands[i].removeCards();
     }
+
+    this.handsCount = 0;
   }
 
   attributes(): PlayerAttributes {
@@ -160,7 +178,7 @@ export default class Player extends GameObject {
 
   useChips(betAmount: number, { hand }: { hand?: Hand } = {}): void {
     if (!hand) {
-      hand = this.hands[0];
+      hand = this._hands[0];
     }
 
     if (!hand) {
@@ -198,7 +216,7 @@ export default class Player extends GameObject {
   }
 
   setHandWinner({
-    hand = this.hands[0],
+    hand = this._hands[0],
     winner,
     surrender = false,
   }: {
@@ -239,6 +257,14 @@ export default class Player extends GameObject {
     this.emit('hand-winner', hand, winner);
   }
 
+  get hands(): Hand[] {
+    return this._hands.slice(0, this.handsCount);
+  }
+
+  get firstHand(): Hand {
+    return this._hands[0];
+  }
+
   get isUser(): boolean {
     return this.strategy === PlayerStrategy.USER_INPUT;
   }
@@ -249,36 +275,36 @@ export default class Player extends GameObject {
 
   // TODO: Consider using `Proxy`.
   get cards(): Card[] {
-    return this.hands[0].cards;
+    return this._hands[0].cards;
   }
 
   // TODO: Consider using `Proxy`.
   get busted(): boolean {
-    return this.hands[0].busted;
+    return this._hands[0].busted;
   }
 
   // TODO: Consider using `Proxy`.
   get blackjack(): boolean {
-    return this.hands[0].blackjack;
+    return this._hands[0].blackjack;
   }
 
   // TODO: Consider using `Proxy`.
   get cardTotal(): number {
-    return this.hands[0].cardTotal;
+    return this._hands[0].cardTotal;
   }
 
   // TODO: Consider using `Proxy`.
   get hasPairs(): boolean {
-    return this.hands[0].hasPairs;
+    return this._hands[0].hasPairs;
   }
 
   // TODO: Consider using `Proxy`.
   get isSoft(): boolean {
-    return this.hands[0].isSoft;
+    return this._hands[0].isSoft;
   }
 
   // TODO: Consider using `Proxy`.
   get isHard(): boolean {
-    return this.hands[0].isHard;
+    return this._hands[0].isHard;
   }
 }
