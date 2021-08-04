@@ -35,7 +35,7 @@ const MAX_TRUE_COUNT = 5;
 
 export const SETTINGS_DEFAULTS: SimulatorSettings = {
   // Simulator-only settings.
-  hands: 10 ** 5,
+  hands: 10 ** 6,
   playerStrategy: 'basic-strategy',
 
   // TODO: Allow computing optimal bet spreads.

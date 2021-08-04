@@ -16,7 +16,7 @@
 
 ## Project goals
 
-* Simulator for computing EV given some table conditions
+* Simulator for computing EV given some table conditions (10M hands / second)
 * Game mode for practicing basic strategy and card counting with hints
 * No package dependencies
 * Runs in any JS environment (CLI, browser, React Native app etc)
@@ -30,13 +30,13 @@ npm install -g @blackjacktrainer/blackjack-simulator
 ```
 
 ```sh
-blackjack-simulator simulate --help
+blackjack-simulator simulate
 ```
 
 ### Game mode
 
 ```sh
-blackjack-simulator game --help
+blackjack-simulator game
 ```
 
 ### Build and run locally
