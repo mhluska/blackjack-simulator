@@ -197,23 +197,29 @@ async function runGame(game) {
 runGame(game);
 ```
 
-```
-The game often pauses and listens for a `click` or `keypress` event on
-`document.body`. Your DOM just has to declare the following buttons somewhere
-for user interaction:
+`PlayerInputReader.readInput` listens for a `click` or `keypress`
+event on `document.body`. Your DOM just has to declare the following buttons
+somewhere for user interaction:
 
-```html
-<template v-if="game.state.step === 'waiting-for-move'">
-  <button data-action="s">Stand (S)</button>
-  <button data-action="h">Hit (H)</button>
-  <button data-action="d">Double (D)</button>
-  <button data-action="r">Surrender (R)</button>
-  <button data-action="p">Split (P)</button>
-<template v-else-if="step === 'ask-insurance'">
-  <button data-action="n">No (N)</button>
-  <button data-action="y">Yes (Y)</button>
-</template>
-<template v-else>
-  <button data-action="d">Deal (press any key)</button>
-</template>
+```jsx
+{game.state.step === 'waiting-for-play-input' && (
+  <>
+    <button data-action="s">Stand (S)</button>
+    <button data-action="h">Hit (H)</button>
+    <button data-action="d">Double (D)</button>
+    <button data-action="r">Surrender (R)</button>
+    <button data-action="p">Split (P)</button>
+  </>
+)}
+{game.state.step === 'waiting-for-insurance-input' && (
+  <>
+    <button data-action="n">No (N)</button>
+    <button data-action="y">Yes (Y)</button>
+  </>
+)}
+{game.state.step === 'waiting-for-new-game-input' && (
+  <>
+    <button data-action="d">Deal (press any key)</button>
+  </>
+)}
 ```

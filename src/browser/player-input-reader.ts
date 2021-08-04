@@ -2,23 +2,10 @@ import PlayerInputReader from '../player-input-reader';
 import { actionDataKeyToAction, actions } from '../types';
 
 export default class DOMPlayerInputReader implements PlayerInputReader {
-  elementSelector: string;
-
-  constructor(elementSelector: string) {
-    this.elementSelector = elementSelector;
-  }
-
   readInput(callback: (action: actions) => void): void {
     document.body.addEventListener(
       'keypress',
       (event) => {
-        if (
-          !this.elementSelector ||
-          !document.querySelector(this.elementSelector)
-        ) {
-          return;
-        }
-
         const action = actionDataKeyToAction(event.key);
         if (action) {
           callback(action);
