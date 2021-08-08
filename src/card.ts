@@ -10,6 +10,27 @@ export type CardAttributes = {
   showingFace: boolean;
 };
 
+function hiLoValue(rank: Ranks): number {
+  switch (rank) {
+    case Ranks.ACE:
+    case Ranks.KING:
+    case Ranks.QUEEN:
+    case Ranks.JACK:
+    case Ranks.TEN:
+      return -1;
+    case Ranks.NINE:
+    case Ranks.EIGHT:
+    case Ranks.SEVEN:
+      return 0;
+    case Ranks.SIX:
+    case Ranks.FIVE:
+    case Ranks.FOUR:
+    case Ranks.THREE:
+    case Ranks.TWO:
+      return 1;
+  }
+}
+
 export default class Card extends GameObject {
   static entityName = 'card';
 
@@ -18,6 +39,8 @@ export default class Card extends GameObject {
   rank: Ranks;
   shoe: Shoe;
   showingFace: boolean;
+  value: dealerTotal;
+  hiLoValue: number;
 
   constructor(suit: Suits, rank: Ranks, shoe: Shoe) {
     super();
@@ -27,6 +50,8 @@ export default class Card extends GameObject {
     this.rank = rank;
     this.shoe = shoe;
     this.showingFace = true;
+    this.value = cardRankToValue(rank);
+    this.hiLoValue = hiLoValue(rank);
   }
 
   flip(): void {
@@ -46,32 +71,7 @@ export default class Card extends GameObject {
     };
   }
 
-  get hiLoValue(): number {
-    switch (this.rank) {
-      case Ranks.ACE:
-      case Ranks.KING:
-      case Ranks.QUEEN:
-      case Ranks.JACK:
-      case Ranks.TEN:
-        return -1;
-      case Ranks.NINE:
-      case Ranks.EIGHT:
-      case Ranks.SEVEN:
-        return 0;
-      case Ranks.SIX:
-      case Ranks.FIVE:
-      case Ranks.FOUR:
-      case Ranks.THREE:
-      case Ranks.TWO:
-        return 1;
-    }
-  }
-
   get visible(): Card['showingFace'] {
     return this.showingFace;
-  }
-
-  get value(): dealerTotal {
-    return cardRankToValue(this.rank);
   }
 }
