@@ -15,7 +15,6 @@ import {
 } from './types';
 
 export type GameSettings = {
-  animationDelay: number;
   autoDeclineInsurance: boolean;
   disableEvents: boolean;
   checkDeviations: boolean;
@@ -42,7 +41,6 @@ type GameState = {
 const MINIMUM_BET = 10 * 100;
 
 export const SETTINGS_DEFAULTS: GameSettings = {
-  animationDelay: 200,
   autoDeclineInsurance: false,
   disableEvents: false,
   checkDeviations: false,

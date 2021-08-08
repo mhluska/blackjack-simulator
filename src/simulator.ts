@@ -183,7 +183,6 @@ export default class Simulator {
       ...this.settings,
 
       debug: this.settings.debug,
-      animationDelay: 0,
       disableEvents: true,
       playerStrategyOverride: {
         [this.settings.playerTablePosition]: this.playerStrategy,

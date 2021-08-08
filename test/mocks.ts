@@ -1,7 +1,6 @@
 const MINIMUM_BET = 10 * 100;
 
 export const settings = {
-  animationDelay: 0,
   autoDeclineInsurance: true,
   disableEvents: true,
   checkDeviations: false,

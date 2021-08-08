@@ -107,7 +107,6 @@ import { Game, PlayerInputReader } from '@blackjacktrainer/blackjack-simulator';
 
 // The following are default settings:
 const settings = {
-  animationDelay: 200,
   disableEvents: false,
   autoDeclineInsurance: false,
   checkDeviations: false,

@@ -13,7 +13,6 @@ function setupGame(options: Partial<GameSetupOptions> = {}) {
   const defaults: GameSetupOptions = {
     settings: {
       debug: !!process.env.DEBUG,
-      animationDelay: 0,
       playerTablePosition: 1,
       playerCount: 1,
     },
