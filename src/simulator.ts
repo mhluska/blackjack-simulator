@@ -116,6 +116,7 @@ function formatTableRules(settings: GameSettings) {
 // Hands per hour estimation based on:
 // https://wizardofodds.com/ask-the-wizard/136/
 // TODO: Add consideration for pitch games.
+// TODO: Add consideration for `spotCount`.
 function estimateHandsPerHour(playerCount: number): number {
   switch (playerCount) {
     case 1:
@@ -201,9 +202,11 @@ export default class Simulator {
     let handsPlayed = 0;
     let amountWagered = 0;
 
+    // TODO: Fix `handsPlayed` going slightly over the limit if the next
+    // iteration involves playing more than one hand.
     while (handsPlayed < this.settings.hands) {
       const betAmount = this.betAmount(game.shoe.hiLoTrueCount);
-      const spotCount = this.spotCount(game.shoe.hiLoRunningCount);
+      const spotCount = this.spotCount(game.shoe.hiLoTrueCount);
 
       const prevBalance = game.player.balance;
 
