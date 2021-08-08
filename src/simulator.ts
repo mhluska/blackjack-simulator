@@ -30,42 +30,45 @@ export type SimulatorResult = {
   timeElapsed: string;
 };
 
-const MINIMUM_BET = 10 * 100;
-const MAX_TRUE_COUNT = 5;
+function defaultSettings(minimumBet = 10 * 100): SimulatorSettings {
+  const maxTrueCount = 5;
 
-export const SETTINGS_DEFAULTS: SimulatorSettings = {
-  // Simulator-only settings.
-  hands: 10 ** 6,
-  playerStrategy: 'basic-strategy',
+  return {
+    // Simulator-only settings.
+    hands: 10 ** 6,
+    playerStrategy: 'basic-strategy',
 
-  // TODO: Allow computing optimal bet spreads.
-  // Simple bet spread strategy, for $10 minimum:
-  // TC < 1: $10
-  // TC 1: $10 * 2^0 = $10
-  // TC 2: $10 * 2^1 = $20
-  // TC 3: $10 * 2^2 = $40
-  // TC 4: $10 * 2^3 = $80
-  playerBetSpread: Array.from(
-    { length: MAX_TRUE_COUNT },
-    (item, hiLoTrueCount) => MINIMUM_BET * 2 ** hiLoTrueCount
-  ),
-  playerSpots: Array.from({ length: MAX_TRUE_COUNT }, () => 1),
+    // TODO: Allow computing optimal bet spreads.
+    // Simple bet spread strategy, for $10 minimum:
+    // TC < 1: $10
+    // TC 1: $10 * 2^0 = $10
+    // TC 2: $10 * 2^1 = $20
+    // TC 3: $10 * 2^2 = $40
+    // TC 4: $10 * 2^3 = $80
+    playerBetSpread: Array.from(
+      { length: maxTrueCount },
+      (item, hiLoTrueCount) => minimumBet * 2 ** hiLoTrueCount
+    ),
+    playerSpots: Array.from({ length: maxTrueCount }, () => 1),
 
-  debug: false,
-  playerTablePosition: 1,
-  playerBankroll: MINIMUM_BET * 1000 * 1000,
+    debug: false,
+    playerTablePosition: 1,
+    playerBankroll: minimumBet * 1000 * 1000,
 
-  // Table rules
-  allowDoubleAfterSplit: true,
-  allowLateSurrender: false,
-  blackjackPayout: '3:2',
-  deckCount: 2,
-  hitSoft17: true,
-  maxHandsAllowed: 4,
-  maximumBet: MINIMUM_BET * 100,
-  minimumBet: MINIMUM_BET,
-  playerCount: 1,
-};
+    // Table rules
+    allowDoubleAfterSplit: true,
+    allowLateSurrender: false,
+    blackjackPayout: '3:2',
+    deckCount: 2,
+    hitSoft17: true,
+    maxHandsAllowed: 4,
+    maximumBet: minimumBet * 100,
+    minimumBet,
+    playerCount: 1,
+  };
+}
+
+export const SETTINGS_DEFAULTS = defaultSettings();
 
 // TODO: Move to stats utils.
 function sum(data: number[]) {
@@ -154,7 +157,7 @@ export default class Simulator {
   constructor(settings: DeepPartial<SimulatorSettings>) {
     // TODO: Avoid `as` here. Otherwise returns `Partial<SimulatorSettings>`.
     this.settings = Utils.mergeDeep(
-      SETTINGS_DEFAULTS,
+      defaultSettings(settings.minimumBet),
       settings
     ) as SimulatorSettings;
 
