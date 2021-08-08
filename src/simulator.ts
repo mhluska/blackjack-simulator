@@ -110,6 +110,33 @@ function formatTableRules(settings: GameSettings) {
     .join(' ');
 }
 
+// Hands per hour estimation based on:
+// https://wizardofodds.com/ask-the-wizard/136/
+// TODO: Add consideration for pitch games.
+function estimateHandsPerHour(playerCount: number): number {
+  switch (playerCount) {
+    case 1:
+      return 209;
+    case 2:
+      return 139;
+    case 3:
+      return 105;
+    case 4:
+      return 84;
+    case 5:
+      return 70;
+    case 6:
+      return 60;
+    case 7:
+      return 52;
+  }
+
+  // For weird cases like playerCount > 7 or < 1, we just return the midpoint
+  // value to make TypeScript happy.
+  // TODO: Convert playerCount to an enum and this can go away.
+  return estimateHandsPerHour(4);
+}
+
 function parsePlayerStrategy(strategy: string): PlayerStrategy {
   switch (strategy) {
     case 'basic-strategy-i18':
@@ -219,8 +246,7 @@ export default class Simulator {
 
     const amountEarned = game.player.balance - bankrollStart;
 
-    // TODO: Estimate this based on number of players at the table.
-    const handsPerHour = 50;
+    const handsPerHour = estimateHandsPerHour(this.settings.playerCount);
     const hoursPlayed = handsPlayed / handsPerHour;
 
     // TODO: Make RoR configurable.
