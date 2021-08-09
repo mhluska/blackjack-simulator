@@ -1,4 +1,4 @@
-import EventEmitter from './event-emitter';
+import EventEmitter, { Events } from './event-emitter';
 
 export default class GameObject extends EventEmitter {
   // NOTE: Implement this in a subclass. We need this because the minifier will
@@ -7,7 +7,7 @@ export default class GameObject extends EventEmitter {
 
   emitChange(): void {
     if (!EventEmitter.disableEvents) {
-      this.emit('change', GameObject.entityName, this.attributes());
+      this.emit(Events.Change, GameObject.entityName, this.attributes());
     }
   }
 

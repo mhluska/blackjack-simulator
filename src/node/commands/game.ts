@@ -1,3 +1,4 @@
+import { Events } from '../../event-emitter';
 import Game, { GameSettings, SETTINGS_DEFAULTS } from '../../game';
 import CLIRenderer from '../../cli-renderer';
 import FileStorage from '../../file-storage';
@@ -47,8 +48,8 @@ export default async function (
   const storage = new FileStorage();
   const playerInputReader = new PlayerInputReader();
 
-  game.on('change', () => renderer.render());
-  game.on('create-record', storage.createRecord);
+  game.on(Events.Change, () => renderer.render());
+  game.on(Events.CreateRecord, storage.createRecord);
 
   let input: actions | undefined;
 

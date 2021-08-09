@@ -1,4 +1,5 @@
 import * as chai from 'chai';
+import { Events } from '../src/event-emitter';
 import Game, { GameSettings } from '../src/game';
 import Card from '../src/card';
 import Utils from '../src/utils';
@@ -87,7 +88,7 @@ describe('Game', function () {
         cardsBefore = game.shoe.cards.length;
 
         let shuffled = false;
-        game.on('shuffle', () => (shuffled = true));
+        game.on(Events.Shuffle, () => (shuffled = true));
 
         while (!shuffled) {
           runGame(game, {

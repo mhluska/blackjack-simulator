@@ -2,55 +2,70 @@
 // eslint-disable-next-line @typescript-eslint/no-explicit-any
 type Listener = (...args: any[]) => void;
 
+export enum Events {
+  Change = 0,
+  HandWinner = 1,
+  CreateRecord = 2,
+  Shuffle = 3,
+  ResetState = 4,
+}
+
 export default class EventEmitter {
   static disableEvents: boolean;
 
-  events: { [key: string]: Listener[] };
+  events: Map<Events, Listener[]>;
 
   constructor() {
-    this.events = {};
+    this.events = new Map();
   }
 
-  on(event: string, listener: Listener): void {
-    if (typeof this.events[event] !== 'object') {
-      this.events[event] = [];
-    }
-
+  on(event: Events, listener: Listener): void {
     if (EventEmitter.disableEvents) {
       return;
     }
 
-    this.events[event].push(listener);
-  }
+    if (typeof this.events.get(event) !== 'object') {
+      this.events.set(event, []);
+    }
 
-  removeListener(event: string, listener: Listener): void {
-    if (typeof this.events[event] !== 'object') {
+    const events = this.events.get(event);
+    if (!events) {
       return;
     }
 
+    events.push(listener);
+  }
+
+  removeListener(event: Events, listener: Listener): void {
     if (EventEmitter.disableEvents) {
+      return;
+    }
+
+    const events = this.events.get(event);
+    if (typeof events !== 'object') {
       return;
     }
 
     // TODO: Fix this. It's probably broken.
-    const index = this.events[event].indexOf(listener);
+    const index = events.indexOf(listener);
     if (index === -1) {
       return;
     }
 
-    this.events[event].splice(index, 1);
+    events.splice(index, 1);
   }
 
-  emit(event: string, ...args: unknown[]): void {
-    if (typeof this.events[event] !== 'object') {
-      return;
-    }
-
+  emit(event: Events, ...args: unknown[]): void {
     if (EventEmitter.disableEvents) {
       return;
     }
 
-    const listeners = this.events[event].slice();
+    const events = this.events.get(event);
+    if (!events) {
+      return;
+    }
+
+    const listeners = events.slice();
 
     for (let i = 0; i < listeners.length; i += 1) {
       listeners[i].apply(this, args);

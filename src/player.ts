@@ -1,4 +1,5 @@
 import Utils from './utils';
+import { Events } from './event-emitter';
 import GameObject from './game-object';
 import Game from './game';
 import Hand, { HandAttributes } from './hand';
@@ -68,7 +69,7 @@ export default class Player extends GameObject {
     this._hands = Array.from({ length: handsMax }, () => {
       // TODO: Use `chainEmitChange`.
       const hand = new Hand(this);
-      hand.on('change', () => this.emitChange());
+      hand.on(Events.Change, () => this.emitChange());
       return hand;
     });
   }
@@ -254,7 +255,7 @@ export default class Player extends GameObject {
       this.addChips(hand.betAmount / 2);
     }
 
-    this.emit('hand-winner', hand, winner);
+    this.emit(Events.HandWinner, hand, winner);
   }
 
   get hands(): Hand[] {

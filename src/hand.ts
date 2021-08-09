@@ -1,4 +1,5 @@
 import GameObject from './game-object';
+import { Events } from './event-emitter';
 import Utils from './utils';
 import Player from './player';
 import Card, { CardAttributes } from './card';
@@ -47,9 +48,13 @@ export default class Hand extends GameObject {
   }
 
   takeCard(card: Card, { prepend = false } = {}): void {
-    card.on('change', () => this.emitChange());
+    card.on(Events.Change, () => this.emitChange());
 
-    this.cards[prepend ? 'unshift' : 'push'](card);
+    if (prepend) {
+      this.cards.unshift(card);
+    } else {
+      this.cards.push(card);
+    }
 
     if (card.visible) {
       this.incrementTotalsForCard(card);
