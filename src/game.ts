@@ -65,7 +65,7 @@ export const SETTINGS_DEFAULTS: GameSettings = {
   maximumBet: MINIMUM_BET * 100,
   minimumBet: MINIMUM_BET,
   playerCount: 1,
-  penetration: 0.875,
+  penetration: 0.8,
 };
 
 export default class Game extends EventEmitter {
