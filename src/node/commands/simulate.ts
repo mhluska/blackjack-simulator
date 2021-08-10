@@ -46,6 +46,7 @@ export default function (
   const result = simulator.run();
   const displayOrder: (keyof SimulatorResult)[] = [
     'tableRules',
+    'penetration',
     'betSpread',
     'spotsPlayed',
     'bankrollRqd',

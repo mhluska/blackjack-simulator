@@ -24,6 +24,7 @@ export type SimulatorResult = {
   handsPushed: string;
   handsWon: string;
   houseEdge: string;
+  penetration: string;
   spotsPlayed: string;
   stdDeviation: string;
   tableRules: string;
@@ -65,6 +66,7 @@ function defaultSettings(minimumBet = 10 * 100): SimulatorSettings {
     maximumBet: minimumBet * 100,
     minimumBet,
     playerCount: 1,
+    penetration: 0.8,
   };
 }
 
@@ -267,7 +269,9 @@ export default class Simulator {
     return {
       amountEarned: Utils.formatCents(amountEarned),
       amountWagered: Utils.formatCents(amountWagered),
-      bankrollRqd: `${formattedBankrollRequired} (${riskOfRuin * 100}% RoR)`,
+      bankrollRqd: `${formattedBankrollRequired} (${Utils.formatPercent(
+        riskOfRuin
+      )} RoR)`,
       betSpread: Utils.arrayToRangeString(
         this.settings.playerBetSpread,
         (amount) => Utils.formatCents(amount, { stripZeroCents: true })
@@ -277,7 +281,8 @@ export default class Simulator {
       handsPlayed: Utils.abbreviateNumber(handsPlayed),
       handsPushed: Utils.abbreviateNumber(handsPushed),
       handsWon: Utils.abbreviateNumber(handsWon),
-      houseEdge: `${((-amountEarned / amountWagered) * 100).toFixed(2)}%`,
+      houseEdge: Utils.formatPercent(-amountEarned / amountWagered),
+      penetration: Utils.formatPercent(this.settings.penetration),
       spotsPlayed: Utils.arrayToRangeString(this.settings.playerSpots),
       stdDeviation: Utils.formatCents(Math.sqrt(bankrollChangesVariance)),
       tableRules: formatTableRules(game.settings),

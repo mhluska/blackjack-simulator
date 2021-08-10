@@ -14,11 +14,6 @@ import {
   cardValueToRank,
 } from './types';
 
-// TODO: When simulating a large number of hands, this can sometimes still run
-// out of cards. Figure out why.
-// When there are less than 35% cards in the shoe, a shuffle + reset is needed.
-const RESET_THRESHOLD = 0.35;
-
 type ShoeAttributes = {
   cards: CardAttributes[];
   hiLoRunningCount: number;
@@ -147,7 +142,7 @@ export default class Shoe extends GameObject {
       return true;
     }
 
-    return this.cardCount / this.maxCards < RESET_THRESHOLD;
+    return this.cardCount / this.maxCards < 1 - this.settings.penetration;
   }
 
   get cardsRemainingRatio(): number {

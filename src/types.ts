@@ -226,4 +226,5 @@ export type TableRules = {
   maximumBet: number;
   minimumBet: number;
   playerCount: number;
+  penetration: number;
 };

@@ -20,4 +20,5 @@ export const settings = {
   maximumBet: MINIMUM_BET * 100,
   minimumBet: MINIMUM_BET,
   playerCount: 1,
+  penetration: 0.8,
 } as const;

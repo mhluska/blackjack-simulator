@@ -124,6 +124,10 @@ export default class Utils {
     }
   }
 
+  static formatPercent(value: number): string {
+    return `${(value * 100).toFixed(2)}%`;
+  }
+
   static formatTime(timeMs: number): string {
     return `${(timeMs / 1000).toFixed(2)} seconds`;
   }

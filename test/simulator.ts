@@ -25,6 +25,7 @@ describe('Simulator', function () {
       'handsPushed',
       'handsWon',
       'houseEdge',
+      'penetration',
       'spotsPlayed',
       'stdDeviation',
       'tableRules',

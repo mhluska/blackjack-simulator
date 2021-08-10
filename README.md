@@ -76,6 +76,7 @@ const settings = {
   maximumBet: 1000 * 100,
   minimumBet: 10 * 100,
   playerCount: 6,
+  penetration: 0.8,
 };
 
 const simulator = new Simulator(settings);
