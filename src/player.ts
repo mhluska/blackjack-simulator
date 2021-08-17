@@ -127,13 +127,9 @@ export default class Player extends GameObject {
   }
 
   takeCard(
-    card: Card | void,
+    card: Card,
     { hand, prepend = false }: { hand?: Hand; prepend?: boolean } = {}
   ): void {
-    if (!card) {
-      return;
-    }
-
     const targetHand = hand ?? this._hands[0];
     targetHand.takeCard(card, { prepend });
 

@@ -3,6 +3,7 @@ import Deck from './deck';
 import Card, { CardAttributes } from './card';
 import GameObject from './game-object';
 import BasicStrategyChecker from './basic-strategy-checker';
+import ExtendableError from './extendable-error';
 import { illustrious18Deviations } from './hi-lo-deviation-checker';
 import { GameSettings } from './game';
 import {
@@ -20,6 +21,8 @@ type ShoeAttributes = {
   hiLoTrueCount: number;
   penetration: number;
 };
+
+export class OutOfCardsError extends ExtendableError {}
 
 export default class Shoe extends GameObject {
   static entityName = 'shoe';
@@ -76,11 +79,17 @@ export default class Shoe extends GameObject {
     }
   }
 
-  drawCard({ showingFace = true } = {}): Card | void {
-    const card = this.cards[this.currentCardIndex];
-    if (!card) {
-      return;
+  drawCard({ showingFace = true } = {}): Card {
+    // This is an edge case that will rarely be reached during game mode. It can
+    // happen if the pen is sufficiently deep and player count is large enough.
+    // It does occur frequently in simulation mode where large amounts of hands
+    // are played. Casinos seem to deal with it in varying ways. We handle it by
+    // pushing all player hands and reshuffling.
+    if (this.currentCardIndex < 0) {
+      throw new OutOfCardsError();
     }
+
+    const card = this.cards[this.currentCardIndex];
 
     this.currentCardIndex -= 1;
 

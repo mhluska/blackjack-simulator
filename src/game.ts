@@ -1,6 +1,6 @@
 import EventEmitter, { Events } from './event-emitter';
 import Utils from './utils';
-import Shoe from './shoe';
+import Shoe, { OutOfCardsError } from './shoe';
 import Dealer from './dealer';
 import Player, { PlayerStrategy } from './player';
 import BasicStrategyChecker from './basic-strategy-checker';
@@ -65,7 +65,7 @@ export const SETTINGS_DEFAULTS: GameSettings = {
   maximumBet: MINIMUM_BET * 100,
   minimumBet: MINIMUM_BET,
   playerCount: 1,
-  penetration: 0.8,
+  penetration: 0.75,
 };
 
 export default class Game extends EventEmitter {
@@ -278,53 +278,63 @@ export default class Game extends EventEmitter {
   step(input?: actions): gameSteps {
     let step: gameSteps = this.state.step;
 
-    switch (step) {
-      case 'start':
-        step = this.dealInitialCards();
-        break;
-
-      case 'waiting-for-insurance-input':
-        if (!this.isValidInsuranceInput(input)) {
+    try {
+      switch (step) {
+        case 'start':
+          step = this.dealInitialCards();
           break;
-        }
 
-        this.askInsurance(input, this.player, ...this.playersLeft);
-        this.payoutInsurance(input);
-        step = 'play-hands-right';
-        break;
+        case 'waiting-for-insurance-input':
+          if (!this.isValidInsuranceInput(input)) {
+            break;
+          }
 
-      case 'play-hands-right':
-        this.playNPCHands(...this.playersRight);
-        step = this.setBlackjackWinner(this.player, this.focusedHand)
-          ? 'play-hands-left'
-          : 'waiting-for-play-input';
-        break;
-
-      case 'waiting-for-play-input':
-        if (!this.isValidPlayHandsInput(input)) {
+          this.askInsurance(input, this.player, ...this.playersLeft);
+          this.payoutInsurance(input);
+          step = 'play-hands-right';
           break;
-        }
 
-        if (this.player.isUser) {
-          step = this.playUserHands(input);
-        } else {
-          this.playNPCHands(this.player);
-          step = 'play-hands-left';
-        }
-        break;
+        case 'play-hands-right':
+          this.playNPCHands(...this.playersRight);
+          step = this.setBlackjackWinner(this.player, this.focusedHand)
+            ? 'play-hands-left'
+            : 'waiting-for-play-input';
+          break;
 
-      case 'play-hands-left':
-        this.playNPCHands(...this.playersLeft);
-        this.playDealer();
+        case 'waiting-for-play-input':
+          if (!this.isValidPlayHandsInput(input)) {
+            break;
+          }
+
+          if (this.player.isUser) {
+            step = this.playUserHands(input);
+          } else {
+            this.playNPCHands(this.player);
+            step = 'play-hands-left';
+          }
+
+          break;
+
+        case 'play-hands-left':
+          this.playNPCHands(...this.playersLeft);
+          this.playDealer();
+          step = 'waiting-for-new-game-input';
+          break;
+
+        case 'waiting-for-new-game-input':
+          if (this.player.isUser && !input) {
+            break;
+          }
+          this.removeCards();
+          step = 'start';
+      }
+    } catch (error) {
+      if (error instanceof OutOfCardsError) {
+        this.pushAllPlayersHands();
         step = 'waiting-for-new-game-input';
-        break;
-
-      case 'waiting-for-new-game-input':
-        if (this.player.isUser && !input) {
-          break;
-        }
-        this.removeCards();
-        step = 'start';
+      } else {
+        throw error;
+      }
     }
 
     this.state.step = step;
@@ -626,6 +636,14 @@ export default class Game extends EventEmitter {
         } else {
           player.setHandWinner({ winner: 'push', hand });
         }
+      });
+    }
+  }
+
+  pushAllPlayersHands(): void {
+    for (const player of this.players) {
+      player.eachHand((hand) => {
+        player.setHandWinner({ winner: 'push', hand });
       });
     }
   }

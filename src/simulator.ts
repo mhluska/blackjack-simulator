@@ -54,7 +54,10 @@ function defaultSettings(minimumBet = 10 * 100): SimulatorSettings {
 
     debug: false,
     playerTablePosition: 1,
-    playerBankroll: minimumBet * 1000 * 1000,
+    // We make the bankroll sufficiently large here to prevent ever going
+    // bankrupt for the purpose of simulation.
+    // TODO: Add support for infinite bankroll in the game module.
+    playerBankroll: minimumBet * 10 ** 7,
 
     // Table rules
     allowDoubleAfterSplit: true,
@@ -66,7 +69,7 @@ function defaultSettings(minimumBet = 10 * 100): SimulatorSettings {
     maximumBet: minimumBet * 100,
     minimumBet,
     playerCount: 1,
-    penetration: 0.8,
+    penetration: 0.75,
   };
 }
 
