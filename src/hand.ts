@@ -3,6 +3,7 @@ import { Events } from './event-emitter';
 import Utils from './utils';
 import Player from './player';
 import Card, { CardAttributes } from './card';
+import { Ranks } from './types';
 
 export type HandAttributes = {
   id: string;
@@ -157,5 +158,13 @@ export default class Hand extends GameObject {
 
   get isHard(): boolean {
     return !this.isSoft;
+  }
+
+  get hasAces(): boolean {
+    return (
+      this.cards.length === 2 &&
+      this.cards[0].rank === Ranks.ACE &&
+      this.cards[1].rank === Ranks.ACE
+    );
   }
 }

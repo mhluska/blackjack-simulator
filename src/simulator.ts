@@ -62,6 +62,7 @@ function defaultSettings(minimumBet = 10 * 100): SimulatorSettings {
     // Table rules
     allowDoubleAfterSplit: true,
     allowLateSurrender: false,
+    allowResplitAces: false,
     blackjackPayout: '3:2',
     deckCount: 2,
     hitSoft17: true,
@@ -109,10 +110,9 @@ function formatTableRules(settings: GameSettings) {
     `${settings.deckCount}D`,
     settings.blackjackPayout,
     settings.hitSoft17 ? 'H17' : 'S17',
-    settings.allowDoubleAfterSplit ? 'DAS' : null,
-    settings.allowLateSurrender ? 'LS' : null,
-    // TODO: Add a setting for resplit aces.
-    'RSA',
+    settings.allowDoubleAfterSplit ? 'DAS' : 'NDAS',
+    settings.allowLateSurrender ? 'LS' : 'NLS',
+    settings.allowResplitAces ? 'RSA' : 'NRSA',
   ]
     .filter(Boolean)
     .join(' ');

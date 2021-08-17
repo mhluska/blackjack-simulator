@@ -1,5 +1,5 @@
 import Utils from './utils';
-import Game from './game';
+import Game, { GameSettings } from './game';
 import Hand from './hand';
 import {
   actions,
@@ -93,7 +93,7 @@ export default class HiLoDeviationChecker {
       return { correctMove: false };
     }
 
-    const allowSplit = hand.player.handsCount < game.settings.maxHandsAllowed;
+    const allowSplit = this._allowSplit(hand, game.settings);
     if (correctMove === 'P' && !allowSplit) {
       return { correctMove: false };
     }
@@ -153,5 +153,14 @@ export default class HiLoDeviationChecker {
       code: correctMove,
       hint: hintMessage,
     };
+  }
+
+  // TODO: DRY with `BasicStrategyChecker` or move these `_allow*` functions
+  // into `Hand`.
+  static _allowSplit(hand: Hand, settings: GameSettings): boolean {
+    return (
+      hand.player.handsCount < settings.maxHandsAllowed &&
+      (!hand.hasAces || settings.allowResplitAces)
+    );
   }
 }

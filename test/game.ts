@@ -231,5 +231,32 @@ describe('Game', function () {
         });
       });
     });
+
+    context('when resplit aces is disabled', function () {
+      before(function () {
+        game = setupGame({
+          settings: {
+            allowResplitAces: false,
+          },
+          // Force a hand where the player has AAv20 (the dealer total is
+          // irrelevant).
+          cards: [Ranks.ACE, Ranks.QUEEN, Ranks.ACE, Ranks.JACK],
+        });
+
+        game.betAmount = betAmount;
+
+        runGame(game, {
+          input: [
+            {
+              'waiting-for-play-input': 'split',
+            },
+          ],
+        });
+      });
+
+      it('should not allow spitting', function () {
+        expect(game.player.hands).to.have.lengthOf(1);
+      });
+    });
   });
 });

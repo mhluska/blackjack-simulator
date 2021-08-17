@@ -219,6 +219,7 @@ export function actionDataKeyToAction(actionDataKey: string): actions | void {
 export type TableRules = {
   allowDoubleAfterSplit: boolean;
   allowLateSurrender: boolean;
+  allowResplitAces: boolean;
   blackjackPayout: blackjackPayouts;
   deckCount: deckCounts;
   hitSoft17: boolean;

@@ -58,6 +58,7 @@ export const SETTINGS_DEFAULTS: GameSettings = {
   // Table rules
   allowDoubleAfterSplit: true,
   allowLateSurrender: false,
+  allowResplitAces: false,
   blackjackPayout: '3:2',
   deckCount: 2,
   hitSoft17: true,
@@ -514,7 +515,8 @@ export default class Game extends EventEmitter {
 
       if (
         input === 'split' &&
-        player.handsCount < this.settings.maxHandsAllowed
+        player.handsCount < this.settings.maxHandsAllowed &&
+        (!hand.hasAces || this.settings.allowResplitAces)
       ) {
         const newHandCard = hand.removeCard();
 

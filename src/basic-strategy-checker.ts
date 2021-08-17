@@ -31,7 +31,7 @@ export default class BasicStrategyChecker {
       return 'N';
     }
 
-    const allowSplit = hand.player.handsCount < game.settings.maxHandsAllowed;
+    const allowSplit = this._allowSplit(hand, game.settings);
 
     const { chart: chartGroup } = selectCharts(game.settings);
     const chartType = this._chartType(hand, allowSplit);
@@ -132,6 +132,13 @@ export default class BasicStrategyChecker {
       code,
       hint: `Basic strategy: last play should have been ${hint}!`,
     };
+  }
+
+  static _allowSplit(hand: Hand, settings: GameSettings): boolean {
+    return (
+      hand.player.handsCount < settings.maxHandsAllowed &&
+      (!hand.hasAces || settings.allowResplitAces)
+    );
   }
 
   static _allowSurrender(hand: Hand, settings: GameSettings): boolean {
