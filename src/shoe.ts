@@ -7,12 +7,11 @@ import ExtendableError from './extendable-error';
 import { illustrious18Deviations } from './hi-lo-deviation-checker';
 import { GameSettings } from './game';
 import {
-  Ranks,
-  chartTypes,
+  Rank,
+  ChartType,
   entries,
-  playerTotal,
-  cardValue,
   cardValueToRank,
+  rankToString,
 } from './types';
 
 type ShoeAttributes = {
@@ -124,7 +123,7 @@ export default class Shoe extends GameObject {
     return (
       `(${this.cardCount} card${this.cardCount > 1 ? 's' : ''}): ` +
       this.remainingCards()
-        .map((card) => card.rank)
+        .map((card) => rankToString(card.rank))
         .reverse()
         .join(' ')
     );
@@ -188,9 +187,9 @@ export default class Shoe extends GameObject {
   }
 
   _moveCardsToFront(
-    playerRank1: Ranks,
-    playerRank2: Ranks,
-    dealerUpcardValue?: number
+    playerRank1: Rank,
+    playerRank2: Rank,
+    dealerUpnumber?: number
   ): void {
     // Move the first two cards to the 0th and 2nd spot so they are dealt to the
     // player at the start of the game.
@@ -200,10 +199,10 @@ export default class Shoe extends GameObject {
       this.cards.length - 1
     );
 
-    if (dealerUpcardValue) {
+    if (dealerUpnumber) {
       Utils.arrayMove(
         this.cards,
-        this.cards.findIndex((card) => card.value === dealerUpcardValue),
+        this.cards.findIndex((card) => card.value === dealerUpnumber),
         this.cards.length - 1 - 1
       );
     }
@@ -215,30 +214,27 @@ export default class Shoe extends GameObject {
     );
   }
 
-  _playerTotalToTwoCardRanks(
-    total: playerTotal,
-    chartType: chartTypes
-  ): [Ranks, Ranks] {
+  _playerTotalToTwoCardRank(total: number, chartType: ChartType): [Rank, Rank] {
     const [rank1, rank2] = this._playerTotalToTwoCardValues(total, chartType);
     return [cardValueToRank(rank1), cardValueToRank(rank2)];
   }
 
   _playerTotalToTwoCardValues(
-    total: playerTotal,
-    chartType: chartTypes
-  ): [cardValue, cardValue] {
+    total: number,
+    chartType: ChartType
+  ): [number, number] {
     switch (chartType) {
-      case 'hard': {
+      case ChartType.Hard: {
         const value = total > 11 ? 10 : 2;
-        return [value, total - value] as [cardValue, cardValue];
+        return [value, total - value];
       }
 
-      case 'soft':
-        return [11, total - 11] as [cardValue, cardValue];
+      case ChartType.Soft:
+        return [11, total - 11];
 
       default:
-      case 'splits':
-        return [total, total] as [cardValue, cardValue];
+      case ChartType.Splits:
+        return [total, total];
     }
   }
 
@@ -251,20 +247,20 @@ export default class Shoe extends GameObject {
     const [chartType, chart] = Utils.arraySample(
       entries(BasicStrategyChecker.uncommonHands(this.settings))
     );
-    const [playerTotal, dealerUpcardValues] = Utils.arraySample(entries(chart));
+    const [playerTotal, dealerUpnumbers] = Utils.arraySample(entries(chart));
 
     // TODO: Remove this once we have uncommon values defined for all charts.
-    if (!dealerUpcardValues) {
+    if (!dealerUpnumbers) {
       return;
     }
 
-    const dealerUpcardValue = Utils.arraySample(dealerUpcardValues);
-    const [rank1, rank2] = this._playerTotalToTwoCardRanks(
+    const dealerUpnumber = Utils.arraySample(dealerUpnumbers);
+    const [rank1, rank2] = this._playerTotalToTwoCardRank(
       playerTotal,
       chartType
     );
 
-    this._moveCardsToFront(rank1, rank2, dealerUpcardValue);
+    this._moveCardsToFront(rank1, rank2, dealerUpnumber);
   }
 
   _setupIllustrious18Mode(): void {
@@ -278,17 +274,16 @@ export default class Shoe extends GameObject {
       illustrious18Deviations.slice(0, this.settings.checkTopNDeviations)
     );
 
-    let total = insurance ? (Utils.random(2, 20) as playerTotal) : playerTotal;
+    let total = insurance ? Utils.random(2, 20) : playerTotal;
 
-    // TODO: Make the splits format just equal the player total so we don't have
-    // to do this awkward division and type cast.
+    // TODO: Make the splits format just equal the player total.
     if (pair) {
-      total = (total / 2) as playerTotal;
+      total = total / 2;
     }
 
-    const [rank1, rank2] = this._playerTotalToTwoCardRanks(
+    const [rank1, rank2] = this._playerTotalToTwoCardRank(
       total,
-      pair ? 'splits' : 'hard'
+      pair ? ChartType.Splits : ChartType.Hard
     );
 
     this._moveCardsToFront(rank1, rank2, dealersCard);

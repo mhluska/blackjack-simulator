@@ -1,22 +1,24 @@
 import Utils from './utils';
 import Game, { GameSettings } from './game';
 import Hand from './hand';
-import selectCharts from './charts/utils';
+import { selectCharts } from './charts/utils';
 import {
-  chartTypes,
+  ChartType,
   CheckResult,
-  actions,
-  correctMoves,
+  Move,
+  ChartMove,
   UncommonChart,
+  chartMoveToCorrectMove,
+  GameStep,
 } from './types';
 
-function chartMinMax(chartType: chartTypes) {
+function chartMinMax(chartType: ChartType) {
   switch (chartType) {
-    case 'hard':
+    case ChartType.Hard:
       return [7, 18];
-    case 'soft':
+    case ChartType.Soft:
       return [13, 20];
-    case 'splits':
+    case ChartType.Splits:
       return [2, 11];
   }
 }
@@ -26,9 +28,9 @@ export default class BasicStrategyChecker {
     return selectCharts(settings).uncommon;
   }
 
-  static suggest(game: Game, hand: Hand): correctMoves {
-    if (game.state.step === 'waiting-for-insurance-input') {
-      return 'N';
+  static suggest(game: Game, hand: Hand): Move {
+    if (game.state.step === GameStep.WaitingForInsuranceInput) {
+      return Move.NoInsurance;
     }
 
     const allowSplit = this._allowSplit(hand, game.settings);
@@ -48,50 +50,62 @@ export default class BasicStrategyChecker {
     const dealerHints = chart[playerTotal - chartMin];
     const correctMove = dealerHints[dealersCard - 2];
 
-    if (correctMove === 'Dh' || correctMove === 'Ds') {
+    if (
+      correctMove === ChartMove.DoubleOrHit ||
+      correctMove === ChartMove.DoubleOrStand
+    ) {
       const allowDouble = hand.firstMove;
       if (allowDouble) {
-        return 'D';
+        return Move.Double;
       } else {
-        return correctMove === 'Dh' ? 'H' : 'S';
+        return correctMove === ChartMove.DoubleOrHit ? Move.Hit : Move.Stand;
       }
     }
 
-    if (correctMove === 'Ph' || correctMove === 'Pd' || correctMove === 'Ps') {
+    if (
+      correctMove === ChartMove.SplitOrHit ||
+      correctMove === ChartMove.SplitOrDouble ||
+      correctMove === ChartMove.SplitOrStand
+    ) {
       if (game.settings.allowDoubleAfterSplit) {
-        return 'P';
+        return Move.Split;
       } else {
         switch (correctMove) {
-          case 'Ph':
-            return 'H';
-          case 'Pd':
-            return 'D';
-          case 'Ps':
-            return 'S';
+          case ChartMove.SplitOrHit:
+            return Move.Hit;
+          case ChartMove.SplitOrDouble:
+            return Move.Double;
+          case ChartMove.SplitOrStand:
+            return Move.Stand;
         }
       }
     }
 
     const allowSurrender = this._allowSurrender(hand, game.settings);
 
-    if (correctMove === 'Rp') {
-      return allowSurrender && !game.settings.allowDoubleAfterSplit ? 'R' : 'P';
+    if (correctMove === ChartMove.SurrenderOrSplit) {
+      return allowSurrender && !game.settings.allowDoubleAfterSplit
+        ? Move.Surrender
+        : Move.Split;
     }
 
-    if (correctMove === 'Rh' || correctMove === 'Rs') {
+    if (
+      correctMove === ChartMove.SurrenderOrHit ||
+      correctMove === ChartMove.SurrenderOrStand
+    ) {
       if (allowSurrender) {
-        return 'R';
+        return Move.Surrender;
       } else {
-        return correctMove == 'Rh' ? 'H' : 'S';
+        return correctMove === ChartMove.SurrenderOrHit ? Move.Hit : Move.Stand;
       }
     }
 
-    return correctMove;
+    return chartMoveToCorrectMove(correctMove);
   }
 
   // Returns true if basic strategy was followed correctly.
   // Returns an object with a `correctMove` code and a `hint` otherwise.
-  static check(game: Game, hand: Hand, input: actions): CheckResult | true {
+  static check(game: Game, hand: Hand, input: Move): CheckResult | true {
     const correctMove = this.suggest(game, hand);
     if (!correctMove) {
       return true;
@@ -100,27 +114,27 @@ export default class BasicStrategyChecker {
     let hint;
 
     // TODO: Add rationale for each hint.
-    if (correctMove === 'N' && input !== 'no-insurance') {
-      hint = 'deny insurance';
+    if (correctMove === Move.NoInsurance && input !== Move.NoInsurance) {
+      hint = 'decline insurance';
     }
 
-    if (correctMove === 'H' && input !== 'hit') {
+    if (correctMove === Move.Hit && input !== Move.Hit) {
       hint = 'hit';
     }
 
-    if (correctMove === 'S' && input !== 'stand') {
+    if (correctMove === Move.Stand && input !== Move.Stand) {
       hint = 'stand';
     }
 
-    if (correctMove === 'D' && input !== 'double') {
+    if (correctMove === Move.Double && input !== Move.Double) {
       hint = 'double';
     }
 
-    if (correctMove === 'P' && input !== 'split') {
+    if (correctMove === Move.Split && input !== Move.Split) {
       hint = 'split';
     }
 
-    if (correctMove === 'R' && input !== 'surrender') {
+    if (correctMove === Move.Surrender && input !== Move.Surrender) {
       hint = 'surrender';
     }
 
@@ -145,13 +159,13 @@ export default class BasicStrategyChecker {
     return hand.firstMove && settings.allowLateSurrender;
   }
 
-  static _chartType(hand: Hand, allowSplit: boolean): chartTypes {
+  static _chartType(hand: Hand, allowSplit: boolean): ChartType {
     if (hand.hasPairs && allowSplit) {
-      return 'splits';
+      return ChartType.Splits;
     } else if (hand.isSoft) {
-      return 'soft';
+      return ChartType.Soft;
     } else {
-      return 'hard';
+      return ChartType.Hard;
     }
   }
 }

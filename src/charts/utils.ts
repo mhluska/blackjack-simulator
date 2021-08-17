@@ -15,7 +15,7 @@ import {
   dMultiS17DasUncommon,
 } from '.';
 
-export default function selectCharts(
+export function selectCharts(
   settings: GameSettings
 ): { chart: BasicStrategyChart; uncommon: UncommonChart } {
   if (settings.deckCount === 1) {

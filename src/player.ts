@@ -7,36 +7,31 @@ import Card from './card';
 import BasicStrategyChecker from './basic-strategy-checker';
 import HiLoDeviationChecker from './hi-lo-deviation-checker';
 import {
-  handWinners,
-  actions,
-  correctMoves,
-  correctMoveToAction,
-  blackjackPayouts,
+  HandWinner,
+  Move,
+  BlackjackPayout,
+  PlayerStrategy,
+  handWinnerToString,
+  playerStrategyToString,
+  moveToString,
 } from './types';
-
-export enum PlayerStrategy {
-  USER_INPUT = 'USER_INPUT',
-  BASIC_STRATEGY = 'BASIC_STRATEGY',
-  BASIC_STRATEGY_I18 = 'BASIC_STRATEGY_I18',
-  DEALER = 'DEALER',
-}
 
 type PlayerAttributes = {
   id: string;
   balance: number;
   hands: HandAttributes[];
-  handWinner: { [id: string]: handWinners };
+  handWinner: { [id: string]: string };
 };
 
 export default class Player extends GameObject {
   static entityName = 'player';
 
   balance: number;
-  blackjackPayout: blackjackPayouts;
+  blackjackPayout: BlackjackPayout;
   debug: boolean;
   handsCount: number;
   handsMax: number;
-  handWinner: Map<string, handWinners>;
+  handWinner: Map<string, HandWinner>;
   id: string;
   strategy: PlayerStrategy;
 
@@ -44,13 +39,13 @@ export default class Player extends GameObject {
 
   constructor({
     balance = 10000 * 100,
-    blackjackPayout = '3:2',
+    blackjackPayout = BlackjackPayout.ThreeToTwo,
     debug = false,
     handsMax,
     strategy,
   }: {
     balance?: number;
-    blackjackPayout?: blackjackPayouts;
+    blackjackPayout?: BlackjackPayout;
     debug?: boolean;
     handsMax: number;
     strategy: PlayerStrategy;
@@ -84,10 +79,10 @@ export default class Player extends GameObject {
     }
   }
 
-  getNPCInput(game: Game, hand: Hand): actions {
-    let correctMove: correctMoves;
+  getNPCInput(game: Game, hand: Hand): Move {
+    let correctMove: Move;
 
-    if (this.strategy === PlayerStrategy.BASIC_STRATEGY_I18) {
+    if (this.strategy === PlayerStrategy.BasicStrategyI18) {
       correctMove =
         HiLoDeviationChecker.suggest(game, hand) ||
         BasicStrategyChecker.suggest(game, hand);
@@ -97,18 +92,18 @@ export default class Player extends GameObject {
 
     if (this.debug) {
       console.log(
-        this.strategy,
+        playerStrategyToString(this.strategy),
         this.id,
-        'dealer',
+        handWinnerToString(HandWinner.Dealer),
         game.dealer.firstHand.serialize(),
-        'player',
+        handWinnerToString(HandWinner.Player),
         hand.serialize(),
         `(${hand.cardTotal})`,
-        correctMove
+        moveToString(correctMove)
       );
     }
 
-    return correctMoveToAction(correctMove);
+    return correctMove;
   }
 
   addHand(betAmount = 0, cards: Card[] = []): Hand {
@@ -156,11 +151,11 @@ export default class Player extends GameObject {
 
   attributes(): PlayerAttributes {
     // TODO: Get `Object.fromEntries` working when running `npm run test`.
-    const handWinner: { [key: string]: handWinners } = {};
+    const handWinner: { [key: string]: string } = {};
     for (const key of this.handWinner.keys()) {
       const value = this.handWinner.get(key);
       if (value) {
-        handWinner[key] = value;
+        handWinner[key] = handWinnerToString(value);
       }
     }
 
@@ -218,7 +213,7 @@ export default class Player extends GameObject {
     surrender = false,
   }: {
     hand?: Hand;
-    winner: handWinners;
+    winner: HandWinner;
     surrender?: boolean;
   }): void {
     if (this.handWinner.has(hand.id)) {
@@ -237,21 +232,30 @@ export default class Player extends GameObject {
       );
     }
 
-    if (winner === 'player') {
+    if (winner === HandWinner.Player) {
       const [ratioNumerator, ratioDenominator] = hand.blackjack
-        ? this.blackjackPayout.split(':').map((num) => parseInt(num))
+        ? this._blackjackNumeratorDenominator()
         : [1, 1];
 
       this.addChips(
         hand.betAmount + hand.betAmount * (ratioNumerator / ratioDenominator)
       );
-    } else if (winner === 'push') {
+    } else if (winner === HandWinner.Push) {
       this.addChips(hand.betAmount);
-    } else if (winner === 'dealer' && surrender) {
+    } else if (winner === HandWinner.Dealer && surrender) {
       this.addChips(hand.betAmount / 2);
     }
 
     this.emit(Events.HandWinner, hand, winner);
+  }
+
+  _blackjackNumeratorDenominator(): number[] {
+    switch (this.blackjackPayout) {
+      case BlackjackPayout.SixToFive:
+        return [6, 5];
+      case BlackjackPayout.ThreeToTwo:
+        return [3, 2];
+    }
   }
 
   get hands(): Hand[] {
@@ -263,7 +267,7 @@ export default class Player extends GameObject {
   }
 
   get isUser(): boolean {
-    return this.strategy === PlayerStrategy.USER_INPUT;
+    return this.strategy === PlayerStrategy.UserInput;
   }
 
   get isNPC(): boolean {

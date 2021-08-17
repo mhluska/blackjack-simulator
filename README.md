@@ -104,7 +104,11 @@ Result contains the following data:
 ### Use as a library (game mode)
 
 ```js
-import { Game, PlayerInputReader } from '@blackjacktrainer/blackjack-simulator';
+import {
+  Game,
+  PlayerInputReader,
+  GameStep,
+} from '@blackjacktrainer/blackjack-simulator';
 
 // The following are default settings:
 const settings = {
@@ -176,7 +180,13 @@ game.on('create-record', (entityName, data) => {
 function stepGame(game, playerInputReader, input) {
   const step = game.step(input);
 
-  if (!step.startsWith('waiting-for')) {
+  if (
+    ![
+      GameStep.WaitingForPlayInput,
+      GameStep.WaitingForInsuranceInput,
+      GameStep.WaitingForNewGameInput,
+    ].includes(step)
+  ) {
     return Promise.resolve();
   }
 
@@ -202,7 +212,7 @@ event on `document.body`. Your DOM just has to declare the following buttons
 somewhere for user interaction:
 
 ```jsx
-{game.state.step === 'waiting-for-play-input' && (
+{game.state.step === GameStep.WaitingForPlayInput && (
   <>
     <button data-action="s">Stand (S)</button>
     <button data-action="h">Hit (H)</button>
@@ -211,13 +221,13 @@ somewhere for user interaction:
     <button data-action="p">Split (P)</button>
   </>
 )}
-{game.state.step === 'waiting-for-insurance-input' && (
+{game.state.step === GameStep.WaitingForInsuranceInput && (
   <>
     <button data-action="n">No (N)</button>
     <button data-action="y">Yes (Y)</button>
   </>
 )}
-{game.state.step === 'waiting-for-new-game-input' && (
+{game.state.step === GameStep.WaitingForNewGameInput && (
   <>
     <button data-action="d">Deal (press any key)</button>
   </>

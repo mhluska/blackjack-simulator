@@ -1,11 +1,17 @@
 import Game, { GameSettings } from './game';
 import Utils from './utils';
-import { PlayerStrategy } from './player';
-import { DeepPartial, TableRules } from './types';
+import {
+  DeepPartial,
+  TableRules,
+  HandWinner,
+  PlayerStrategy,
+  BlackjackPayout,
+  blackjackPayoutToString,
+} from './types';
 
 export type SimulatorSettings = {
   debug: boolean;
-  playerStrategy: 'basic-strategy' | 'basic-strategy-i18';
+  playerStrategy: string;
   playerBetSpread: number[];
   playerSpots: number[];
   playerTablePosition: number;
@@ -63,7 +69,7 @@ function defaultSettings(minimumBet = 10 * 100): SimulatorSettings {
     allowDoubleAfterSplit: true,
     allowLateSurrender: false,
     allowResplitAces: false,
-    blackjackPayout: '3:2',
+    blackjackPayout: BlackjackPayout.ThreeToTwo,
     deckCount: 2,
     hitSoft17: true,
     maxHandsAllowed: 4,
@@ -99,7 +105,9 @@ function bankrollRequired(
   variancePerHand: number,
   expectationPerHand: number
 ) {
-  return -(variancePerHand / (2 * expectationPerHand)) * Math.log(riskOfRuin);
+  return variancePerHand === 0
+    ? 0
+    : -(variancePerHand / (2 * expectationPerHand)) * Math.log(riskOfRuin);
 }
 
 function formatTableRules(settings: GameSettings) {
@@ -108,7 +116,7 @@ function formatTableRules(settings: GameSettings) {
       stripZeroCents: true,
     })}–${Utils.formatCents(settings.maximumBet, { stripZeroCents: true })}`,
     `${settings.deckCount}D`,
-    settings.blackjackPayout,
+    blackjackPayoutToString(settings.blackjackPayout),
     settings.hitSoft17 ? 'H17' : 'S17',
     settings.allowDoubleAfterSplit ? 'DAS' : 'NDAS',
     settings.allowLateSurrender ? 'LS' : 'NLS',
@@ -149,10 +157,10 @@ function estimateHandsPerHour(playerCount: number): number {
 function parsePlayerStrategy(strategy: string): PlayerStrategy {
   switch (strategy) {
     case 'basic-strategy-i18':
-      return PlayerStrategy.BASIC_STRATEGY_I18;
+      return PlayerStrategy.BasicStrategyI18;
     default:
     case 'basic-strategy':
-      return PlayerStrategy.BASIC_STRATEGY;
+      return PlayerStrategy.BasicStrategy;
   }
 }
 
@@ -239,13 +247,13 @@ export default class Simulator {
         amountWagered += betAmount;
 
         switch (result) {
-          case 'player':
+          case HandWinner.Player:
             handsWon += 1;
             break;
-          case 'dealer':
+          case HandWinner.Dealer:
             handsLost += 1;
             break;
-          case 'push':
+          case HandWinner.Push:
             handsPushed += 1;
             break;
         }

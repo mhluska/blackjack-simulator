@@ -1,5 +1,5 @@
-import { actions } from './types';
+import { Move } from './types';
 
 export default interface PlayerInputReader {
-  readInput(handler: (action: actions) => void): void;
+  readInput(handler: (action: Move) => void): void;
 }

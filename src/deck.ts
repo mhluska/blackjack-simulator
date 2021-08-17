@@ -2,7 +2,7 @@ import Card from './card';
 import Utils from './utils';
 import GameObject from './game-object';
 import Shoe from './shoe';
-import { Suits, Ranks } from './types';
+import { Suit, Rank, values } from './types';
 
 export default class Deck extends GameObject {
   static entityName = 'deck';
@@ -10,12 +10,12 @@ export default class Deck extends GameObject {
   shoe: Shoe;
   cards: Card[];
 
-  static randomSuit(): Suits {
-    return Utils.arraySample(Object.values(Suits));
+  static randomSuit(): Suit {
+    return Utils.arraySample(values(Suit));
   }
 
-  static randomRank(): Ranks {
-    return Utils.arraySample(Object.values(Ranks));
+  static randomRank(): Rank {
+    return Utils.arraySample(values(Rank));
   }
 
   constructor(shoe: Shoe) {
@@ -28,11 +28,13 @@ export default class Deck extends GameObject {
   setupCards(): Card[] {
     const cards: Card[] = [];
 
-    Object.values(Suits).forEach((suit) =>
-      Object.values(Ranks).forEach((rank) =>
-        cards.push(new Card(suit, rank, this.shoe))
-      )
-    );
+    values(Suit)
+      .filter((s) => typeof s === 'number')
+      .forEach((suit) =>
+        values(Rank)
+          .filter((r) => typeof r === 'number')
+          .forEach((rank) => cards.push(new Card(suit, rank, this.shoe)))
+      );
 
     Utils.arrayShuffle(cards);
 

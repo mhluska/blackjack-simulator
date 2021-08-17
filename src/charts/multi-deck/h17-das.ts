@@ -1,4 +1,9 @@
-import { BasicStrategyChart, UncommonChart } from '../../types';
+import {
+  BasicStrategyChart,
+  UncommonChart,
+  convertToChartMove,
+  ChartType,
+} from '../../types';
 
 // Chart symbols:
 // H:  Hit
@@ -15,8 +20,8 @@ import { BasicStrategyChart, UncommonChart } from '../../types';
 // See https://wizardofodds.com/blackjack/images/bj_4d_h17.gif
 
 // prettier-ignore
-export const chart: BasicStrategyChart = {
-  hard: [
+export const chart: BasicStrategyChart = convertToChartMove({
+  [ChartType.Hard]: [
     ['H',  'H',  'H',  'H',  'H',  'H',  'H',  'H',  'H',  'H' ],
     ['H',  'H',  'H',  'H',  'H',  'H',  'H',  'H',  'H',  'H' ],
     ['H',  'Dh', 'Dh', 'Dh', 'Dh', 'H',  'H',  'H',  'H',  'H' ],
@@ -31,7 +36,7 @@ export const chart: BasicStrategyChart = {
     ['S',  'S',  'S',  'S',  'S',  'S',  'S',  'S',  'S',  'S' ],
   ],
 
-  soft: [
+  [ChartType.Soft]: [
     ['H',  'H',  'H',  'Dh', 'Dh', 'H',  'H',  'H',  'H',  'H' ],
     ['H',  'H',  'H',  'Dh', 'Dh', 'H',  'H',  'H',  'H',  'H' ],
     ['H',  'H',  'Dh', 'Dh', 'Dh', 'H',  'H',  'H',  'H',  'H' ],
@@ -42,7 +47,7 @@ export const chart: BasicStrategyChart = {
     ['S',  'S',  'S',  'S',  'S',  'S',  'S',  'S',  'S',  'S' ],
   ],
 
-  splits: [
+  [ChartType.Splits]: [
     ['Ph', 'Ph', 'P',  'P',  'P',  'P',  'H',  'H',  'H',  'H' ],
     ['Ph', 'Ph', 'P',  'P',  'P',  'P',  'H',  'H',  'H',  'H' ],
     ['H',  'H',  'H',  'Ph', 'Ph', 'H',  'H',  'H',  'H',  'H' ],
@@ -54,11 +59,11 @@ export const chart: BasicStrategyChart = {
     ['S',  'S',  'S',  'S',  'S',  'S',  'S',  'S',  'S',  'S' ],
     ['P',  'P',  'P',  'P',  'P',  'P',  'P',  'P',  'P',  'P' ],
   ],
-};
+});
 
 // prettier-ignore
 export const uncommon: UncommonChart = {
-  hard: [[]],
-  soft: [[]],
-  splits: [[]],
+  [ChartType.Hard]: [[]],
+  [ChartType.Soft]: [[]],
+  [ChartType.Splits]: [[]],
 };

@@ -4,6 +4,7 @@ import Renderer from './renderer';
 import Game from './game';
 import Player from './player';
 import Hand from './hand';
+import { HandWinner, GameStep, handWinnerToString } from './types';
 
 // Renders the game state to the terminal.
 // TODO: Make this draw ascii-based cards. For now just basic text output.
@@ -38,11 +39,11 @@ export default class CLIRenderer implements Renderer {
   }
 
   _renderDealerCards(): void {
-    this._renderPlayerLine(this.game.dealer, 'Dealer', 3);
+    this._renderPlayerLine(this.game.dealer, HandWinner.Dealer, 3);
   }
 
   _renderPlayerCards(): void {
-    this._renderPlayerLine(this.game.player, 'Player', 2);
+    this._renderPlayerLine(this.game.player, HandWinner.Player, 2);
   }
 
   _renderPlayCorrection(): void {
@@ -56,7 +57,7 @@ export default class CLIRenderer implements Renderer {
 
     let question;
 
-    if (this.game.state.step === 'waiting-for-play-input') {
+    if (this.game.state.step === GameStep.WaitingForPlayInput) {
       const choices = ['H (hit)', 'S (stand)'];
 
       if (this.game.focusedHand.firstMove) {
@@ -75,20 +76,20 @@ export default class CLIRenderer implements Renderer {
       }
 
       question = choices.join(', ') + '? ';
-    } else if (this.game.state.step === 'waiting-for-insurance-input') {
+    } else if (this.game.state.step === GameStep.WaitingForInsuranceInput) {
       question = 'Y (buy insurance), N (no insurance)? ';
-    } else if (this.game.state.step === 'waiting-for-new-game-input') {
+    } else if (this.game.state.step === GameStep.WaitingForNewGameInput) {
       const getGameResult = (hand: Hand) => {
         const blackjack =
           hand.blackjack && !this.game.dealer.blackjack ? 'Blackjack! ' : '';
 
         switch (this.game.player.handWinner.get(hand.id)) {
-          case 'player':
+          case HandWinner.Player:
             return `${blackjack}Player wins`;
-          case 'dealer':
+          case HandWinner.Dealer:
             return `${blackjack}Dealer wins`;
-          case 'push':
-            return 'Push';
+          case HandWinner.Push:
+            return HandWinner.Push;
         }
       };
 
@@ -116,7 +117,7 @@ export default class CLIRenderer implements Renderer {
     process.stdout.write(text);
   }
 
-  _renderPlayerLine(player: Player, type: string, row: number): void {
+  _renderPlayerLine(player: Player, type: HandWinner, row: number): void {
     const line = player.hands
       .map((hand) => {
         const padding = hand.cardTotal < 10 ? ' ' : '';
@@ -128,7 +129,7 @@ export default class CLIRenderer implements Renderer {
       })
       .join('   ');
 
-    this._renderLine(`${type} ${line}`, row);
+    this._renderLine(`${handWinnerToString(type)} ${line}`, row);
   }
 
   // Alters the text with ANSI escape codes. For example, bold ace cards.

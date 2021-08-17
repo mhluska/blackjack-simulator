@@ -1,32 +1,38 @@
 import GameObject from './game-object';
 import Utils from './utils';
 import Shoe from './shoe';
-import { Suits, Ranks, dealerTotal, cardRankToValue } from './types';
+import {
+  Suit,
+  Rank,
+  cardRankToValue,
+  suitToString,
+  rankToString,
+} from './types';
 
 export type CardAttributes = {
   id: string;
-  suit: Suits;
-  rank: Ranks;
+  suit: string;
+  rank: string;
   showingFace: boolean;
 };
 
-function hiLoValue(rank: Ranks): number {
+function hiLoValue(rank: Rank): number {
   switch (rank) {
-    case Ranks.ACE:
-    case Ranks.KING:
-    case Ranks.QUEEN:
-    case Ranks.JACK:
-    case Ranks.TEN:
+    case Rank.Ace:
+    case Rank.King:
+    case Rank.Queen:
+    case Rank.Jack:
+    case Rank.Ten:
       return -1;
-    case Ranks.NINE:
-    case Ranks.EIGHT:
-    case Ranks.SEVEN:
+    case Rank.Nine:
+    case Rank.Eight:
+    case Rank.Seven:
       return 0;
-    case Ranks.SIX:
-    case Ranks.FIVE:
-    case Ranks.FOUR:
-    case Ranks.THREE:
-    case Ranks.TWO:
+    case Rank.Six:
+    case Rank.Five:
+    case Rank.Four:
+    case Rank.Three:
+    case Rank.Two:
       return 1;
   }
 }
@@ -35,14 +41,14 @@ export default class Card extends GameObject {
   static entityName = 'card';
 
   id: string;
-  suit: Suits;
-  rank: Ranks;
+  suit: Suit;
+  rank: Rank;
   shoe: Shoe;
   showingFace: boolean;
-  value: dealerTotal;
+  value: number;
   hiLoValue: number;
 
-  constructor(suit: Suits, rank: Ranks, shoe: Shoe) {
+  constructor(suit: Suit, rank: Rank, shoe: Shoe) {
     super();
 
     this.id = Utils.randomId();
@@ -65,8 +71,8 @@ export default class Card extends GameObject {
   attributes(): CardAttributes {
     return {
       id: this.id,
-      suit: this.suit,
-      rank: this.rank,
+      suit: suitToString(this.suit),
+      rank: rankToString(this.rank),
       showingFace: this.showingFace,
     };
   }

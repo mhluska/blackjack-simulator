@@ -1,15 +1,15 @@
 import PlayerInputReader from '../player-input-reader';
-import { actions, actionDataKeyToAction } from '../types';
+import { actionDataKeyToCorrectMove, Move } from '../types';
 
 export default class CLIPlayerInputReader implements PlayerInputReader {
-  readInput(callback: (action: actions) => void): void {
+  readInput(callback: (action: Move) => void): void {
     const handler = (str: string, key: { [key: string]: string | boolean }) => {
       if (key && key.ctrl && key.name === 'c') {
         process.stdin.pause();
         return;
       }
 
-      const action = actionDataKeyToAction(str);
+      const action = actionDataKeyToCorrectMove(str);
       if (action) {
         process.stdin.off('keypress', handler);
         callback(action);

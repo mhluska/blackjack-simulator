@@ -1,3 +1,5 @@
+import { BlackjackPayout } from '../src/types';
+
 const MINIMUM_BET = 10 * 100;
 
 export const settings = {
@@ -14,7 +16,7 @@ export const settings = {
   allowDoubleAfterSplit: true,
   allowLateSurrender: false,
   allowResplitAces: false,
-  blackjackPayout: '3:2',
+  blackjackPayout: BlackjackPayout.ThreeToTwo,
   deckCount: 2,
   hitSoft17: true,
   maxHandsAllowed: 4,

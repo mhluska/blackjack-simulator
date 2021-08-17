@@ -3,7 +3,7 @@ import Game, { GameSettings, SETTINGS_DEFAULTS } from '../../game';
 import CLIRenderer from '../../cli-renderer';
 import FileStorage from '../../file-storage';
 import PlayerInputReader from '../player-input-reader';
-import { actions } from '../../types';
+import { Move, GameStep } from '../../types';
 import Utils from '../../utils';
 import { CliSettings, printUsageOptions } from '../utils';
 
@@ -12,17 +12,21 @@ import { CliSettings, printUsageOptions } from '../utils';
 function stepGame(
   game: Game,
   playerInputReader: PlayerInputReader,
-  input: actions | undefined
+  input: Move | undefined
 ) {
   const step = game.step(input);
 
-  if (!step.startsWith('waiting-for')) {
+  if (
+    ![
+      GameStep.WaitingForPlayInput,
+      GameStep.WaitingForInsuranceInput,
+      GameStep.WaitingForNewGameInput,
+    ].includes(step)
+  ) {
     return Promise.resolve(undefined);
   }
 
-  return new Promise<actions>((resolve) =>
-    playerInputReader.readInput(resolve)
-  );
+  return new Promise<Move>((resolve) => playerInputReader.readInput(resolve));
 }
 
 export default async function (
@@ -51,7 +55,7 @@ export default async function (
   game.on(Events.Change, () => renderer.render());
   game.on(Events.CreateRecord, storage.createRecord);
 
-  let input: actions | undefined;
+  let input: Move | undefined;
 
   (async function () {
     while (true) {

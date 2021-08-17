@@ -3,11 +3,18 @@ import { Events } from '../src/event-emitter';
 import Game, { GameSettings } from '../src/game';
 import Card from '../src/card';
 import Utils from '../src/utils';
-import { DeepPartial, Suits, Ranks, actions, gameSteps } from '../src/types';
+import {
+  DeepPartial,
+  Suit,
+  Rank,
+  GameStep,
+  Move,
+  HandWinner,
+} from '../src/types';
 
 type GameSetupOptions = {
   settings: DeepPartial<GameSettings>;
-  cards: Ranks[];
+  cards: Rank[];
 };
 
 function setupGame(options: Partial<GameSetupOptions> = {}) {
@@ -26,9 +33,9 @@ function setupGame(options: Partial<GameSetupOptions> = {}) {
   const game = new Game(mergedOptions.settings);
   const length = game.shoe.cards.length;
 
-  mergedOptions.cards.forEach((cardRank: Ranks, index: number) => {
+  mergedOptions.cards.forEach((cardRank: Rank, index: number) => {
     game.shoe.cards[length - index - 1] = new Card(
-      Suits.HEARTS,
+      Suit.Hearts,
       cardRank,
       game.shoe
     );
@@ -44,13 +51,13 @@ function runGame(
     input = [],
   }: {
     repeatPlayerInput?: boolean;
-    input?: Partial<{ [key in gameSteps]: actions }>[];
+    input?: Partial<{ [key in GameStep]: Move }>[];
   } = {}
 ) {
   let callCount = 0;
 
   do {
-    let playerInput: actions | undefined;
+    let playerInput: Move | undefined;
 
     const inputChoices = input[callCount];
     if (inputChoices) {
@@ -66,7 +73,7 @@ function runGame(
     }
 
     game.step(playerInput);
-  } while (game.state.step !== 'start');
+  } while (game.state.step !== GameStep.Start);
 }
 
 const expect = chai.expect;
@@ -95,9 +102,9 @@ describe('Game', function () {
             repeatPlayerInput: true,
             input: [
               {
-                'waiting-for-new-game-input': 'hit',
-                'waiting-for-play-input': 'hit',
-                'waiting-for-insurance-input': 'no-insurance',
+                [GameStep.WaitingForNewGameInput]: Move.Hit,
+                [GameStep.WaitingForPlayInput]: Move.Hit,
+                [GameStep.WaitingForInsuranceInput]: Move.NoInsurance,
               },
             ],
           });
@@ -117,8 +124,8 @@ describe('Game', function () {
       let playerBalanceBefore: number;
 
       const game = setupGame({
-        // Force a winning hand for the player (Blackjack with A-J).
-        cards: [Ranks.ACE, Ranks.TWO, Ranks.JACK, Ranks.TWO],
+        // Force a winning hand for the player (blackjack with A-J).
+        cards: [Rank.Ace, Rank.Two, Rank.Jack, Rank.Two],
       });
 
       before(function () {
@@ -129,7 +136,7 @@ describe('Game', function () {
         runGame(game, {
           input: [
             {
-              'waiting-for-new-game-input': 'hit',
+              [GameStep.WaitingForNewGameInput]: Move.Hit,
             },
           ],
         });
@@ -149,7 +156,7 @@ describe('Game', function () {
         game = setupGame({
           settings: { autoDeclineInsurance: true },
           // Force a hand that prompts for insurance (dealer Ace).
-          cards: [Ranks.TWO, Ranks.ACE],
+          cards: [Rank.Two, Rank.Ace],
         });
 
         game.betAmount = betAmount;
@@ -157,8 +164,8 @@ describe('Game', function () {
           repeatPlayerInput: true,
           input: [
             {
-              'waiting-for-play-input': 'hit',
-              'waiting-for-new-game-input': 'hit',
+              [GameStep.WaitingForPlayInput]: Move.Hit,
+              [GameStep.WaitingForNewGameInput]: Move.Hit,
             },
           ],
         });
@@ -176,7 +183,7 @@ describe('Game', function () {
             settings: {
               allowLateSurrender: true,
             },
-            cards: [Ranks.SIX, Ranks.QUEEN, Ranks.JACK, Ranks.JACK],
+            cards: [Rank.Six, Rank.Queen, Rank.Jack, Rank.Jack],
           });
 
           game.betAmount = betAmount;
@@ -184,19 +191,19 @@ describe('Game', function () {
           runGame(game, {
             input: [
               {
-                'waiting-for-play-input': 'surrender',
+                [GameStep.WaitingForPlayInput]: Move.Surrender,
               },
               {
-                'waiting-for-new-game-input': 'hit',
+                [GameStep.WaitingForNewGameInput]: Move.Hit,
               },
             ],
           });
         });
 
         it('should allow late surrender', function () {
-          expect(game.state.step).to.equal('start');
+          expect(game.state.step).to.equal(GameStep.Start);
           expect(game.player.handWinner.values().next().value).to.equal(
-            'dealer'
+            HandWinner.Dealer
           );
         });
       });
@@ -209,7 +216,7 @@ describe('Game', function () {
             },
             // Force a hand where the player has 16v10 and the next card will
             // not bust the player.
-            cards: [Ranks.SIX, Ranks.QUEEN, Ranks.JACK, Ranks.JACK, Ranks.TWO],
+            cards: [Rank.Six, Rank.Queen, Rank.Jack, Rank.Jack, Rank.Two],
           });
 
           game.betAmount = betAmount;
@@ -217,17 +224,17 @@ describe('Game', function () {
           runGame(game, {
             input: [
               {
-                'waiting-for-play-input': 'hit',
+                [GameStep.WaitingForPlayInput]: Move.Hit,
               },
               {
-                'waiting-for-play-input': 'surrender',
+                [GameStep.WaitingForPlayInput]: Move.Surrender,
               },
             ],
           });
         });
 
         it('should not allow late surrender', function () {
-          expect(game.state.step).to.equal('waiting-for-play-input');
+          expect(game.state.step).to.equal(GameStep.WaitingForPlayInput);
         });
       });
     });
@@ -240,7 +247,7 @@ describe('Game', function () {
           },
           // Force a hand where the player has AAv20 (the dealer total is
           // irrelevant).
-          cards: [Ranks.ACE, Ranks.QUEEN, Ranks.ACE, Ranks.JACK],
+          cards: [Rank.Ace, Rank.Queen, Rank.Ace, Rank.Jack],
         });
 
         game.betAmount = betAmount;
@@ -248,7 +255,7 @@ describe('Game', function () {
         runGame(game, {
           input: [
             {
-              'waiting-for-play-input': 'split',
+              [GameStep.WaitingForPlayInput]: Move.Split,
             },
           ],
         });

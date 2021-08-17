@@ -1,106 +1,100 @@
-export type actionDataKeys = 'h' | 's' | 'd' | 'p' | 'r' | 'n' | 'y';
-
-// TODO: Consolidate with `actionDataKeys`.
-export type correctMoves = 'H' | 'S' | 'D' | 'P' | 'R' | 'N' | 'Y';
-
-export type actions =
-  | 'hit'
-  | 'stand'
-  | 'double'
-  | 'split'
-  | 'surrender'
-  | 'no-insurance'
-  | 'ask-insurance'
-  | 'next-game';
-
-export type handWinners = 'player' | 'dealer' | 'push';
-
-export type chartTypes = 'hard' | 'soft' | 'splits';
-
-export type gameSteps =
-  | 'play-hands-left'
-  | 'play-hands-right'
-  | 'start'
-  | 'waiting-for-insurance-input'
-  | 'waiting-for-new-game-input'
-  | 'waiting-for-play-input';
-
-export type deckCounts = 1 | 2 | 4 | 6 | 8;
-
-export enum Suits {
-  HEARTS = 'HEARTS',
-  DIAMONDS = 'DIAMONDS',
-  CLUBS = 'CLUBS',
-  SPADES = 'SPADES',
+export enum Move {
+  AskInsurance,
+  Double,
+  Hit,
+  NoInsurance,
+  Split,
+  Stand,
+  Surrender,
 }
 
-export enum Ranks {
-  ACE = 'A',
-  TWO = '2',
-  THREE = '3',
-  FOUR = '4',
-  FIVE = '5',
-  SIX = '6',
-  SEVEN = '7',
-  EIGHT = '8',
-  NINE = '9',
-  TEN = 'T',
-  JACK = 'J',
-  QUEEN = 'Q',
-  KING = 'K',
+export enum ChartMove {
+  // TODO: DRY with `Move`?
+  AskInsurance,
+  Double,
+  Hit,
+  NoInsurance,
+  Split,
+  Stand,
+  Surrender,
+
+  DoubleOrHit,
+  DoubleOrStand,
+  SplitOrDouble,
+  SplitOrHit,
+  SplitOrStand,
+  SurrenderOrHit,
+  SurrenderOrSplit,
+  SurrenderOrStand,
+}
+
+export enum HandWinner {
+  Player,
+  Dealer,
+  Push,
+}
+
+export enum ChartType {
+  Hard,
+  Soft,
+  Splits,
+}
+
+export enum GameStep {
+  PlayHandsLeft,
+  PlayHandsRight,
+  Start,
+  WaitingForInsuranceInput,
+  WaitingForNewGameInput,
+  WaitingForPlayInput,
+}
+
+export enum Suit {
+  Hearts,
+  Diamonds,
+  Clubs,
+  Spades,
+}
+
+export enum Rank {
+  Ace,
+  Two,
+  Three,
+  Four,
+  Five,
+  Six,
+  Seven,
+  Eight,
+  Nine,
+  Ten,
+  Jack,
+  Queen,
+  King,
+}
+
+export enum PlayerStrategy {
+  UserInput,
+  BasicStrategy,
+  BasicStrategyI18,
+  Dealer,
+}
+
+export enum BlackjackPayout {
+  ThreeToTwo,
+  SixToFive,
 }
 
 export type CheckResult = {
-  code: correctMoves;
+  code: Move;
   hint: string;
 };
 
-export type playerTotal =
-  | 0
-  | 2
-  | 3
-  | 4
-  | 5
-  | 6
-  | 7
-  | 8
-  | 9
-  | 10
-  | 11
-  | 12
-  | 13
-  | 14
-  | 15
-  | 16
-  | 17
-  | 18
-  | 19
-  | 20
-  | 21;
-
-export type dealerTotal = 2 | 3 | 4 | 5 | 6 | 7 | 8 | 9 | 10 | 11;
-
-export type blackjackPayouts = '3:2' | '6:5';
-
-export type cardValue = 1 | dealerTotal;
-
-export type chartMoves =
-  | correctMoves
-  | 'Dh'
-  | 'Ds'
-  | 'Rh'
-  | 'Rs'
-  | 'Ph'
-  | 'Pd'
-  | 'Ps'
-  | 'Rp';
-
 export type BasicStrategyChart = {
-  [key in chartTypes]: chartMoves[][];
+  [key in ChartType]: ChartMove[][];
 };
 
 export type UncommonChart = {
-  [key in chartTypes]: { [total in playerTotal]?: dealerTotal[] };
+  [key in ChartType]: { [total: number]: number[] };
 };
 
 // TODO: Avoid any here.
@@ -118,110 +112,284 @@ export const keys = Object.keys as <T>(o: T) => (keyof T)[];
 // See https://github.com/microsoft/TypeScript/pull/12253#issuecomment-479851685
 export const entries = Object.entries as <T>(o: T) => [keyof T, T[keyof T]][];
 
-// TODO: Consolidate types so we can remove these converter functions?
-export function cardValueToRank(integerRank: cardValue): Ranks {
-  switch (integerRank) {
+export const values = Object.values as <T>(o: T) => T[keyof T][];
+
+// TODO: Consolidate types so we can remove this converter function?
+export function cardValueToRank(value: number): Rank {
+  switch (value) {
     case 2:
-      return Ranks.TWO;
+      return Rank.Two;
     case 3:
-      return Ranks.THREE;
+      return Rank.Three;
     case 4:
-      return Ranks.FOUR;
+      return Rank.Four;
     case 5:
-      return Ranks.FIVE;
+      return Rank.Five;
     case 6:
-      return Ranks.SIX;
+      return Rank.Six;
     case 7:
-      return Ranks.SEVEN;
+      return Rank.Seven;
     case 8:
-      return Ranks.EIGHT;
+      return Rank.Eight;
     case 9:
-      return Ranks.NINE;
+      return Rank.Nine;
     case 10:
-      // We could return `Ranks.JACK`, `Ranks.QUEEN` or `Ranks.KING` as well. We
-      // arbitrarily choose `Ranks.TEN`.
-      return Ranks.TEN;
+      // We could return `Rank.Jack`, `Rank.Queen` or `Rank.King` as well. We
+      // arbitrarily choose `Rank.Ten`.
+      return Rank.Ten;
     case 1:
     case 11:
-      return Ranks.ACE;
+      return Rank.Ace;
+    default:
+      throw new Error(`Unexpected value ${value}`);
   }
 }
 
-// TODO: Consolidate types so we can remove these converter functions?
-export function cardRankToValue(cardRank: Ranks): dealerTotal {
+// TODO: Consolidate types so we can remove this converter function?
+export function cardRankToValue(cardRank: Rank): number {
   switch (cardRank) {
-    case Ranks.TWO:
+    case Rank.Two:
       return 2;
-    case Ranks.THREE:
+    case Rank.Three:
       return 3;
-    case Ranks.FOUR:
+    case Rank.Four:
       return 4;
-    case Ranks.FIVE:
+    case Rank.Five:
       return 5;
-    case Ranks.SIX:
+    case Rank.Six:
       return 6;
-    case Ranks.SEVEN:
+    case Rank.Seven:
       return 7;
-    case Ranks.EIGHT:
+    case Rank.Eight:
       return 8;
-    case Ranks.NINE:
+    case Rank.Nine:
       return 9;
-    case Ranks.TEN:
-    case Ranks.KING:
-    case Ranks.QUEEN:
-    case Ranks.JACK:
+    case Rank.Ten:
+    case Rank.King:
+    case Rank.Queen:
+    case Rank.Jack:
       return 10;
-    case Ranks.ACE:
+    case Rank.Ace:
       return 11;
   }
 }
 
-// TODO: Consolidate types so we can remove these converter functions?
-export function correctMoveToAction(correctMove: correctMoves): actions {
-  switch (correctMove) {
-    case 'D':
-      return 'double';
-    case 'H':
-      return 'hit';
-    case 'N':
-      return 'no-insurance';
-    case 'Y':
-      return 'ask-insurance';
-    case 'P':
-      return 'split';
-    case 'R':
-      return 'surrender';
-    case 'S':
-      return 'stand';
+// TODO: Consolidate types so we can remove this converter function?
+export function chartMoveToCorrectMove(chartMove: ChartMove): Move {
+  switch (chartMove) {
+    case ChartMove.AskInsurance:
+      return Move.AskInsurance;
+    case ChartMove.Double:
+      return Move.Double;
+    case ChartMove.Hit:
+      return Move.Hit;
+    case ChartMove.NoInsurance:
+      return Move.NoInsurance;
+    case ChartMove.Split:
+      return Move.Split;
+    case ChartMove.Stand:
+      return Move.Stand;
+    case ChartMove.Surrender:
+      return Move.Surrender;
+    default:
+      throw new Error(`Unexpected chart move ${chartMove}`);
   }
 }
 
-// TODO: Consolidate types so we can remove these converter functions?
-export function actionDataKeyToAction(actionDataKey: string): actions | void {
+// TODO: Consolidate types so we can remove this converter functions?
+export function actionDataKeyToCorrectMove(actionDataKey: string): Move {
   switch (actionDataKey) {
-    case 'd':
-      return 'double';
-    case 'h':
-      return 'hit';
-    case 'n':
-      return 'no-insurance';
     case 'y':
-      return 'ask-insurance';
+      return Move.AskInsurance;
+    case 'd':
+      return Move.Double;
+    case 'n':
+      return Move.NoInsurance;
     case 'p':
-      return 'split';
-    case 'r':
-      return 'surrender';
+      return Move.Split;
     case 's':
-      return 'stand';
+      return Move.Stand;
+    case 'r':
+      return Move.Surrender;
+    default:
+    case 'h':
+      return Move.Hit;
   }
+}
+
+function convertCodeToChartMove(code: string): ChartMove {
+  switch (code) {
+    case 'Y':
+      return ChartMove.AskInsurance;
+    case 'D':
+      return ChartMove.Double;
+    case 'H':
+      return ChartMove.Hit;
+    case 'N':
+      return ChartMove.NoInsurance;
+    case 'P':
+      return ChartMove.Split;
+    case 'S':
+      return ChartMove.Stand;
+    case 'R':
+      return ChartMove.Surrender;
+    case 'Dh':
+      return ChartMove.DoubleOrHit;
+    case 'Ds':
+      return ChartMove.DoubleOrStand;
+    case 'Pd':
+      return ChartMove.SplitOrDouble;
+    case 'Ph':
+      return ChartMove.SplitOrHit;
+    case 'Ps':
+      return ChartMove.SplitOrStand;
+    case 'Rh':
+      return ChartMove.SurrenderOrHit;
+    case 'Rp':
+      return ChartMove.SurrenderOrSplit;
+    case 'Rs':
+      return ChartMove.SurrenderOrStand;
+    default:
+      throw new Error(`Invalid code ${code}`);
+  }
+}
+
+// TODO: Check if AssemblyScript supports string enums. If so, can remove this.
+export function handWinnerToString(handWinner: HandWinner): string {
+  switch (handWinner) {
+    case HandWinner.Dealer:
+      return 'dealer';
+    case HandWinner.Player:
+      return 'player';
+    case HandWinner.Push:
+      return 'push';
+    default:
+      throw new Error(`Unexpected hand winner ${handWinner}`);
+  }
+}
+
+// TODO: Check if AssemblyScript supports string enums. If so, can remove this.
+export function suitToString(suit: Suit): string {
+  switch (suit) {
+    case Suit.Hearts:
+      return 'h';
+    case Suit.Diamonds:
+      return 'd';
+    case Suit.Clubs:
+      return 'c';
+    case Suit.Spades:
+      return 's';
+    default:
+      throw new Error(`Unexpected suit ${suit}`);
+  }
+}
+
+// TODO: Check if AssemblyScript supports string enums. If so, can remove this.
+export function rankToString(rank: Rank): string {
+  switch (rank) {
+    case Rank.Ace:
+      return 'A';
+    case Rank.Two:
+      return '2';
+    case Rank.Three:
+      return '3';
+    case Rank.Four:
+      return '4';
+    case Rank.Five:
+      return '5';
+    case Rank.Six:
+      return '6';
+    case Rank.Seven:
+      return '7';
+    case Rank.Eight:
+      return '8';
+    case Rank.Nine:
+      return '9';
+    case Rank.Ten:
+      return 'T';
+    case Rank.Jack:
+      return 'J';
+    case Rank.Queen:
+      return 'Q';
+    case Rank.King:
+      return 'K';
+    default:
+      throw new Error(`Unexpected rank ${rank}`);
+  }
+}
+
+// TODO: Check if AssemblyScript supports string enums. If so, can remove this.
+export function playerStrategyToString(playerStrategy: PlayerStrategy): string {
+  switch (playerStrategy) {
+    case PlayerStrategy.BasicStrategy:
+      return 'BasicStrategy';
+    case PlayerStrategy.BasicStrategyI18:
+      return 'BasicStrategyI18';
+    case PlayerStrategy.Dealer:
+      return 'Dealer';
+    case PlayerStrategy.UserInput:
+      return 'UserInput';
+    default:
+      throw new Error(`Unexpected player strategy ${playerStrategy}`);
+  }
+}
+
+// TODO: Check if AssemblyScript supports string enums. If so, can remove this.
+export function moveToString(move: Move): string {
+  switch (move) {
+    case Move.AskInsurance:
+      return 'AskInsurance';
+    case Move.Double:
+      return 'Double';
+    case Move.Hit:
+      return 'Hit';
+    case Move.NoInsurance:
+      return 'NoInsurance';
+    case Move.Split:
+      return 'Split';
+    case Move.Stand:
+      return 'Stand';
+    case Move.Surrender:
+      return 'Surrender';
+    default:
+      throw new Error(`Unexpected move ${move}`);
+  }
+}
+
+// TODO: Check if AssemblyScript supports string enums. If so, can remove this.
+export function blackjackPayoutToString(
+  blackjackPayout: BlackjackPayout
+): string {
+  switch (blackjackPayout) {
+    case BlackjackPayout.ThreeToTwo:
+      return '3:2';
+    case BlackjackPayout.SixToFive:
+      return '6:5';
+    default:
+      throw new Error(`Unexpected blackjack payout ${blackjackPayout}`);
+  }
+}
+
+function convertSubChartToChartMove(subchart: string[][]): ChartMove[][] {
+  return subchart.map((row) => row.map(convertCodeToChartMove));
+}
+
+export function convertToChartMove(
+  chart: { [key in ChartType]: string[][] }
+): BasicStrategyChart {
+  return {
+    [ChartType.Hard]: convertSubChartToChartMove(chart[ChartType.Hard]),
+    [ChartType.Soft]: convertSubChartToChartMove(chart[ChartType.Soft]),
+    [ChartType.Splits]: convertSubChartToChartMove(chart[ChartType.Splits]),
+  };
 }
 
 export type TableRules = {
   allowDoubleAfterSplit: boolean;
   allowLateSurrender: boolean;
   allowResplitAces: boolean;
-  blackjackPayout: blackjackPayouts;
-  deckCount: deckCounts;
+  blackjackPayout: BlackjackPayout;
+  deckCount: number;
   hitSoft17: boolean;
   maxHandsAllowed: number;
   maximumBet: number;

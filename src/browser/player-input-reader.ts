@@ -1,12 +1,12 @@
 import PlayerInputReader from '../player-input-reader';
-import { actionDataKeyToAction, actions } from '../types';
+import { actionDataKeyToCorrectMove, Move } from '../types';
 
 export default class DOMPlayerInputReader implements PlayerInputReader {
-  readInput(callback: (action: actions) => void): void {
+  readInput(callback: (action: Move) => void): void {
     document.body.addEventListener(
       'keypress',
       (event) => {
-        const action = actionDataKeyToAction(event.key);
+        const action = actionDataKeyToCorrectMove(event.key);
         if (action) {
           callback(action);
         }
@@ -19,7 +19,9 @@ export default class DOMPlayerInputReader implements PlayerInputReader {
         return;
       }
 
-      const action = actionDataKeyToAction(event.target?.dataset.action ?? '');
+      const action = actionDataKeyToCorrectMove(
+        event.target?.dataset.action ?? ''
+      );
 
       if (action) {
         document.body.removeEventListener('click', clickHandler);

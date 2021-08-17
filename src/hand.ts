@@ -3,7 +3,7 @@ import { Events } from './event-emitter';
 import Utils from './utils';
 import Player from './player';
 import Card, { CardAttributes } from './card';
-import { Ranks } from './types';
+import { Rank } from './types';
 
 export type HandAttributes = {
   id: string;
@@ -78,18 +78,18 @@ export default class Hand extends GameObject {
 
   incrementTotalsForCard(card: Card): void {
     this.cardHighTotal += card.value;
-    this.cardLowTotal += card.rank === 'A' ? 1 : card.value;
+    this.cardLowTotal += card.rank === Rank.Ace ? 1 : card.value;
 
-    if (card.rank === 'A') {
+    if (card.rank === Rank.Ace) {
       this.acesCount += 1;
     }
   }
 
   decrementTotalsForCard(card: Card): void {
     this.cardHighTotal -= card.value;
-    this.cardLowTotal -= card.rank === 'A' ? 1 : card.value;
+    this.cardLowTotal -= card.rank === Rank.Ace ? 1 : card.value;
 
-    if (card.rank === 'A') {
+    if (card.rank === Rank.Ace) {
       this.acesCount -= 1;
     }
   }
@@ -163,8 +163,8 @@ export default class Hand extends GameObject {
   get hasAces(): boolean {
     return (
       this.cards.length === 2 &&
-      this.cards[0].rank === Ranks.ACE &&
-      this.cards[1].rank === Ranks.ACE
+      this.cards[0].rank === Rank.Ace &&
+      this.cards[1].rank === Rank.Ace
     );
   }
 }

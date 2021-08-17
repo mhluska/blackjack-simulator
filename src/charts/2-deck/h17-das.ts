@@ -1,4 +1,9 @@
-import { BasicStrategyChart, UncommonChart } from '../../types';
+import {
+  BasicStrategyChart,
+  UncommonChart,
+  convertToChartMove,
+  ChartType,
+} from '../../types';
 
 // Chart symbols:
 // H:  Hit
@@ -15,8 +20,8 @@ import { BasicStrategyChart, UncommonChart } from '../../types';
 // See https://wizardofodds.com/blackjack/images/bj_2d_h17.gif
 
 // prettier-ignore
-export const chart: BasicStrategyChart = {
-  hard: [
+export const chart: BasicStrategyChart = convertToChartMove({
+  [ChartType.Hard]: [
     ['H',  'H',  'H',  'H',  'H',  'H',  'H',  'H',  'H',  'H' ],
     ['H',  'H',  'H',  'H',  'H',  'H',  'H',  'H',  'H',  'H' ],
     ['Dh', 'Dh', 'Dh', 'Dh', 'Dh', 'H',  'H',  'H',  'H',  'H' ],
@@ -31,7 +36,7 @@ export const chart: BasicStrategyChart = {
     ['S',  'S',  'S',  'S',  'S',  'S',  'S',  'S',  'S',  'S' ],
   ],
 
-  soft: [
+  [ChartType.Soft]: [
     ['H',  'H',  'H',  'Dh', 'Dh', 'H',  'H',  'H',  'H',  'H' ],
     ['H',  'H',  'Dh', 'Dh', 'Dh', 'H',  'H',  'H',  'H',  'H' ],
     ['H',  'H',  'Dh', 'Dh', 'Dh', 'H',  'H',  'H',  'H',  'H' ],
@@ -42,7 +47,7 @@ export const chart: BasicStrategyChart = {
     ['S',  'S',  'S',  'S',  'S',  'S',  'S',  'S',  'S',  'S' ],
   ],
 
-  splits: [
+  [ChartType.Splits]: [
     ['Ph', 'Ph', 'P',  'P',  'P',  'P',  'H',  'H',  'H',  'H' ],
     ['Ph', 'Ph', 'P',  'P',  'P',  'P',  'H',  'H',  'H',  'H' ],
     ['H',  'H',  'H',  'Ph', 'Ph', 'H',  'H',  'H',  'H',  'H' ],
@@ -54,11 +59,11 @@ export const chart: BasicStrategyChart = {
     ['S',  'S',  'S',  'S',  'S',  'S',  'S',  'S',  'S',  'S' ],
     ['P',  'P',  'P',  'P',  'P',  'P',  'P',  'P',  'P',  'P' ],
   ],
-};
+});
 
 // prettier-ignore
 export const uncommon: UncommonChart = {
-  hard: {
+  [ChartType.Hard]: {
     9:  [7],
     10: [9],
     12: [2, 3],
@@ -67,7 +72,7 @@ export const uncommon: UncommonChart = {
     17: [10, 11],
   },
 
-  soft: {
+  [ChartType.Soft]: {
     13: [2, 3, 4, 5],
     14: [2, 3, 4],
     15: [2, 3, 4],
@@ -77,7 +82,7 @@ export const uncommon: UncommonChart = {
     19: [5, 6, 7]
   },
 
-  splits: {
+  [ChartType.Splits]: {
     2: [7, 8],
     3: [7, 8],
     4: [2, 3, 4, 5, 6, 7],

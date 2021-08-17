@@ -29,7 +29,7 @@ export default class Utils {
     array.splice(toIndex, 0, element);
   }
 
-  static arrayFlatten<R>(array: R[][]): R[] {
+  static arrayflatten<R>(array: R[][]): R[] {
     return array.reduce((flatten: R[], arr: R[]) => [...flatten, ...arr]);
   }
 
