@@ -5,8 +5,31 @@ import Simulator, {
 } from '../../simulator';
 
 import { CliSettings, printUsageOptions } from '../utils';
-import { entries, keys } from '../../types';
+import {
+  entries,
+  keys,
+  parsePlayerStrategy,
+  parseBlackjackPayout,
+  blackjackPayoutToString,
+  playerStrategyToString,
+} from '../../types';
 import Utils from '../../utils';
+
+interface CliSimulatorSettings
+  extends Omit<SimulatorSettings, 'playerStrategy' | 'blackjackPayout'> {
+  playerStrategy: string;
+  blackjackPayout: string;
+}
+
+function parseEnums(
+  options: Partial<CliSimulatorSettings & CliSettings>
+): Partial<SimulatorSettings> {
+  return Utils.compact({
+    ...options,
+    playerStrategy: parsePlayerStrategy(options.playerStrategy),
+    blackjackPayout: parseBlackjackPayout(options.blackjackPayout),
+  });
+}
 
 // TODO: Move commands out of the /src directory once we move to WebAssembly.
 // Any async/eventloop concerns should be moved out since it doesn't support it.
@@ -14,7 +37,7 @@ import Utils from '../../utils';
 // using our custom `entries()` function which is also not compatible with
 // AssemblyScript.
 export default function (
-  options: Partial<SimulatorSettings & CliSettings>
+  options: Partial<CliSimulatorSettings & CliSettings>
 ): void {
   if (options.help) {
     console.log('Usage: simulator simulate [options]');
@@ -22,8 +45,13 @@ export default function (
     console.log('Options:');
 
     printUsageOptions<SimulatorSettings>(SETTINGS_DEFAULTS, {
+      blackjackPayout: {
+        hint: '[3:2 | 6:5]',
+        formatter: blackjackPayoutToString,
+      },
       playerStrategy: {
         hint: '[basic-strategy | basic-strategy-i18]',
+        formatter: playerStrategyToString,
       },
       playerBetSpread: {
         hint: '(bets at TC 0, 1, 2 etc)',
@@ -46,7 +74,7 @@ export default function (
     return;
   }
 
-  const simulator = new Simulator(options);
+  const simulator = new Simulator(parseEnums(options));
 
   const result = simulator.run();
   const displayOrder: (keyof SimulatorResult)[] = [

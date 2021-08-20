@@ -15,6 +15,7 @@ import {
   HandWinner,
   PlayerStrategy,
   BlackjackPayout,
+  GameMode,
 } from './types';
 
 export type GameSettings = {
@@ -22,7 +23,7 @@ export type GameSettings = {
   disableEvents: boolean;
   checkDeviations: boolean;
   checkTopNDeviations: number;
-  mode: 'default' | 'pairs' | 'uncommon' | 'illustrious18';
+  mode: GameMode;
   debug: boolean;
   playerBankroll: number;
   playerTablePosition: number;
@@ -49,9 +50,10 @@ export const SETTINGS_DEFAULTS: GameSettings = {
   checkDeviations: false,
   checkTopNDeviations: 18,
 
-  // Can be one of 'default', 'pairs', 'uncommon', 'illustrious18'. If the mode
-  // is set to 'illustrious18', `checkDeviations` will be forced to true.
-  mode: 'default',
+  // Can be one of 'GameMode.Default', 'GameMode.Pairs', 'GameMode.Uncommon',
+  // 'GameMode.Illustrious18'. If the mode is set to 'GameMode.Illustrious18',
+  // `checkDeviations` will be forced to true.
+  mode: GameMode.Default,
   debug: false,
 
   playerBankroll: MINIMUM_BET * 1000 * 1000,

@@ -1,4 +1,4 @@
-import { BlackjackPayout } from '../src/types';
+import { BlackjackPayout, GameMode } from '../src/types';
 
 const MINIMUM_BET = 10 * 100;
 
@@ -7,7 +7,7 @@ export const settings = {
   disableEvents: true,
   checkDeviations: false,
   checkTopNDeviations: 18,
-  mode: 'default',
+  mode: GameMode.Default,
   debug: false,
   playerBankroll: MINIMUM_BET * 1000,
   playerTablePosition: 1,

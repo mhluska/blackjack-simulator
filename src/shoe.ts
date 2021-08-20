@@ -6,7 +6,13 @@ import BasicStrategyChecker from './basic-strategy-checker';
 import ExtendableError from './extendable-error';
 import { illustrious18Deviations } from './hi-lo-deviation-checker';
 import { GameSettings } from './game';
-import { Rank, ChartType, cardValueToRank, rankToString } from './types';
+import {
+  Rank,
+  ChartType,
+  cardValueToRank,
+  rankToString,
+  GameMode,
+} from './types';
 
 type ShoeAttributes = {
   cards: CardAttributes[];
@@ -55,15 +61,15 @@ export default class Shoe extends GameObject {
   shuffle(): void {
     Utils.arrayShuffle(this.cards);
 
-    if (this.mode === 'pairs') {
+    if (this.mode === GameMode.Pairs) {
       this._setupPairsMode();
     }
 
-    if (this.mode === 'uncommon') {
+    if (this.mode === GameMode.Uncommon) {
       this._setupUncommonMode();
     }
 
-    if (this.mode === 'illustrious18') {
+    if (this.mode === GameMode.Illustrious18) {
       this._setupIllustrious18Mode();
     }
 
@@ -140,7 +146,7 @@ export default class Shoe extends GameObject {
   }
 
   get needsReset(): boolean {
-    if (this.mode !== 'default') {
+    if (this.mode !== GameMode.Default) {
       return true;
     }
 

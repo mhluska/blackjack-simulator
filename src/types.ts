@@ -84,6 +84,13 @@ export enum BlackjackPayout {
   SixToFive,
 }
 
+export enum GameMode {
+  Default,
+  Pairs,
+  Uncommon,
+  Illustrious18,
+}
+
 export type CheckResult = {
   code: Move;
   hint: string;
@@ -323,13 +330,34 @@ export function rankToString(rank: Rank): string {
 export function playerStrategyToString(playerStrategy: PlayerStrategy): string {
   switch (playerStrategy) {
     case PlayerStrategy.BasicStrategy:
-      return 'BasicStrategy';
+      return 'basic-strategy';
     case PlayerStrategy.BasicStrategyI18:
-      return 'BasicStrategyI18';
+      return 'basic-strategy-i18';
     case PlayerStrategy.Dealer:
-      return 'Dealer';
+      return 'dealer';
     case PlayerStrategy.UserInput:
-      return 'UserInput';
+      return 'user-input';
+    default:
+      throw new Error(`Unexpected player strategy ${playerStrategy}`);
+  }
+}
+
+export function parsePlayerStrategy(
+  playerStrategy: string | undefined
+): PlayerStrategy | undefined {
+  if (!playerStrategy) {
+    return;
+  }
+
+  switch (playerStrategy) {
+    case 'basic-strategy-i18':
+      return PlayerStrategy.BasicStrategyI18;
+    case 'basic-strategy':
+      return PlayerStrategy.BasicStrategy;
+    case 'dealer':
+      return PlayerStrategy.Dealer;
+    case 'user-input':
+      return PlayerStrategy.UserInput;
     default:
       throw new Error(`Unexpected player strategy ${playerStrategy}`);
   }
@@ -368,6 +396,58 @@ export function blackjackPayoutToString(
       return '6:5';
     default:
       throw new Error(`Unexpected blackjack payout ${blackjackPayout}`);
+  }
+}
+
+export function parseBlackjackPayout(
+  blackjackPayout: string | undefined
+): BlackjackPayout | undefined {
+  if (!blackjackPayout) {
+    return;
+  }
+
+  switch (blackjackPayout) {
+    case '3:2':
+      return BlackjackPayout.ThreeToTwo;
+    case '6:5':
+      return BlackjackPayout.SixToFive;
+    default:
+      throw new Error(`Unexpected blackjack payout ${blackjackPayout}`);
+  }
+}
+
+// TODO: Check if AssemblyScript supports string enums. If so, can remove this.
+export function gameModeToString(mode: GameMode): string {
+  switch (mode) {
+    case GameMode.Default:
+      return 'default';
+    case GameMode.Pairs:
+      return 'pairs';
+    case GameMode.Uncommon:
+      return 'uncommon';
+    case GameMode.Illustrious18:
+      return 'illustrious18';
+    default:
+      throw new Error(`Unexpected blackjack payout ${mode}`);
+  }
+}
+
+export function parseGameMode(mode: string | undefined): GameMode | undefined {
+  if (!mode) {
+    return;
+  }
+
+  switch (mode) {
+    case 'defalt':
+      return GameMode.Default;
+    case 'pairs':
+      return GameMode.Pairs;
+    case 'uncommon':
+      return GameMode.Uncommon;
+    case 'illustrious18':
+      return GameMode.Illustrious18;
+    default:
+      throw new Error(`Unexpected blackjack payout ${mode}`);
   }
 }
 

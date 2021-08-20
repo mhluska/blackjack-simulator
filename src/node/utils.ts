@@ -26,7 +26,7 @@ export function printUsageOptions<T extends SimpleObject>(
     } else {
       const items = [`  --${kebabCase(key.toString())}`];
 
-      if (value) {
+      if (value !== null && typeof value !== 'undefined') {
         let formattedValue = options[key]?.formatter?.(value);
         if (formattedValue && formattedValue.includes('$')) {
           formattedValue = `'${formattedValue}'`;

@@ -1,7 +1,7 @@
 import Utils from './utils';
 import Game, { GameSettings } from './game';
 import Hand from './hand';
-import { Move, CheckResult, GameStep } from './types';
+import { Move, CheckResult, GameStep, GameMode } from './types';
 
 type Illustrious18Deviation = {
   insurance?: boolean;
@@ -105,7 +105,7 @@ export default class HiLoDeviationChecker {
   static check(game: Game, hand: Hand, input: Move): CheckResult | boolean {
     if (
       !game.settings.checkDeviations &&
-      game.settings.mode !== 'illustrious18'
+      game.settings.mode !== GameMode.Illustrious18
     ) {
       return false;
     }

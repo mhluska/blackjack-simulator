@@ -11,7 +11,7 @@ import {
 
 export type SimulatorSettings = {
   debug: boolean;
-  playerStrategy: string;
+  playerStrategy: PlayerStrategy;
   playerBetSpread: number[];
   playerSpots: number[];
   playerTablePosition: number;
@@ -43,7 +43,7 @@ function defaultSettings(minimumBet = 10 * 100): SimulatorSettings {
   return {
     // Simulator-only settings.
     hands: 10 ** 6,
-    playerStrategy: 'basic-strategy',
+    playerStrategy: PlayerStrategy.BasicStrategyI18,
 
     // TODO: Allow computing optimal bet spreads.
     // Simple bet spread strategy, for $10 minimum:
@@ -154,19 +154,8 @@ function estimateHandsPerHour(playerCount: number): number {
   return estimateHandsPerHour(4);
 }
 
-function parsePlayerStrategy(strategy: string): PlayerStrategy {
-  switch (strategy) {
-    case 'basic-strategy-i18':
-      return PlayerStrategy.BasicStrategyI18;
-    default:
-    case 'basic-strategy':
-      return PlayerStrategy.BasicStrategy;
-  }
-}
-
 export default class Simulator {
   settings: SimulatorSettings;
-  playerStrategy: PlayerStrategy;
 
   constructor(settings: DeepPartial<SimulatorSettings>) {
     // TODO: Avoid `as` here. Otherwise returns `Partial<SimulatorSettings>`.
@@ -174,8 +163,6 @@ export default class Simulator {
       defaultSettings(settings.minimumBet),
       settings
     ) as SimulatorSettings;
-
-    this.playerStrategy = parsePlayerStrategy(this.settings.playerStrategy);
   }
 
   clampToArray(index: number, array: number[]): number {
@@ -199,7 +186,7 @@ export default class Simulator {
       debug: this.settings.debug,
       disableEvents: true,
       playerStrategyOverride: {
-        [this.settings.playerTablePosition]: this.playerStrategy,
+        [this.settings.playerTablePosition]: this.settings.playerStrategy,
       },
     });
 
