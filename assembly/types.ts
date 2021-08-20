@@ -95,12 +95,12 @@ export type BasicStrategyChart = Map<ChartType, ChartMove[][]>;
 export type UncommonChart = Map<ChartType, Map<u8, u8[]>>;
 
 // TODO: Avoid any here.
-// TODO: Get this working in AssemblyScript.
+// TODO: Not available in AS.
 // export type SimpleObject = {
 //   [key: string]: any;
 // };
 
-// TODO: Get this working in AssemblyScript.
+// TODO: Not available in AS.
 // export type DeepPartial<T> = {
 //   [P in keyof T]?: DeepPartial<T[P]>;
 // };
