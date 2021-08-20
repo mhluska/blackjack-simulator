@@ -19,9 +19,10 @@ import {
 //
 // See https://wizardofodds.com/blackjack/images/bj_2d_s17.gif
 
-// prettier-ignore
-export const chart: BasicStrategyChart = convertToChartMove({
-  [ChartType.Hard]: [
+export const chart: BasicStrategyChart = convertToChartMove(
+  // prettier-ignore
+  new Map([
+    [ChartType.Hard, [
     ['H',  'H',  'H',  'H',  'H',  'H',  'H',  'H',  'H',  'H' ],
     ['H',  'H',  'H',  'H',  'H',  'H',  'H',  'H',  'H',  'H' ],
     ['Dh', 'Dh', 'Dh', 'Dh', 'Dh', 'H',  'H',  'H',  'H',  'H' ],
@@ -34,9 +35,9 @@ export const chart: BasicStrategyChart = convertToChartMove({
     ['S',  'S',  'S',  'S',  'S',  'H',  'H',  'H',  'Rh', 'Rh'],
     ['S',  'S',  'S',  'S',  'S',  'S',  'S',  'S',  'S',  'S' ],
     ['S',  'S',  'S',  'S',  'S',  'S',  'S',  'S',  'S',  'S' ],
-  ],
+  ]],
 
-  [ChartType.Soft]: [
+    [ChartType.Soft, [
     ['H',  'H',  'H',  'Dh', 'Dh', 'H',  'H',  'H',  'H',  'H' ],
     ['H',  'H',  'Dh', 'Dh', 'Dh', 'H',  'H',  'H',  'H',  'H' ],
     ['H',  'H',  'Dh', 'Dh', 'Dh', 'H',  'H',  'H',  'H',  'H' ],
@@ -45,9 +46,9 @@ export const chart: BasicStrategyChart = convertToChartMove({
     ['S',  'Ds', 'Ds', 'Ds', 'Ds', 'S',  'S',  'H',  'H',  'H' ],
     ['S',  'S',  'S',  'S',  'S',  'S',  'S',  'S',  'S',  'S' ],
     ['S',  'S',  'S',  'S',  'S',  'S',  'S',  'S',  'S',  'S' ],
-  ],
+  ]],
 
-  [ChartType.Splits]: [
+    [ChartType.Splits, [
     ['Ph', 'Ph', 'P',  'P',  'P',  'P',  'H',  'H',  'H',  'H' ],
     ['Ph', 'Ph', 'P',  'P',  'P',  'P',  'H',  'H',  'H',  'H' ],
     ['H',  'H',  'H',  'Ph', 'Ph', 'H',  'H',  'H',  'H',  'H' ],
@@ -58,12 +59,12 @@ export const chart: BasicStrategyChart = convertToChartMove({
     ['P',  'P',  'P',  'P',  'P',  'S',  'P',  'P',  'S',  'S' ],
     ['S',  'S',  'S',  'S',  'S',  'S',  'S',  'S',  'S',  'S' ],
     ['P',  'P',  'P',  'P',  'P',  'P',  'P',  'P',  'P',  'P' ],
-  ],
-});
+  ]],
+  ])
+);
 
-// prettier-ignore
-export const uncommon: UncommonChart = {
-  [ChartType.Hard]: [[]],
-  [ChartType.Soft]: [[]],
-  [ChartType.Splits]: [[]],
-};
+export const uncommon: UncommonChart = new Map([
+  [ChartType.Hard, new Map()],
+  [ChartType.Soft, new Map()],
+  [ChartType.Splits, new Map()],
+]);

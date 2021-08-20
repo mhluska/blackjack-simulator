@@ -89,13 +89,8 @@ export type CheckResult = {
   hint: string;
 };
 
-export type BasicStrategyChart = {
-  [key in ChartType]: ChartMove[][];
-};
-
-export type UncommonChart = {
-  [key in ChartType]: { [total: number]: number[] };
-};
+export type BasicStrategyChart = Map<ChartType, ChartMove[][]>;
+export type UncommonChart = Map<ChartType, Map<number, number[]>>;
 
 // TODO: Avoid any here.
 export type SimpleObject = {
@@ -112,7 +107,13 @@ export const keys = Object.keys as <T>(o: T) => (keyof T)[];
 // See https://github.com/microsoft/TypeScript/pull/12253#issuecomment-479851685
 export const entries = Object.entries as <T>(o: T) => [keyof T, T[keyof T]][];
 
-export const values = Object.values as <T>(o: T) => T[keyof T][];
+export function enumValues<T>(object: T): T[keyof T][] {
+  return Object.values(object).filter((value) => typeof value === 'number');
+}
+
+// export const values = <_, T>(enum: T) => { Object.values(enum).filter(value => typeof value === 'number') }
+
+// export const values = Object.values as <T>(o: T) => T[keyof T][];
 
 // TODO: Consolidate types so we can remove this converter function?
 export function cardValueToRank(value: number): Rank {
@@ -370,18 +371,24 @@ export function blackjackPayoutToString(
   }
 }
 
-function convertSubChartToChartMove(subchart: string[][]): ChartMove[][] {
+function convertSubChartToChartMove(
+  subchart: string[][] | undefined
+): ChartMove[][] {
+  if (!subchart) {
+    throw new Error('Subchart not found');
+  }
+
   return subchart.map((row) => row.map(convertCodeToChartMove));
 }
 
 export function convertToChartMove(
-  chart: { [key in ChartType]: string[][] }
+  chart: Map<ChartType, string[][]>
 ): BasicStrategyChart {
-  return {
-    [ChartType.Hard]: convertSubChartToChartMove(chart[ChartType.Hard]),
-    [ChartType.Soft]: convertSubChartToChartMove(chart[ChartType.Soft]),
-    [ChartType.Splits]: convertSubChartToChartMove(chart[ChartType.Splits]),
-  };
+  return new Map([
+    [ChartType.Hard, convertSubChartToChartMove(chart.get(ChartType.Hard))],
+    [ChartType.Soft, convertSubChartToChartMove(chart.get(ChartType.Soft))],
+    [ChartType.Splits, convertSubChartToChartMove(chart.get(ChartType.Splits))],
+  ]);
 }
 
 export type TableRules = {

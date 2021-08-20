@@ -37,17 +37,21 @@ export default class BasicStrategyChecker {
 
     const { chart: chartGroup } = selectCharts(game.settings);
     const chartType = this._chartType(hand, allowSplit);
-    const chart = chartGroup[chartType];
     const [chartMin, chartMax] = chartMinMax(chartType);
 
     const playerTotal = Utils.clamp(
       hand.hasPairs && allowSplit ? hand.cards[0].value : hand.cardTotal,
       chartMin,
       chartMax
-    ) as typeof chartMin;
+    );
 
-    const dealersCard = game.dealer.upcard.value;
+    const chart = chartGroup.get(chartType);
+    if (!chart) {
+      throw new Error('Subchart not found');
+    }
+
     const dealerHints = chart[playerTotal - chartMin];
+    const dealersCard = game.dealer.upcard.value;
     const correctMove = dealerHints[dealersCard - 2];
 
     if (

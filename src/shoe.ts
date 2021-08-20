@@ -6,13 +6,7 @@ import BasicStrategyChecker from './basic-strategy-checker';
 import ExtendableError from './extendable-error';
 import { illustrious18Deviations } from './hi-lo-deviation-checker';
 import { GameSettings } from './game';
-import {
-  Rank,
-  ChartType,
-  entries,
-  cardValueToRank,
-  rankToString,
-} from './types';
+import { Rank, ChartType, cardValueToRank, rankToString } from './types';
 
 type ShoeAttributes = {
   cards: CardAttributes[];
@@ -189,7 +183,7 @@ export default class Shoe extends GameObject {
   _moveCardsToFront(
     playerRank1: Rank,
     playerRank2: Rank,
-    dealerUpnumber?: number
+    dealerUpcard?: number
   ): void {
     // Move the first two cards to the 0th and 2nd spot so they are dealt to the
     // player at the start of the game.
@@ -199,10 +193,10 @@ export default class Shoe extends GameObject {
       this.cards.length - 1
     );
 
-    if (dealerUpnumber) {
+    if (dealerUpcard) {
       Utils.arrayMove(
         this.cards,
-        this.cards.findIndex((card) => card.value === dealerUpnumber),
+        this.cards.findIndex((card) => card.value === dealerUpcard),
         this.cards.length - 1 - 1
       );
     }
@@ -245,22 +239,25 @@ export default class Shoe extends GameObject {
 
   _setupUncommonMode(): void {
     const [chartType, chart] = Utils.arraySample(
-      entries(BasicStrategyChecker.uncommonHands(this.settings))
+      Array.from(BasicStrategyChecker.uncommonHands(this.settings).entries())
     );
-    const [playerTotal, dealerUpnumbers] = Utils.arraySample(entries(chart));
+
+    const [playerTotal, dealerUpcards] = Utils.arraySample(
+      Array.from(chart.entries())
+    );
 
     // TODO: Remove this once we have uncommon values defined for all charts.
-    if (!dealerUpnumbers) {
+    if (dealerUpcards.length === 0) {
       return;
     }
 
-    const dealerUpnumber = Utils.arraySample(dealerUpnumbers);
+    const dealerUpcard = Utils.arraySample(dealerUpcards);
     const [rank1, rank2] = this._playerTotalToTwoCardRank(
       playerTotal,
       chartType
     );
 
-    this._moveCardsToFront(rank1, rank2, dealerUpnumber);
+    this._moveCardsToFront(rank1, rank2, dealerUpcard);
   }
 
   _setupIllustrious18Mode(): void {

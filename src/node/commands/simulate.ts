@@ -8,6 +8,11 @@ import { CliSettings, printUsageOptions } from '../utils';
 import { entries, keys } from '../../types';
 import Utils from '../../utils';
 
+// TODO: Move commands out of the /src directory once we move to WebAssembly.
+// Any async/eventloop concerns should be moved out since it doesn't support it.
+// TODO: After moving this out of /src, we can drop TypeScript here and avoid
+// using our custom `entries()` function which is also not compatible with
+// AssemblyScript.
 export default function (
   options: Partial<SimulatorSettings & CliSettings>
 ): void {

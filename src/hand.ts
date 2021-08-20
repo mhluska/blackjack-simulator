@@ -3,7 +3,7 @@ import { Events } from './event-emitter';
 import Utils from './utils';
 import Player from './player';
 import Card, { CardAttributes } from './card';
-import { Rank } from './types';
+import { Rank, rankToString } from './types';
 
 export type HandAttributes = {
   id: string;
@@ -106,7 +106,7 @@ export default class Hand extends GameObject {
 
   serialize({ showHidden = false } = {}): string {
     return this.cards
-      .map((card) => (card.visible || showHidden ? card.rank : '?'))
+      .map((card) => (card.visible || showHidden ? rankToString(card.rank) : '?'))
       .join(' ');
   }
 
