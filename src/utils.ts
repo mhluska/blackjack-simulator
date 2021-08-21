@@ -67,15 +67,8 @@ export default class Utils {
     return value;
   }
 
-  // Range will be either `>= x` or `< x` for an integer `x`.
-  static rangeBoundary(range: string): number {
-    const number = range.split(' ').pop();
-    return number ? parseInt(number) : 0;
-  }
-
-  static compareRange(number: number, range: string): boolean {
-    const boundary = this.rangeBoundary(range);
-    return range.includes('>=') ? number >= boundary : number < boundary;
+  static compareRange(number: number, range: [string, number]): boolean {
+    return range[0] === '>' ? number >= range[1] : number < range[1];
   }
 
   static hiLoValue(cards: Card[]): number {

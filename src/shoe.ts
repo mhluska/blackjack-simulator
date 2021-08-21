@@ -302,7 +302,7 @@ export default class Shoe extends GameObject {
     // careful to subtract the next 3 cards from the running count since they
     // are about to be drawn by the dealer.
     let runningCount =
-      Utils.rangeBoundary(index) *
+      index[1] *
         (((this.maxCards - 3) * this.settings.deckCount) / this.maxCards) -
       i1 -
       i2 -

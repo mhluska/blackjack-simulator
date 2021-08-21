@@ -9,7 +9,7 @@ type Illustrious18Deviation = {
   pair?: boolean;
   dealersCard: number;
   correctMove: Move;
-  index: string;
+  index: [string, number];
 };
 
 // prettier-ignore
@@ -18,24 +18,24 @@ type Illustrious18Deviation = {
 //
 // TODO: Consider different deviations for deck counts and s17.
 export const illustrious18Deviations: Illustrious18Deviation[] = [
-  { playerTotal: 0,  dealersCard: 11, correctMove: Move.AskInsurance, index: '>= 3', insurance: true },
-  { playerTotal: 16, dealersCard: 10, correctMove: Move.Stand, index: '>= 0' },
-  { playerTotal: 15, dealersCard: 10, correctMove: Move.Stand, index: '>= 4' },
-  { playerTotal: 20, dealersCard: 5,  correctMove: Move.Split, index: '>= 5', pair: true },
-  { playerTotal: 20, dealersCard: 6,  correctMove: Move.Split, index: '>= 4', pair: true },
-  { playerTotal: 10, dealersCard: 10, correctMove: Move.Double, index: '>= 4' },
-  { playerTotal: 12, dealersCard: 3,  correctMove: Move.Stand, index: '>= 2' },
-  { playerTotal: 12, dealersCard: 2,  correctMove: Move.Stand, index: '>= 3' },
-  { playerTotal: 11, dealersCard: 11, correctMove: Move.Hit, index: '< 1'  },
-  { playerTotal: 9,  dealersCard: 2,  correctMove: Move.Hit, index: '< 1'  },
-  { playerTotal: 10, dealersCard: 11, correctMove: Move.Double, index: '>= 4' },
-  { playerTotal: 9,  dealersCard: 7,  correctMove: Move.Double, index: '>= 3' },
-  { playerTotal: 16, dealersCard: 9,  correctMove: Move.Stand, index: '>= 5' },
-  { playerTotal: 13, dealersCard: 2,  correctMove: Move.Hit, index: '< -1' },
-  { playerTotal: 12, dealersCard: 4,  correctMove: Move.Hit, index: '< 0'  },
-  { playerTotal: 12, dealersCard: 5,  correctMove: Move.Hit, index: '< -2' },
-  { playerTotal: 12, dealersCard: 6,  correctMove: Move.Hit, index: '< -1' },
-  { playerTotal: 13, dealersCard: 3,  correctMove: Move.Hit, index: '< -2' },
+  { playerTotal: 0,  dealersCard: 11, correctMove: Move.AskInsurance, index: ['>=', 3], insurance: true },
+  { playerTotal: 16, dealersCard: 10, correctMove: Move.Stand,        index: ['>=', 0]                  },
+  { playerTotal: 15, dealersCard: 10, correctMove: Move.Stand,        index: ['>=', 4]                  },
+  { playerTotal: 20, dealersCard: 5,  correctMove: Move.Split,        index: ['>=', 5], pair: true      },
+  { playerTotal: 20, dealersCard: 6,  correctMove: Move.Split,        index: ['>=', 4], pair: true      },
+  { playerTotal: 10, dealersCard: 10, correctMove: Move.Double,       index: ['>=', 4]                  },
+  { playerTotal: 12, dealersCard: 3,  correctMove: Move.Stand,        index: ['>=', 2]                  },
+  { playerTotal: 12, dealersCard: 2,  correctMove: Move.Stand,        index: ['>=', 3]                  },
+  { playerTotal: 11, dealersCard: 11, correctMove: Move.Hit,          index: ['<',  1]                  },
+  { playerTotal: 9,  dealersCard: 2,  correctMove: Move.Hit,          index: ['<',  1]                  },
+  { playerTotal: 10, dealersCard: 11, correctMove: Move.Double,       index: ['>=', 4]                  },
+  { playerTotal: 9,  dealersCard: 7,  correctMove: Move.Double,       index: ['>=', 3]                  },
+  { playerTotal: 16, dealersCard: 9,  correctMove: Move.Stand,        index: ['>=', 5]                  },
+  { playerTotal: 13, dealersCard: 2,  correctMove: Move.Hit,          index: ['<', -1]                  },
+  { playerTotal: 12, dealersCard: 4,  correctMove: Move.Hit,          index: ['<',  0]                  },
+  { playerTotal: 12, dealersCard: 5,  correctMove: Move.Hit,          index: ['<', -2]                  },
+  { playerTotal: 12, dealersCard: 6,  correctMove: Move.Hit,          index: ['<', -1]                  },
+  { playerTotal: 13, dealersCard: 3,  correctMove: Move.Hit,          index: ['<', -2]                  },
 ];
 
 export default class HiLoDeviationChecker {
