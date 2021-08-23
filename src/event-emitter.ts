@@ -24,7 +24,7 @@ export default class EventEmitter {
       return;
     }
 
-    if (typeof this.events.get(event) !== 'object') {
+    if (!this.events.has(event)) {
       this.events.set(event, []);
     }
 
@@ -42,11 +42,10 @@ export default class EventEmitter {
     }
 
     const events = this.events.get(event);
-    if (typeof events !== 'object') {
+    if (!events) {
       return;
     }
 
-    // TODO: Fix this. It's probably broken.
     const index = events.indexOf(listener);
     if (index === -1) {
       return;
