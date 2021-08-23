@@ -16,10 +16,11 @@
 
 ## Project goals
 
-* Simulator for computing EV given some table conditions (10M hands / second)
+* Simulator mode for computing EV given some table conditions (10M hands / second)
 * Game mode for practicing basic strategy and card counting with hints
 * No package dependencies
 * Runs in any JS environment (CLI, browser, React Native app etc)
+* Multi-core support in Node
 
 ## Usage
 
@@ -62,7 +63,7 @@ const settings = {
   // Can be one of:
   // 'basic-strategy': play perfect basic strategy
   // 'basic-strategy-i18': play perfect basic strategy plus illustrious 18
-  playerStrategy: 'basic-strategy',
+  playerStrategy: 'basic-strategy-i18',
 
   playerBetSpread: [1000, 2000, 4000, 8000, 16000],
   playerSpots: [1, 1, 1, 1, 1],
