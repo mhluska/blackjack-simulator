@@ -22,7 +22,6 @@ export type GameSettings = {
   autoDeclineInsurance: boolean;
   disableEvents: boolean;
   checkDeviations: boolean;
-  checkTopNDeviations: number;
   mode: GameMode;
   debug: boolean;
   playerBankroll: number;
@@ -48,7 +47,6 @@ export const SETTINGS_DEFAULTS: GameSettings = {
   autoDeclineInsurance: false,
   disableEvents: false,
   checkDeviations: false,
-  checkTopNDeviations: 18,
 
   // Can be one of 'GameMode.Default', 'GameMode.Pairs', 'GameMode.Uncommon',
   // 'GameMode.Illustrious18'. If the mode is set to 'GameMode.Illustrious18',

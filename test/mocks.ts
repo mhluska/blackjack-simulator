@@ -6,7 +6,6 @@ export const settings = {
   autoDeclineInsurance: true,
   disableEvents: true,
   checkDeviations: false,
-  checkTopNDeviations: 18,
   mode: GameMode.Default,
   debug: false,
   playerBankroll: MINIMUM_BET * 1000,

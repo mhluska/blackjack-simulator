@@ -124,7 +124,6 @@ const settings = {
   autoDeclineInsurance: false,
   disableEvents: false,
   checkDeviations: false,
-  checkTopNDeviations: 18,
 
   // Can be one of 'default', 'pairs', 'uncommon', 'illustrious18'. If the mode
   // is set to 'illustrious18', `checkDeviations` will be forced to true.

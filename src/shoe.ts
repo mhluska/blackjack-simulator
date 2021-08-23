@@ -12,6 +12,7 @@ import {
   cardValueToRank,
   rankToString,
   GameMode,
+  Move,
 } from './types';
 
 type ShoeAttributes = {
@@ -267,17 +268,18 @@ export default class Shoe extends GameObject {
   }
 
   _setupIllustrious18Mode(): void {
-    const {
-      insurance,
-      playerTotal,
-      dealersCard,
-      index,
-      pair,
-    } = Utils.arraySample(
-      illustrious18Deviations.slice(0, this.settings.checkTopNDeviations)
+    const [playerTotal, entries] = Utils.arraySample(
+      Array.from(illustrious18Deviations.entries())
     );
 
-    let total = insurance ? Utils.random(2, 20) : playerTotal;
+    const [dealerTotal, deviation] = Utils.arraySample(Array.from(entries));
+
+    let total =
+      deviation.correctMove === Move.AskInsurance
+        ? Utils.random(2, 20)
+        : playerTotal;
+
+    const pair = deviation.correctMove === Move.Split;
 
     // TODO: Make the splits format just equal the player total.
     if (pair) {
@@ -289,7 +291,7 @@ export default class Shoe extends GameObject {
       pair ? ChartType.Splits : ChartType.Hard
     );
 
-    this._moveCardsToFront(rank1, rank2, dealersCard);
+    this._moveCardsToFront(rank1, rank2, dealerTotal);
 
     // Include all face up cards in the count from the opening hand.
     const i1 = this.cards[this.cards.length - 1].hiLoValue;
@@ -302,28 +304,30 @@ export default class Shoe extends GameObject {
     // careful to subtract the next 3 cards from the running count since they
     // are about to be drawn by the dealer.
     let runningCount =
-      index[1] *
+      deviation.index[1] *
         (((this.maxCards - 3) * this.settings.deckCount) / this.maxCards) -
       i1 -
       i2 -
       i3;
 
+    const lt = deviation.index[0][0] === '<';
+
     // Since we forced the true count to a nice number, the running count will
     // be an ugly decimal. We round it up or down depending on whether the
     // illustrious 18 deviation acts on indices going further negative or
     // positive.
-    runningCount = Math[index.includes('<') ? 'floor' : 'ceil'](runningCount);
+    runningCount = Math[lt ? 'floor' : 'ceil'](runningCount);
 
     // Force the true count one point less for the '<' comparison since it
     // is an exclusive equality check.
-    if (index.includes('<')) {
+    if (deviation.index[0].includes('<')) {
       runningCount -= this.decksRemaining;
     }
 
     // Half time time we randomly alter the running count to something
     // incorrect to be able to test the users knowledge.
     if (Utils.random(0, 1) === 0) {
-      runningCount += this.decksRemaining * (index.includes('<') ? 1 : -1);
+      runningCount += this.decksRemaining * (lt ? 1 : -1);
     }
 
     this.hiLoRunningCount = runningCount;

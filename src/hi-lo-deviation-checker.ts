@@ -4,39 +4,59 @@ import Hand from './hand';
 import { Move, CheckResult, GameStep, GameMode } from './types';
 
 type Illustrious18Deviation = {
-  insurance?: boolean;
-  playerTotal: number;
-  pair?: boolean;
-  dealersCard: number;
   correctMove: Move;
   index: [string, number];
 };
 
-// prettier-ignore
-// Referenced from the book `Blackjack Attack`.
-// `index` refers to true count.
-//
 // TODO: Consider different deviations for deck counts and s17.
-export const illustrious18Deviations: Illustrious18Deviation[] = [
-  { playerTotal: 0,  dealersCard: 11, correctMove: Move.AskInsurance, index: ['>=', 3], insurance: true },
-  { playerTotal: 16, dealersCard: 10, correctMove: Move.Stand,        index: ['>=', 0]                  },
-  { playerTotal: 15, dealersCard: 10, correctMove: Move.Stand,        index: ['>=', 4]                  },
-  { playerTotal: 20, dealersCard: 5,  correctMove: Move.Split,        index: ['>=', 5], pair: true      },
-  { playerTotal: 20, dealersCard: 6,  correctMove: Move.Split,        index: ['>=', 4], pair: true      },
-  { playerTotal: 10, dealersCard: 10, correctMove: Move.Double,       index: ['>=', 4]                  },
-  { playerTotal: 12, dealersCard: 3,  correctMove: Move.Stand,        index: ['>=', 2]                  },
-  { playerTotal: 12, dealersCard: 2,  correctMove: Move.Stand,        index: ['>=', 3]                  },
-  { playerTotal: 11, dealersCard: 11, correctMove: Move.Hit,          index: ['<',  1]                  },
-  { playerTotal: 9,  dealersCard: 2,  correctMove: Move.Hit,          index: ['<',  1]                  },
-  { playerTotal: 10, dealersCard: 11, correctMove: Move.Double,       index: ['>=', 4]                  },
-  { playerTotal: 9,  dealersCard: 7,  correctMove: Move.Double,       index: ['>=', 3]                  },
-  { playerTotal: 16, dealersCard: 9,  correctMove: Move.Stand,        index: ['>=', 5]                  },
-  { playerTotal: 13, dealersCard: 2,  correctMove: Move.Hit,          index: ['<', -1]                  },
-  { playerTotal: 12, dealersCard: 4,  correctMove: Move.Hit,          index: ['<',  0]                  },
-  { playerTotal: 12, dealersCard: 5,  correctMove: Move.Hit,          index: ['<', -2]                  },
-  { playerTotal: 12, dealersCard: 6,  correctMove: Move.Hit,          index: ['<', -1]                  },
-  { playerTotal: 13, dealersCard: 3,  correctMove: Move.Hit,          index: ['<', -2]                  },
-];
+// prettier-ignore
+export const illustrious18Deviations = new Map<number, Map<number, Illustrious18Deviation>>([
+  [0,  new Map([
+    [11, { correctMove: Move.AskInsurance, index: ['>=', 3] }],
+  ]),
+  ],
+  [9,  new Map([
+    [2,  { correctMove: Move.Hit,          index: ['<',  1] }],
+    [7,  { correctMove: Move.Double,       index: ['>=', 3] }],
+  ]),
+  ],
+  [10, new Map([
+    [10, { correctMove: Move.Double,       index: ['>=', 4] }],
+    [11, { correctMove: Move.Double,       index: ['>=', 4] }],
+  ]),
+  ],
+  [11, new Map([
+    [11, { correctMove: Move.Hit,          index: ['<',  1] }],
+  ])
+  ],
+  [12, new Map([
+    [2,  { correctMove: Move.Stand,        index: ['>=', 3] }],
+    [3,  { correctMove: Move.Stand,        index: ['>=', 2] }],
+    [4,  { correctMove: Move.Hit,          index: ['<',  0] }],
+    [5,  { correctMove: Move.Hit,          index: ['<', -2] }],
+    [6,  { correctMove: Move.Hit,          index: ['<', -1] }],
+  ]),
+  ],
+  [13, new Map([
+    [2,  { correctMove: Move.Hit,          index: ['<', -1] }],
+    [3,  { correctMove: Move.Hit,          index: ['<', -2] }],
+  ]),
+  ],
+  [15, new Map([
+    [10, { correctMove: Move.Stand,        index: ['>=', 4] }]
+  ])
+  ],
+  [16, new Map([
+    [9,  { correctMove: Move.Stand,        index: ['>=', 5] }],
+    [10, { correctMove: Move.Stand,        index: ['>=', 0] }],
+  ]),
+  ],
+  [20, new Map([
+    [5,  { correctMove: Move.Split,        index: ['>=', 5] }],
+    [6,  { correctMove: Move.Split,        index: ['>=', 4] }],
+  ]),
+  ],
+]);
 
 export default class HiLoDeviationChecker {
   static _suggest(
@@ -46,53 +66,33 @@ export default class HiLoDeviationChecker {
     correctMove: Move | false;
     deviation?: Illustrious18Deviation;
   } {
-    let deviationIndex;
-
     const trueCount = game.shoe.hiLoTrueCount;
 
-    if (!game.dealer.upcard) {
+    if (!game.dealer.upcard || hand.isSoft) {
       return { correctMove: false };
     }
+
+    const playerTotal =
+      game.state.step === GameStep.WaitingForInsuranceInput
+        ? 0
+        : hand.cardTotal;
+    const dealersCard = game.dealer.upcard.value;
+    const deviation = illustrious18Deviations
+      .get(playerTotal)
+      ?.get(dealersCard);
 
     if (
-      game.dealer.upcard.value === 11 &&
-      game.state.step === GameStep.WaitingForInsuranceInput
+      !deviation ||
+      (hand.hasPairs && deviation.correctMove !== Move.Split) ||
+      (!hand.firstMove && deviation.correctMove === Move.Double) ||
+      (!this._allowSplit(hand, game.settings) &&
+        deviation.correctMove === Move.Split) ||
+      !Utils.compareRange(trueCount, deviation.index)
     ) {
-      deviationIndex = illustrious18Deviations.findIndex(
-        (d) => d.insurance && Utils.compareRange(trueCount, d.index)
-      );
-    } else {
-      const playerTotal = hand.cardTotal;
-      const dealersCard = game.dealer.upcard.value;
-
-      deviationIndex = illustrious18Deviations.findIndex(
-        (d, index) =>
-          index < game.settings.checkTopNDeviations &&
-          d.playerTotal === playerTotal &&
-          d.dealersCard === dealersCard &&
-          hand.hasPairs === !!d.pair &&
-          hand.isHard &&
-          Utils.compareRange(trueCount, d.index)
-      );
-    }
-
-    if (deviationIndex === -1) {
       return { correctMove: false };
     }
 
-    const deviation = illustrious18Deviations[deviationIndex];
-    const correctMove = deviation.correctMove;
-
-    if (correctMove === Move.Double && !hand.firstMove) {
-      return { correctMove: false };
-    }
-
-    const allowSplit = this._allowSplit(hand, game.settings);
-    if (correctMove === Move.Split && !allowSplit) {
-      return { correctMove: false };
-    }
-
-    return { correctMove, deviation };
+    return { correctMove: deviation.correctMove, deviation };
   }
 
   static suggest(game: Game, hand: Hand): Move | false {
