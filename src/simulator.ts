@@ -30,7 +30,6 @@ export type SimulatorResult = {
   bankrollMean: number;
   bankrollVariance: number;
   timeElapsed: number;
-
   tableRules: TableRules;
 } & Pick<SimulatorSettings, 'playerBetSpread' | 'playerSpots'>;
 
