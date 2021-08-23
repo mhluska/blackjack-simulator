@@ -17,17 +17,15 @@ describe('Simulator', function () {
     expect(result).to.have.all.keys(
       'amountEarned',
       'amountWagered',
-      'bankrollRqd',
-      'betSpread',
-      'expectedValue',
+      'bankrollMean',
+      'bankrollVariance',
       'handsLost',
       'handsPlayed',
       'handsPushed',
       'handsWon',
-      'houseEdge',
-      'penetration',
-      'spotsPlayed',
-      'stdDeviation',
+      'hoursPlayed',
+      'playerBetSpread',
+      'playerSpots',
       'tableRules',
       'timeElapsed'
     );

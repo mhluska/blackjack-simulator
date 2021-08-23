@@ -106,7 +106,9 @@ export default class Hand extends GameObject {
 
   serialize({ showHidden = false } = {}): string {
     return this.cards
-      .map((card) => (card.visible || showHidden ? rankToString(card.rank) : '?'))
+      .map((card) =>
+        card.visible || showHidden ? rankToString(card.rank) : '?'
+      )
       .join(' ');
   }
 

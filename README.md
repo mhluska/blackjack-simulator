@@ -58,7 +58,7 @@ const settings = {
   debug: false,
 
   // Simulator-only settings:
-  hands: 10 ** 6,
+  hands: 10 ** 7,
   // Can be one of:
   // 'basic-strategy': play perfect basic strategy
   // 'basic-strategy-i18': play perfect basic strategy plus illustrious 18
