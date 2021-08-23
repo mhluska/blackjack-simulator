@@ -1,7 +1,13 @@
+import { cpus } from 'os';
+import { fork } from 'child_process';
+
 import Simulator, {
   SimulatorSettings,
   SimulatorResult,
+  FormattedSimulatorResult,
   SETTINGS_DEFAULTS,
+  formatResult,
+  mergeResults,
 } from '../../simulator';
 
 import { CliSettings, printUsageOptions } from '../utils';
@@ -29,6 +35,75 @@ function parseEnums(
     playerStrategy: parsePlayerStrategy(options.playerStrategy),
     blackjackPayout: parseBlackjackPayout(options.blackjackPayout),
   });
+}
+
+function printResult(result: FormattedSimulatorResult) {
+  const displayOrder: (keyof FormattedSimulatorResult)[] = [
+    'tableRules',
+    'penetration',
+    'betSpread',
+    'spotsPlayed',
+    'bankrollRqd',
+    'expectedValue',
+    'stdDeviation',
+    'houseEdge',
+    'handsPlayed',
+  ];
+
+  const longestLabelLength = Math.max(...keys(result).map((key) => key.length));
+
+  const print = (key: string, value: string | number) => {
+    const label = `${Utils.titleCase(key)}:`;
+    console.log(`${label.padEnd(longestLabelLength + 3, ' ')}${value}`);
+  };
+
+  // Print the most relevant options first (iteration order of a POJO is not
+  // guaranteed).
+  displayOrder.forEach((key) => {
+    print(key, result[key]);
+  });
+
+  entries(result).forEach(([key, value]) => {
+    if (!displayOrder.includes(key)) {
+      print(key, value);
+    }
+  });
+}
+
+// HACK: Distributes hands between cores by changing the CLI arg value.
+function adjustHandsCliArg() {
+  let handsIndex = process.argv.indexOf('--hands');
+
+  if (handsIndex === -1) {
+    process.argv.push('--hands');
+    process.argv.push(SETTINGS_DEFAULTS.hands.toString());
+    handsIndex = process.argv.length - 2;
+  }
+
+  const totalHands =
+    handsIndex === -1
+      ? SETTINGS_DEFAULTS.hands
+      : parseInt(process.argv[handsIndex + 1]);
+
+  const cpuCount = cpus().length;
+  if (totalHands < cpuCount) {
+    return {
+      handsIndex,
+      handsPerCore: 1,
+      cores: totalHands,
+      remainingHands: 0,
+    };
+  }
+
+  const handsPerCore = Math.floor(totalHands / cpuCount);
+  const remainingHands = totalHands - handsPerCore * cpuCount;
+
+  return {
+    handsIndex,
+    handsPerCore,
+    cores: cpuCount,
+    remainingHands,
+  };
 }
 
 // TODO: Move commands out of the /src directory once we move to WebAssembly.
@@ -74,37 +149,36 @@ export default function (
     return;
   }
 
-  const simulator = new Simulator(parseEnums(options));
+  if (process.argv[3] === 'child') {
+    process.send?.(new Simulator(parseEnums(options)).run());
+  } else {
+    const results: SimulatorResult[] = [];
+    const {
+      handsIndex,
+      handsPerCore,
+      remainingHands,
+      cores,
+    } = adjustHandsCliArg();
 
-  const result = simulator.run();
-  const displayOrder: (keyof SimulatorResult)[] = [
-    'tableRules',
-    'penetration',
-    'betSpread',
-    'spotsPlayed',
-    'bankrollRqd',
-    'expectedValue',
-    'stdDeviation',
-    'houseEdge',
-    'handsPlayed',
-  ];
+    for (let i = 0; i < cores; i += 1) {
+      process.argv[handsIndex + 1] = (i === 0
+        ? handsPerCore + remainingHands
+        : handsPerCore
+      ).toString();
 
-  const longestLabelLength = Math.max(...keys(result).map((key) => key.length));
+      const child = fork(process.argv[1], [
+        process.argv[2],
+        'child',
+        ...process.argv.slice(3),
+      ]);
 
-  const print = (key: string, value: string | number) => {
-    const label = `${Utils.titleCase(key)}:`;
-    console.log(`${label.padEnd(longestLabelLength + 3, ' ')}${value}`);
-  };
+      child.on('message', (message) => {
+        results.push(message as SimulatorResult);
 
-  // Print the most relevant options first (iteration order of a POJO is not
-  // guaranteed).
-  displayOrder.forEach((key) => {
-    print(key, result[key]);
-  });
-
-  entries(result).forEach(([key, value]) => {
-    if (!displayOrder.includes(key)) {
-      print(key, value);
+        if (results.length === cores) {
+          printResult(formatResult(mergeResults(results)));
+        }
+      });
     }
-  });
+  }
 }

@@ -1,4 +1,4 @@
-import Game, { GameSettings } from './game';
+import Game from './game';
 import Utils from './utils';
 import {
   DeepPartial,
@@ -20,6 +20,20 @@ export type SimulatorSettings = {
 } & TableRules;
 
 export type SimulatorResult = {
+  amountEarned: number;
+  amountWagered: number;
+  hoursPlayed: number;
+  handsLost: number;
+  handsPlayed: number;
+  handsPushed: number;
+  handsWon: number;
+  bankrollMean: number;
+  bankrollVariance: number;
+  timeElapsed: number;
+  tableRules: TableRules;
+} & Pick<SimulatorSettings, 'playerBetSpread' | 'playerSpots'>;
+
+export type FormattedSimulatorResult = {
   amountEarned: string;
   amountWagered: string;
   bankrollRqd: string;
@@ -42,7 +56,7 @@ function defaultSettings(minimumBet = 10 * 100): SimulatorSettings {
 
   return {
     // Simulator-only settings.
-    hands: 10 ** 6,
+    hands: 10 ** 7,
     playerStrategy: PlayerStrategy.BasicStrategyI18,
 
     // TODO: Allow computing optimal bet spreads.
@@ -82,22 +96,6 @@ function defaultSettings(minimumBet = 10 * 100): SimulatorSettings {
 
 export const SETTINGS_DEFAULTS = defaultSettings();
 
-// TODO: Move to stats utils.
-function sum(data: number[]) {
-  return data.reduce((a, b) => a + b, 0);
-}
-
-// TODO: Move to stats utils.
-function mean(data: number[]) {
-  return sum(data) / data.length;
-}
-
-// TODO: Move to stats utils.
-function variance(data: number[]) {
-  const dataMean = mean(data);
-  return sum(data.map((num) => (num - dataMean) ** 2)) / (data.length - 1);
-}
-
 // Calculates bankroll required given a risk of ruin. Based on equation 9 in
 // Sileo's paper: http://www12.plala.or.jp/doubledown/poker/sileo.pdf
 function bankrollRequired(
@@ -110,17 +108,17 @@ function bankrollRequired(
     : -(variancePerHand / (2 * expectationPerHand)) * Math.log(riskOfRuin);
 }
 
-function formatTableRules(settings: GameSettings) {
+function formatTableRules(tableRules: TableRules) {
   return [
-    `${Utils.formatCents(settings.minimumBet, {
+    `${Utils.formatCents(tableRules.minimumBet, {
       stripZeroCents: true,
-    })}–${Utils.formatCents(settings.maximumBet, { stripZeroCents: true })}`,
-    `${settings.deckCount}D`,
-    blackjackPayoutToString(settings.blackjackPayout),
-    settings.hitSoft17 ? 'H17' : 'S17',
-    settings.allowDoubleAfterSplit ? 'DAS' : 'NDAS',
-    settings.allowLateSurrender ? 'LS' : 'NLS',
-    settings.allowResplitAces ? 'RSA' : 'NRSA',
+    })}–${Utils.formatCents(tableRules.maximumBet, { stripZeroCents: true })}`,
+    `${tableRules.deckCount}D`,
+    blackjackPayoutToString(tableRules.blackjackPayout),
+    tableRules.hitSoft17 ? 'H17' : 'S17',
+    tableRules.allowDoubleAfterSplit ? 'DAS' : 'NDAS',
+    tableRules.allowLateSurrender ? 'LS' : 'NLS',
+    tableRules.allowResplitAces ? 'RSA' : 'NRSA',
   ]
     .filter(Boolean)
     .join(' ');
@@ -152,6 +150,106 @@ function estimateHandsPerHour(playerCount: number): number {
   // value to make TypeScript happy.
   // TODO: Convert playerCount to an enum and this can go away.
   return estimateHandsPerHour(4);
+}
+
+export function mergeResults(results: SimulatorResult[]): SimulatorResult {
+  // Calculates the variance of several datasets (population variance).
+  // See https://stats.stackexchange.com/a/389925
+  const totalHandsPlayed = Utils.arraySum(results.map((r) => r.handsPlayed));
+  const average =
+    Utils.arraySum(results.map((r) => r.handsPlayed * r.bankrollMean)) /
+    totalHandsPlayed;
+  const betweenGroupVariance = Utils.arraySum(
+    results.map((r) => r.handsPlayed * (r.bankrollMean - average) ** 2)
+  );
+  const withinGroupVariance = Utils.arraySum(
+    results.map((r) => r.handsPlayed * r.bankrollVariance)
+  );
+  const bankrollVariance =
+    (betweenGroupVariance + withinGroupVariance) / totalHandsPlayed;
+
+  return results.reduce(
+    (previousValue, currentValue) => ({
+      ...previousValue,
+
+      amountEarned: previousValue.amountEarned + currentValue.amountEarned,
+      amountWagered: previousValue.amountWagered + currentValue.amountWagered,
+      hoursPlayed: previousValue.hoursPlayed + currentValue.hoursPlayed,
+      handsLost: previousValue.handsLost + currentValue.handsLost,
+      handsPlayed: previousValue.handsPlayed + currentValue.handsPlayed,
+      handsPushed: previousValue.handsPushed + currentValue.handsPushed,
+      handsWon: previousValue.handsWon + currentValue.handsWon,
+      timeElapsed: Math.max(
+        previousValue.timeElapsed,
+        currentValue.timeElapsed
+      ),
+    }),
+    {
+      bankrollMean: average,
+      bankrollVariance,
+
+      // Pass along relevant simulator and game settings.
+      playerBetSpread: results[0].playerBetSpread,
+      playerSpots: results[0].playerSpots,
+      tableRules: results[0].tableRules,
+
+      amountEarned: 0,
+      amountWagered: 0,
+      hoursPlayed: 0,
+      handsLost: 0,
+      handsPlayed: 0,
+      handsPushed: 0,
+      handsWon: 0,
+      timeElapsed: 0,
+    }
+  );
+}
+
+export function formatResult(
+  result: SimulatorResult
+): FormattedSimulatorResult {
+  const {
+    amountEarned,
+    amountWagered,
+    bankrollVariance,
+    handsLost,
+    handsPlayed,
+    handsPushed,
+    handsWon,
+    hoursPlayed,
+    playerBetSpread,
+    playerSpots,
+    tableRules,
+    timeElapsed,
+  } = result;
+
+  // TODO: Make RoR configurable.
+  const riskOfRuin = 0.05;
+  const formattedBankrollRequired = Utils.formatCents(
+    bankrollRequired(riskOfRuin, bankrollVariance, amountEarned / handsPlayed)
+  );
+
+  return {
+    amountEarned: Utils.formatCents(amountEarned),
+    amountWagered: Utils.formatCents(amountWagered),
+    bankrollRqd: `${formattedBankrollRequired} (${Utils.formatPercent(
+      riskOfRuin
+    )} RoR)`,
+    betSpread: Utils.arrayToRangeString(playerBetSpread, (amount) =>
+      Utils.formatCents(amount, { stripZeroCents: true })
+    ),
+    expectedValue: `${Utils.formatCents(amountEarned / hoursPlayed)}/hour`,
+    handsLost: Utils.abbreviateNumber(handsLost),
+    handsPlayed: Utils.abbreviateNumber(handsPlayed),
+    handsPushed: Utils.abbreviateNumber(handsPushed),
+    handsWon: Utils.abbreviateNumber(handsWon),
+    houseEdge: Utils.formatPercent(-amountEarned / amountWagered),
+    penetration: Utils.formatPercent(tableRules.penetration),
+    spotsPlayed: Utils.arrayToRangeString(playerSpots),
+    stdDeviation: Utils.formatCents(Math.sqrt(bankrollVariance)),
+    tableRules: formatTableRules(tableRules),
+    timeElapsed: Utils.formatTime(timeElapsed),
+  };
 }
 
 export default class Simulator {
@@ -192,8 +290,8 @@ export default class Simulator {
 
     const bankrollStart = game.player.balance;
 
-    let bankrollChangesMean = 0;
-    let bankrollChangesVariance = 0;
+    let bankrollMean = 0;
+    let bankrollVariance = 0;
     let bankrollValues = 1;
 
     let handsWon = 0;
@@ -218,16 +316,15 @@ export default class Simulator {
       // TODO: Update this value per `handWinner`. Currently one change can
       // correspond to multiple hands due to splits.
       const bankrollChangeValue = game.player.balance - prevBalance;
-      const prevBankrollChangesMean = bankrollChangesMean;
+      const prevBankrollMean = bankrollMean;
       bankrollValues += 1;
-      bankrollChangesMean =
-        bankrollChangesMean +
-        (bankrollChangeValue - bankrollChangesMean) / bankrollValues;
+      bankrollMean =
+        bankrollMean + (bankrollChangeValue - bankrollMean) / bankrollValues;
 
-      bankrollChangesVariance =
-        bankrollChangesVariance +
-        (bankrollChangeValue - prevBankrollChangesMean) *
-          (bankrollChangeValue - bankrollChangesMean);
+      bankrollVariance =
+        bankrollVariance +
+        (bankrollChangeValue - prevBankrollMean) *
+          (bankrollChangeValue - bankrollMean);
 
       for (const result of game.player.handWinner.values()) {
         handsPlayed += 1;
@@ -247,44 +344,40 @@ export default class Simulator {
       }
     }
 
-    bankrollChangesVariance /= bankrollValues - 1;
+    bankrollVariance /= bankrollValues - 1;
 
     const amountEarned = game.player.balance - bankrollStart;
-
     const handsPerHour = estimateHandsPerHour(this.settings.playerCount);
     const hoursPlayed = handsPlayed / handsPerHour;
 
-    // TODO: Make RoR configurable.
-    const riskOfRuin = 0.05;
-    const formattedBankrollRequired = Utils.formatCents(
-      bankrollRequired(
-        riskOfRuin,
-        bankrollChangesVariance,
-        amountEarned / handsPlayed
-      )
-    );
-
     return {
-      amountEarned: Utils.formatCents(amountEarned),
-      amountWagered: Utils.formatCents(amountWagered),
-      bankrollRqd: `${formattedBankrollRequired} (${Utils.formatPercent(
-        riskOfRuin
-      )} RoR)`,
-      betSpread: Utils.arrayToRangeString(
-        this.settings.playerBetSpread,
-        (amount) => Utils.formatCents(amount, { stripZeroCents: true })
-      ),
-      expectedValue: `${Utils.formatCents(amountEarned / hoursPlayed)}/hour`,
-      handsLost: Utils.abbreviateNumber(handsLost),
-      handsPlayed: Utils.abbreviateNumber(handsPlayed),
-      handsPushed: Utils.abbreviateNumber(handsPushed),
-      handsWon: Utils.abbreviateNumber(handsWon),
-      houseEdge: Utils.formatPercent(-amountEarned / amountWagered),
-      penetration: Utils.formatPercent(this.settings.penetration),
-      spotsPlayed: Utils.arrayToRangeString(this.settings.playerSpots),
-      stdDeviation: Utils.formatCents(Math.sqrt(bankrollChangesVariance)),
-      tableRules: formatTableRules(game.settings),
-      timeElapsed: Utils.formatTime(Date.now() - startTime),
+      amountEarned,
+      amountWagered,
+      bankrollMean,
+      bankrollVariance,
+      handsLost,
+      handsPlayed,
+      handsPushed,
+      handsWon,
+      hoursPlayed,
+      timeElapsed: Date.now() - startTime,
+
+      playerBetSpread: this.settings.playerBetSpread,
+      playerSpots: this.settings.playerSpots,
+
+      tableRules: {
+        allowDoubleAfterSplit: game.settings.allowDoubleAfterSplit,
+        allowLateSurrender: game.settings.allowLateSurrender,
+        allowResplitAces: game.settings.allowResplitAces,
+        blackjackPayout: game.settings.blackjackPayout,
+        deckCount: game.settings.deckCount,
+        hitSoft17: game.settings.hitSoft17,
+        maxHandsAllowed: game.settings.maxHandsAllowed,
+        maximumBet: game.settings.maximumBet,
+        minimumBet: game.settings.minimumBet,
+        penetration: game.settings.penetration,
+        playerCount: game.settings.playerCount,
+      },
     };
   }
 }

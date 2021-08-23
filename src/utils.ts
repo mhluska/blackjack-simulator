@@ -4,8 +4,23 @@ import { SimpleObject, DeepPartial } from './types';
 type Range<T> = { start: number; end: number; value: T };
 
 export default class Utils {
-  static arraySum(array: number[]): number {
-    return array.reduce((acc, current) => acc + current, 0);
+  // TODO: Move to stats utils.
+  static arraySum(data: number[]): number {
+    return data.reduce((acc, current) => acc + current, 0);
+  }
+
+  // TODO: Move to stats utils.
+  static arrayMean(data: number[]): number {
+    return this.arraySum(data) / data.length;
+  }
+
+  // TODO: Move to stats utils.
+  static arrayVariance(data: number[]): number {
+    const dataMean = this.arrayMean(data);
+    return (
+      this.arraySum(data.map((num) => (num - dataMean) ** 2)) /
+      (data.length - 1)
+    );
   }
 
   // Fisher–Yates shuffle algorithm.
