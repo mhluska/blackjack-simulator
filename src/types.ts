@@ -205,7 +205,9 @@ export function chartMoveToCorrectMove(chartMove: ChartMove): Move {
 }
 
 // TODO: Consolidate types so we can remove this converter functions?
-export function actionDataKeyToCorrectMove(actionDataKey: string): Move | undefined {
+export function actionDataKeyToCorrectMove(
+  actionDataKey: string
+): Move | undefined {
   if (!actionDataKey) {
     return;
   }

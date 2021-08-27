@@ -7,7 +7,11 @@ export default class GameObject extends EventEmitter {
 
   emitChange(): void {
     if (!EventEmitter.disableEvents) {
-      this.emit(Event.Change, (this.constructor as typeof GameObject).entityName, this.attributes());
+      this.emit(
+        Event.Change,
+        (this.constructor as typeof GameObject).entityName,
+        this.attributes()
+      );
     }
   }
 
