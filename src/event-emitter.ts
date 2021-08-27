@@ -2,7 +2,7 @@
 // eslint-disable-next-line @typescript-eslint/no-explicit-any
 type Listener = (...args: any[]) => void;
 
-export enum Events {
+export enum Event {
   Change = 0,
   HandWinner = 1,
   CreateRecord = 2,
@@ -13,13 +13,13 @@ export enum Events {
 export default class EventEmitter {
   static disableEvents: boolean;
 
-  events: Map<Events, Listener[]>;
+  events: Map<Event, Listener[]>;
 
   constructor() {
     this.events = new Map();
   }
 
-  on(event: Events, listener: Listener): void {
+  on(event: Event, listener: Listener): void {
     if (EventEmitter.disableEvents) {
       return;
     }
@@ -36,7 +36,7 @@ export default class EventEmitter {
     events.push(listener);
   }
 
-  removeListener(event: Events, listener: Listener): void {
+  removeListener(event: Event, listener: Listener): void {
     if (EventEmitter.disableEvents) {
       return;
     }
@@ -54,7 +54,7 @@ export default class EventEmitter {
     events.splice(index, 1);
   }
 
-  emit(event: Events, ...args: unknown[]): void {
+  emit(event: Event, ...args: unknown[]): void {
     if (EventEmitter.disableEvents) {
       return;
     }

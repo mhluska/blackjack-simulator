@@ -114,9 +114,10 @@ Result contains the following data:
 
 ```js
 import {
+  Event,
   Game,
-  PlayerInputReader,
   GameStep,
+  PlayerInputReader,
 } from '@blackjacktrainer/blackjack-simulator';
 
 // Default settings:
@@ -165,18 +166,18 @@ const state = {};
 // - dealer
 // - player
 // - handWinner
-game.on('change', (name, value) => {
+game.on(Event.Change, (name, value) => {
   state[name] = value;
 });
 
-game.on('shuffle', () => {
+game.on(Event.Shuffle, () => {
   console.log('End of shoe, cards shuffled!');
 });
 
 // Emitted when the game wants to save optional game statistics.
 // `entityName` can be one of `hand-result` or `move`.
 // `data` is a plain object with values to save to the backend.
-game.on('create-record', (entityName, data) => {
+game.on(Event.CreateRecord, (entityName, data) => {
   fetch(`/api/v1/${entityName}`, {
     method: 'POST',
     body: JSON.serialize(data),

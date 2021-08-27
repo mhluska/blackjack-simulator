@@ -1,5 +1,5 @@
 import GameObject from './game-object';
-import { Events } from './event-emitter';
+import { Event } from './event-emitter';
 import Utils from './utils';
 import Player from './player';
 import Card, { CardAttributes } from './card';
@@ -49,7 +49,7 @@ export default class Hand extends GameObject {
   }
 
   takeCard(card: Card, { prepend = false } = {}): void {
-    card.on(Events.Change, () => this.emitChange());
+    card.on(Event.Change, () => this.emitChange());
 
     if (prepend) {
       this.cards.unshift(card);

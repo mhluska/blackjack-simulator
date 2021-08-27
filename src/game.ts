@@ -1,4 +1,4 @@
-import EventEmitter, { Events } from './event-emitter';
+import EventEmitter, { Event } from './event-emitter';
 import Utils from './utils';
 import Shoe, { OutOfCardsError } from './shoe';
 import Dealer from './dealer';
@@ -152,8 +152,8 @@ export default class Game extends EventEmitter {
     this.playersLeft = this.players.slice(reversedTablePosition);
     this.playersRight = this.players.slice(0, reversedTablePosition - 1);
 
-    this.player.on(Events.HandWinner, (hand, winner) => {
-      this.emit(Events.CreateRecord, 'hand-result', {
+    this.player.on(Event.HandWinner, (hand, winner) => {
+      this.emit(Event.CreateRecord, 'hand-result', {
         createdAt: Date.now(),
         gameId: this.gameId,
         dealerHand: this.dealer.firstHand.serialize({ showHidden: true }),
@@ -187,9 +187,9 @@ export default class Game extends EventEmitter {
             }
 
             if (typeof value === 'object' && value.attributes) {
-              this.emit(Events.Change, key, value.attributes());
+              this.emit(Event.Change, key, value.attributes());
             } else {
-              this.emit(Events.Change, key, value);
+              this.emit(Event.Change, key, value);
             }
 
             return true;
@@ -199,7 +199,7 @@ export default class Game extends EventEmitter {
 
   resetState(): void {
     this.setupState();
-    this.emit(Events.ResetState);
+    this.emit(Event.ResetState);
   }
 
   allPlayerHandsFinished(): boolean {
@@ -209,8 +209,8 @@ export default class Game extends EventEmitter {
   }
 
   chainEmitChange<T extends EventEmitter>(object: T): T {
-    object.on(Events.Change, (name: string, value: SimpleObject) =>
-      this.emit(Events.Change, name, value)
+    object.on(Event.Change, (name: string, value: SimpleObject) =>
+      this.emit(Event.Change, name, value)
     );
     return object;
   }
@@ -228,7 +228,7 @@ export default class Game extends EventEmitter {
 
     this.state.sessionMovesTotal += 1;
 
-    this.emit(Events.CreateRecord, 'move', {
+    this.emit(Event.CreateRecord, 'move', {
       createdAt: Date.now(),
       gameId: this.gameId,
       dealerHand: this.dealer.firstHand.serialize({ showHidden: true }),
@@ -667,7 +667,7 @@ export default class Game extends EventEmitter {
         console.log('Cut card reached');
       }
       this.shoe.resetCards();
-      this.emit(Events.Shuffle);
+      this.emit(Event.Shuffle);
     }
 
     if (this.settings.debug) {
