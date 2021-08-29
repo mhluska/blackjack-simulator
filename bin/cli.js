@@ -64,7 +64,7 @@ function parseArgs(args) {
     const arg = camelize(args[i]);
     const value = parseArgValue(args[i + 1]);
 
-    if (!value || value.length === 0) {
+    if (value === null || typeof value === 'undefined' || value.length === 0) {
       throw new Error(`Invalid value for arg ${args[i]}: ${value}`);
     }
 
