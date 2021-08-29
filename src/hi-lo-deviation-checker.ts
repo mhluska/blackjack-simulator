@@ -16,44 +16,44 @@ export const illustrious18Deviations = new Map<number, Map<number, Illustrious18
   ]),
   ],
   [9,  new Map([
-    [2,  { correctMove: Move.Hit,          index: ['<',  1] }],
-    [7,  { correctMove: Move.Double,       index: ['>=', 3] }],
+    [2,  { correctMove: Move.Hit,    index: ['<',  1] }],
+    [7,  { correctMove: Move.Double, index: ['>=', 3] }],
   ]),
   ],
   [10, new Map([
-    [10, { correctMove: Move.Double,       index: ['>=', 4] }],
-    [11, { correctMove: Move.Double,       index: ['>=', 4] }],
+    [10, { correctMove: Move.Double, index: ['>=', 4] }],
+    [11, { correctMove: Move.Double, index: ['>=', 4] }],
   ]),
   ],
   [11, new Map([
-    [11, { correctMove: Move.Hit,          index: ['<',  1] }],
+    [11, { correctMove: Move.Hit,    index: ['<',  1] }],
   ])
   ],
   [12, new Map([
-    [2,  { correctMove: Move.Stand,        index: ['>=', 3] }],
-    [3,  { correctMove: Move.Stand,        index: ['>=', 2] }],
-    [4,  { correctMove: Move.Hit,          index: ['<',  0] }],
-    [5,  { correctMove: Move.Hit,          index: ['<', -2] }],
-    [6,  { correctMove: Move.Hit,          index: ['<', -1] }],
+    [2,  { correctMove: Move.Stand,  index: ['>=', 3] }],
+    [3,  { correctMove: Move.Stand,  index: ['>=', 2] }],
+    [4,  { correctMove: Move.Hit,    index: ['<',  0] }],
+    [5,  { correctMove: Move.Hit,    index: ['<', -2] }],
+    [6,  { correctMove: Move.Hit,    index: ['<', -1] }],
   ]),
   ],
   [13, new Map([
-    [2,  { correctMove: Move.Hit,          index: ['<', -1] }],
-    [3,  { correctMove: Move.Hit,          index: ['<', -2] }],
+    [2,  { correctMove: Move.Hit,    index: ['<', -1] }],
+    [3,  { correctMove: Move.Hit,    index: ['<', -2] }],
   ]),
   ],
   [15, new Map([
-    [10, { correctMove: Move.Stand,        index: ['>=', 4] }]
+    [10, { correctMove: Move.Stand,  index: ['>=', 4] }]
   ])
   ],
   [16, new Map([
-    [9,  { correctMove: Move.Stand,        index: ['>=', 5] }],
-    [10, { correctMove: Move.Stand,        index: ['>=', 0] }],
+    [9,  { correctMove: Move.Stand,  index: ['>=', 5] }],
+    [10, { correctMove: Move.Stand,  index: ['>=', 0] }],
   ]),
   ],
   [20, new Map([
-    [5,  { correctMove: Move.Split,        index: ['>=', 5] }],
-    [6,  { correctMove: Move.Split,        index: ['>=', 4] }],
+    [5,  { correctMove: Move.Split,  index: ['>=', 5] }],
+    [6,  { correctMove: Move.Split,  index: ['>=', 4] }],
   ]),
   ],
 ]);
