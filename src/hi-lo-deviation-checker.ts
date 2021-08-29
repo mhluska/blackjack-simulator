@@ -59,17 +59,18 @@ export const illustrious18Deviations = new Map<number, Map<number, Illustrious18
 ]);
 
 export default class HiLoDeviationChecker {
-  static _suggest(
-    game: Game,
-    hand: Hand
-  ): {
-    correctMove: Move | false;
-    deviation?: Illustrious18Deviation;
-  } {
+  static _suggest(game: Game, hand: Hand): Illustrious18Deviation | undefined {
+    if (
+      !game.settings.checkDeviations &&
+      game.settings.mode !== GameMode.Illustrious18
+    ) {
+      return;
+    }
+
     const trueCount = game.shoe.hiLoTrueCount;
 
     if (!game.dealer.upcard || hand.isSoft) {
-      return { correctMove: false };
+      return;
     }
 
     const playerTotal =
@@ -87,34 +88,28 @@ export default class HiLoDeviationChecker {
       (!hand.allowSplit && deviation.correctMove === Move.Split) ||
       !Utils.compareRange(trueCount, deviation.index)
     ) {
-      return { correctMove: false };
+      return;
     }
 
-    return { correctMove: deviation.correctMove, deviation };
+    return deviation;
   }
 
-  static suggest(game: Game, hand: Hand): Move | false {
-    return this._suggest(game, hand).correctMove;
+  static suggest(game: Game, hand: Hand): Move | undefined {
+    return this._suggest(game, hand)?.correctMove;
   }
 
   // Returns true if an Illustrious 18 deviation was followed correctly.
   // Returns false if a deviation was not present.
   // Returns an object with a `correctMove` code and a `hint` otherwise.
   static check(game: Game, hand: Hand, input: Move): CheckResult | boolean {
-    if (
-      !game.settings.checkDeviations &&
-      game.settings.mode !== GameMode.Illustrious18
-    ) {
+    const deviation = this._suggest(game, hand);
+
+    if (!deviation) {
       return false;
     }
 
-    const { correctMove, deviation } = this._suggest(game, hand);
-
-    if (!correctMove) {
-      return true;
-    }
-
     let hint;
+    const { correctMove, index } = deviation;
 
     if (
       correctMove === (Move.AskInsurance as Move) &&
@@ -139,10 +134,11 @@ export default class HiLoDeviationChecker {
       hint = 'split';
     }
 
-    let hintMessage = `Illustrious 18 deviation: last play should have been ${hint}`;
-    if (deviation) {
-      hintMessage += ' for true counts ${deviation.index}';
+    if (!hint) {
+      return true;
     }
+
+    const hintMessage = `Illustrious 18 deviation: last play should have been ${hint} for true counts ${index[0]} ${index[1]}`;
 
     return {
       code: correctMove,

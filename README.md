@@ -34,6 +34,12 @@ npm install -g @blackjacktrainer/blackjack-simulator
 blackjack-simulator simulate
 ```
 
+Override the number of CPU cores used:
+
+```sh
+CORES=1 blackjack-simulator simulate
+```
+
 ### Game mode
 
 ```sh

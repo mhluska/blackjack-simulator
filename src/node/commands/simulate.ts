@@ -85,7 +85,11 @@ function adjustHandsCliArg() {
       ? SETTINGS_DEFAULTS.hands
       : parseInt(process.argv[handsIndex + 1]);
 
-  const cpuCount = cpus().length;
+  const maxCores = cpus().length;
+  const cpuCount = process.env.CORES
+    ? Math.min(parseInt(process.env.CORES), maxCores)
+    : maxCores;
+
   if (totalHands < cpuCount) {
     return {
       handsIndex,
@@ -104,6 +108,47 @@ function adjustHandsCliArg() {
     cores: cpuCount,
     remainingHands,
   };
+}
+
+function getCoresResults(
+  options: Partial<CliSimulatorSettings & CliSettings>
+): Promise<SimulatorResult[]> {
+  const {
+    handsIndex,
+    handsPerCore,
+    remainingHands,
+    cores,
+  } = adjustHandsCliArg();
+  const results: SimulatorResult[] = [];
+
+  // Avoid spawning child processes if only one core is available.
+  if (cores === 1) {
+    results.push(new Simulator(parseEnums(options)).run());
+    return Promise.resolve(results);
+  }
+
+  return new Promise((resolve) => {
+    for (let i = 0; i < cores; i += 1) {
+      process.argv[handsIndex + 1] = (i === 0
+        ? handsPerCore + remainingHands
+        : handsPerCore
+      ).toString();
+
+      const child = fork(process.argv[1], [
+        process.argv[2],
+        'child',
+        ...process.argv.slice(3),
+      ]);
+
+      child.on('message', (message) => {
+        results.push(message as SimulatorResult);
+
+        if (results.length === cores) {
+          resolve(results);
+        }
+      });
+    }
+  });
 }
 
 // TODO: Move commands out of the /src directory once we move to WebAssembly.
@@ -152,33 +197,8 @@ export default function (
   if (process.argv[3] === 'child') {
     process.send?.(new Simulator(parseEnums(options)).run());
   } else {
-    const results: SimulatorResult[] = [];
-    const {
-      handsIndex,
-      handsPerCore,
-      remainingHands,
-      cores,
-    } = adjustHandsCliArg();
-
-    for (let i = 0; i < cores; i += 1) {
-      process.argv[handsIndex + 1] = (i === 0
-        ? handsPerCore + remainingHands
-        : handsPerCore
-      ).toString();
-
-      const child = fork(process.argv[1], [
-        process.argv[2],
-        'child',
-        ...process.argv.slice(3),
-      ]);
-
-      child.on('message', (message) => {
-        results.push(message as SimulatorResult);
-
-        if (results.length === cores) {
-          printResult(formatResult(mergeResults(results)));
-        }
-      });
-    }
+    getCoresResults(options).then((results) => {
+      printResult(formatResult(mergeResults(results)));
+    });
   }
 }

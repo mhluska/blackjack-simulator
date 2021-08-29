@@ -1,6 +1,12 @@
 import * as chai from 'chai';
+import * as sinonChai from 'sinon-chai';
+import * as sinon from 'sinon';
+
+import BasicStrategyChecker from '../src/basic-strategy-checker';
+import HiLoDeviationChecker from '../src/hi-lo-deviation-checker';
 import { Event } from '../src/event-emitter';
 import Game, { GameSettings } from '../src/game';
+import Hand from '../src/Hand';
 import Card from '../src/card';
 import Utils from '../src/utils';
 import {
@@ -10,7 +16,11 @@ import {
   GameStep,
   Move,
   HandWinner,
+  CheckResult,
 } from '../src/types';
+
+const expect = chai.expect;
+chai.use(sinonChai);
 
 type GameSetupOptions = {
   settings: DeepPartial<GameSettings>;
@@ -69,6 +79,8 @@ function runGame(
     input?: Partial<{ [key in GameStep]: Move }>[];
   } = {}
 ) {
+  game.betAmount = 10 * 100;
+
   let callCount = 0;
 
   do {
@@ -91,8 +103,6 @@ function runGame(
   } while (game.state.step !== GameStep.Start);
 }
 
-const expect = chai.expect;
-
 describe('Game', function () {
   let game: Game;
 
@@ -101,8 +111,6 @@ describe('Game', function () {
   });
 
   describe('#run()', function () {
-    const betAmount = 10 * 100;
-
     context('when the shoe needs to be reset', function () {
       let cardsBefore: number;
 
@@ -147,8 +155,6 @@ describe('Game', function () {
       before(function () {
         playerBalanceBefore = game.player.balance;
 
-        game.betAmount = betAmount;
-
         runGame(game, {
           input: [
             {
@@ -160,7 +166,7 @@ describe('Game', function () {
 
       it('should increase the player balance', function () {
         expect(game.player.balance).to.equal(
-          playerBalanceBefore + betAmount * (3 / 2)
+          playerBalanceBefore + game.betAmount * (3 / 2)
         );
       });
     });
@@ -176,7 +182,6 @@ describe('Game', function () {
           playerCards: [Rank.Two],
         });
 
-        game.betAmount = betAmount;
         runGame(game, {
           repeatPlayerInput: true,
           input: [
@@ -203,8 +208,6 @@ describe('Game', function () {
             dealerCards: [Rank.Queen, Rank.Jack],
             playerCards: [Rank.Six, Rank.Jack],
           });
-
-          game.betAmount = betAmount;
 
           runGame(game, {
             input: [
@@ -238,8 +241,6 @@ describe('Game', function () {
             playerCards: [Rank.Six, Rank.Jack, Rank.Two],
           });
 
-          game.betAmount = betAmount;
-
           runGame(game, {
             input: [
               {
@@ -271,8 +272,6 @@ describe('Game', function () {
           playerCards: [Rank.Ace, Rank.Ace, Rank.Ace, Rank.Ace],
         });
 
-        game.betAmount = betAmount;
-
         runGame(game, {
           input: [
             {
@@ -297,8 +296,6 @@ describe('Game', function () {
           playerCards: [Rank.Five, Rank.Five],
         });
 
-        game.betAmount = betAmount;
-
         runGame(game, {
           input: [
             {
@@ -312,6 +309,31 @@ describe('Game', function () {
         expect(game.state.sessionMovesTotal).to.equal(1);
         expect(game.state.sessionMovesCorrect).to.equal(0);
         expect(game.state.playCorrection).to.include('double');
+      });
+    });
+
+    context('when a typical hand is played', function () {
+      before(function () {
+        sinon.spy(BasicStrategyChecker, 'check');
+        sinon.spy(HiLoDeviationChecker, 'check');
+
+        game = setupGame({
+          dealerCards: [Rank.Nine],
+          playerCards: [Rank.Five, Rank.Three],
+        });
+
+        runGame(game, {
+          input: [
+            {
+              [GameStep.WaitingForPlayInput]: Move.Hit,
+            },
+          ],
+        });
+      });
+
+      it('checked deviations and basic strategy', function () {
+        expect(BasicStrategyChecker.check).to.have.been.calledOnce;
+        expect(HiLoDeviationChecker.check).to.have.been.calledOnce;
       });
     });
   });
