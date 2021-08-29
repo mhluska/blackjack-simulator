@@ -159,7 +159,7 @@ function getCoresResults(
 export default function (
   options: Partial<CliSimulatorSettings & CliSettings>
 ): void {
-  if (options.help) {
+  if (options.help || options.h) {
     console.log('Usage: simulator simulate [options]');
     console.log();
     console.log('Options:');

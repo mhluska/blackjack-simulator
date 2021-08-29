@@ -1,5 +1,7 @@
 #!/usr/bin/env node
 
+const fs = require('fs');
+
 // See https://stackoverflow.com/a/52551910/659910
 function camelize(str) {
   return str
@@ -78,6 +80,11 @@ function parseArgs(args) {
   return options;
 }
 
+if (process.argv.includes('--version') || process.argv.includes('-v')) {
+  console.log(JSON.parse(fs.readFileSync('package.json', 'utf8')).version);
+  return;
+}
+
 const commandNames = ['simulate', 'game'];
 
 if (!commandNames.includes(process.argv[2])) {
@@ -90,6 +97,7 @@ if (!commandNames.includes(process.argv[2])) {
 }
 
 const options = parseArgs(process.argv.slice(3));
+
 // eslint-disable-next-line @typescript-eslint/no-var-requires
 const command = require(`../dist/${process.argv[2]}`).default;
 

@@ -2,6 +2,7 @@ import { keys, SimpleObject } from '../types';
 
 export type CliSettings = {
   help: boolean;
+  h: boolean;
 };
 
 export function kebabCase(str: string): string {
