@@ -5,7 +5,7 @@ import GameObject from './game-object';
 import BasicStrategyChecker from './basic-strategy-checker';
 import ExtendableError from './extendable-error';
 import { illustrious18Deviations } from './hi-lo-deviation-checker';
-import { GameSettings } from './game';
+import { settings } from './game';
 import {
   Rank,
   ChartType,
@@ -30,13 +30,11 @@ export default class Shoe extends GameObject {
   cards!: Card[];
   currentCardIndex!: number;
   hiLoRunningCount!: number;
-  settings: GameSettings;
 
-  constructor({ settings }: { settings: GameSettings }) {
+  constructor() {
     super();
 
-    this.settings = settings;
-    this.setCards(this._setupCards(settings.deckCount));
+    this.setCards(this._setupCards());
     this.shuffle();
   }
 
@@ -62,19 +60,19 @@ export default class Shoe extends GameObject {
   shuffle(): void {
     Utils.arrayShuffle(this.cards);
 
-    if (this.mode === GameMode.Pairs) {
+    if (settings.mode === GameMode.Pairs) {
       this._setupPairsMode();
     }
 
-    if (this.mode === GameMode.Uncommon) {
+    if (settings.mode === GameMode.Uncommon) {
       this._setupUncommonMode();
     }
 
-    if (this.mode === GameMode.Illustrious18) {
+    if (settings.mode === GameMode.Illustrious18) {
       this._setupIllustrious18Mode();
     }
 
-    if (this.debug) {
+    if (settings.debug) {
       console.log('Shoe shuffled');
     }
   }
@@ -134,24 +132,16 @@ export default class Shoe extends GameObject {
     return this.currentCardIndex + 1;
   }
 
-  get mode(): GameSettings['mode'] {
-    return this.settings.mode;
-  }
-
-  get debug(): GameSettings['debug'] {
-    return this.settings.debug;
-  }
-
   get maxCards(): number {
-    return this.settings.deckCount * 52;
+    return settings.deckCount * 52;
   }
 
   get needsReset(): boolean {
-    if (this.mode !== GameMode.Default) {
+    if (settings.mode !== GameMode.Default) {
       return true;
     }
 
-    return this.cardCount / this.maxCards < 1 - this.settings.penetration;
+    return this.cardCount / this.maxCards < 1 - settings.penetration;
   }
 
   get cardsRemainingRatio(): number {
@@ -163,16 +153,16 @@ export default class Shoe extends GameObject {
   }
 
   get decksRemaining(): number {
-    return this.cardsRemainingRatio * this.settings.deckCount;
+    return this.cardsRemainingRatio * settings.deckCount;
   }
 
   get hiLoTrueCount(): number {
     return this.hiLoRunningCount / this.decksRemaining;
   }
 
-  _setupCards(deckCount: GameSettings['deckCount']): Card[] {
+  _setupCards(): Card[] {
     const decks = [];
-    for (let i = 0; i < deckCount; i += 1) {
+    for (let i = 0; i < settings.deckCount; i += 1) {
       decks.push(new Deck(this));
     }
 
@@ -246,7 +236,7 @@ export default class Shoe extends GameObject {
 
   _setupUncommonMode(): void {
     const [chartType, chart] = Utils.arraySample(
-      Array.from(BasicStrategyChecker.uncommonHands(this.settings).entries())
+      Array.from(BasicStrategyChecker.uncommonHands(settings).entries())
     );
 
     const [playerTotal, dealerUpcards] = Utils.arraySample(
@@ -305,7 +295,7 @@ export default class Shoe extends GameObject {
     // are about to be drawn by the dealer.
     let runningCount =
       deviation.index[1] *
-        (((this.maxCards - 3) * this.settings.deckCount) / this.maxCards) -
+        (((this.maxCards - 3) * settings.deckCount) / this.maxCards) -
       i1 -
       i2 -
       i3;

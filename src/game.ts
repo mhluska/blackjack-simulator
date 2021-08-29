@@ -41,39 +41,43 @@ type GameState = {
   focusedHandIndex: number;
 };
 
-const MINIMUM_BET = 10 * 100;
+function defaultSettings(minimumBet = 10 * 100): GameSettings {
+  return {
+    autoDeclineInsurance: false,
+    disableEvents: false,
+    checkDeviations: false,
 
-export const SETTINGS_DEFAULTS: GameSettings = {
-  autoDeclineInsurance: false,
-  disableEvents: false,
-  checkDeviations: false,
+    // Can be one of 'GameMode.Default', 'GameMode.Pairs', 'GameMode.Uncommon',
+    // 'GameMode.Illustrious18'. If the mode is set to 'GameMode.Illustrious18',
+    // `checkDeviations` will be forced to true.
+    mode: GameMode.Default,
+    debug: false,
 
-  // Can be one of 'GameMode.Default', 'GameMode.Pairs', 'GameMode.Uncommon',
-  // 'GameMode.Illustrious18'. If the mode is set to 'GameMode.Illustrious18',
-  // `checkDeviations` will be forced to true.
-  mode: GameMode.Default,
-  debug: false,
+    playerBankroll: minimumBet * 1000 * 1000,
+    playerTablePosition: 1,
+    playerStrategyOverride: {},
 
-  playerBankroll: MINIMUM_BET * 1000 * 1000,
-  playerTablePosition: 1,
-  playerStrategyOverride: {},
+    // Table rules
+    allowDoubleAfterSplit: true,
+    allowLateSurrender: false,
+    allowResplitAces: false,
+    blackjackPayout: BlackjackPayout.ThreeToTwo,
+    deckCount: 2,
+    hitSoft17: true,
+    maxHandsAllowed: 4,
+    maximumBet: minimumBet * 100,
+    minimumBet,
+    playerCount: 1,
+    penetration: 0.75,
+  };
+}
 
-  // Table rules
-  allowDoubleAfterSplit: true,
-  allowLateSurrender: false,
-  allowResplitAces: false,
-  blackjackPayout: BlackjackPayout.ThreeToTwo,
-  deckCount: 2,
-  hitSoft17: true,
-  maxHandsAllowed: 4,
-  maximumBet: MINIMUM_BET * 100,
-  minimumBet: MINIMUM_BET,
-  playerCount: 1,
-  penetration: 0.75,
-};
+export const SETTINGS_DEFAULTS = defaultSettings();
+export const settings = defaultSettings();
 
 export default class Game extends EventEmitter {
   _state!: GameState;
+  settings: GameSettings;
   betAmount!: number;
   spotCount!: number;
   dealer!: Dealer;
@@ -82,18 +86,17 @@ export default class Game extends EventEmitter {
   players!: Player[];
   playersLeft!: Player[];
   playersRight!: Player[];
-  settings: GameSettings;
   shoe!: Shoe;
   state!: GameState;
 
-  constructor(settings: DeepPartial<GameSettings> = SETTINGS_DEFAULTS) {
+  constructor(gameSettings: DeepPartial<GameSettings> = SETTINGS_DEFAULTS) {
     super();
 
-    this.settings = Utils.mergeDeep(SETTINGS_DEFAULTS, settings);
-    this.betAmount = this.settings.minimumBet;
+    this.settings = this.updateSettings(gameSettings);
+    this.betAmount = settings.minimumBet;
     this.spotCount = 1;
 
-    if (this.settings.disableEvents) {
+    if (settings.disableEvents) {
       EventEmitter.disableEvents = true;
     }
 
@@ -104,8 +107,9 @@ export default class Game extends EventEmitter {
     return this.player.getHand(this.state.focusedHandIndex);
   }
 
-  updateSettings(settings: GameSettings): void {
-    this.settings = settings;
+  updateSettings(gameSettings: DeepPartial<GameSettings>): GameSettings {
+    Utils.mergeDeep(settings, gameSettings);
+    return settings;
   }
 
   setupState(): void {
@@ -113,28 +117,28 @@ export default class Game extends EventEmitter {
     // wrong moves in the database.
     this.gameId = Utils.randomId();
 
-    this.shoe = this.chainEmitChange(new Shoe({ settings: this.settings }));
+    this.shoe = this.chainEmitChange(new Shoe());
     this.dealer = this.chainEmitChange(
       new Dealer({
-        handsMax: this.settings.maxHandsAllowed,
-        debug: this.settings.debug,
+        handsMax: settings.maxHandsAllowed,
+        debug: settings.debug,
         strategy: PlayerStrategy.Dealer,
       })
     );
 
     this.players = Array.from(
-      { length: this.settings.playerCount },
+      { length: settings.playerCount },
       (_item, index) =>
         this.chainEmitChange(
           new Player({
-            handsMax: this.settings.maxHandsAllowed,
-            balance: this.settings.playerBankroll,
-            blackjackPayout: this.settings.blackjackPayout,
-            debug: this.settings.debug,
+            handsMax: settings.maxHandsAllowed,
+            balance: settings.playerBankroll,
+            blackjackPayout: settings.blackjackPayout,
+            debug: settings.debug,
             // TODO: Make this configurable for each player.
             strategy:
-              this.settings.playerStrategyOverride[index + 1] ??
-              (index === this.settings.playerTablePosition - 1
+              settings.playerStrategyOverride[index + 1] ??
+              (index === settings.playerTablePosition - 1
                 ? PlayerStrategy.UserInput
                 : PlayerStrategy.BasicStrategy),
           })
@@ -146,7 +150,7 @@ export default class Game extends EventEmitter {
     this.players.reverse();
 
     const reversedTablePosition =
-      this.players.length - this.settings.playerTablePosition + 1;
+      this.players.length - settings.playerTablePosition + 1;
 
     this.player = this.players[reversedTablePosition - 1];
     this.playersLeft = this.players.slice(reversedTablePosition);
@@ -175,7 +179,7 @@ export default class Game extends EventEmitter {
       k: string | number | symbol
     ): k is keyof T => k in obj;
 
-    this.state = this.settings.disableEvents
+    this.state = settings.disableEvents
       ? this._state
       : new Proxy(this._state, {
           set: (target, key, value) => {
@@ -252,21 +256,15 @@ export default class Game extends EventEmitter {
       return false;
     }
 
-    if (
-      input === Move.Surrender &&
-      (!this.settings.allowLateSurrender || !this.focusedHand.firstMove)
-    ) {
+    if (input === Move.Surrender && !this.focusedHand.allowSurrender) {
       return false;
     }
 
-    if (
-      input === Move.Split &&
-      (!this.focusedHand.hasPairs || !this.focusedHand.firstMove)
-    ) {
+    if (input === Move.Split && !this.focusedHand.allowSplit) {
       return false;
     }
 
-    if (input === Move.Double && !this.focusedHand.firstMove) {
+    if (input === Move.Double && !this.focusedHand.allowDouble) {
       return false;
     }
 
@@ -360,7 +358,7 @@ export default class Game extends EventEmitter {
   }
 
   dealInitialCards(): GameStep {
-    if (this.settings.debug) {
+    if (settings.debug) {
       console.log(`> Starting new hand (player ID ${this.player.id})`);
       console.log('Shoe:', this.shoe.serialize());
     }
@@ -377,7 +375,7 @@ export default class Game extends EventEmitter {
       ) {
         // TODO: Make NPCs bet more realistically than minimum bet.
         const hand = player.addHand(
-          player === this.player ? this.betAmount : this.settings.minimumBet
+          player === this.player ? this.betAmount : settings.minimumBet
         );
 
         // Draw card for each player face up (upcard).
@@ -419,7 +417,7 @@ export default class Game extends EventEmitter {
     if (this.dealer.upcard.value === 11) {
       this.askInsurance(null, ...this.playersRight);
 
-      if (!this.settings.autoDeclineInsurance) {
+      if (!settings.autoDeclineInsurance) {
         return GameStep.WaitingForInsuranceInput;
       }
     }
@@ -438,7 +436,7 @@ export default class Game extends EventEmitter {
         // TODO: Make insurance amount configurable. Currently uses half the bet
         // size as insurance to recover full bet amount.
         const amount =
-          player === this.player ? this.betAmount : this.settings.minimumBet;
+          player === this.player ? this.betAmount : settings.minimumBet;
 
         if (input === Move.AskInsurance) {
           player.useChips(amount / 2, { hand });
@@ -465,7 +463,7 @@ export default class Game extends EventEmitter {
           // TODO: Make insurance amount configurable. Currently uses half the
           // bet size as insurance to recover full bet amount.
           player.addChips(
-            player === this.player ? this.betAmount : this.settings.minimumBet
+            player === this.player ? this.betAmount : settings.minimumBet
           );
         }
       });
@@ -485,6 +483,14 @@ export default class Game extends EventEmitter {
     }
 
     return false;
+  }
+
+  canSplitAces(hand: Hand, allowResplitAces: boolean): boolean {
+    if (!hand.hasAces || !hand.fromSplit) {
+      return true;
+    }
+
+    return allowResplitAces;
   }
 
   stepHand(
@@ -517,8 +523,8 @@ export default class Game extends EventEmitter {
 
       if (
         input === Move.Split &&
-        player.handsCount < this.settings.maxHandsAllowed &&
-        (!hand.hasAces || this.settings.allowResplitAces)
+        player.handsCount < settings.maxHandsAllowed &&
+        hand.allowSplit
       ) {
         const newHandCard = hand.removeCard();
 
@@ -549,7 +555,7 @@ export default class Game extends EventEmitter {
     }
 
     if (hand.busted) {
-      if (this.settings.debug) {
+      if (settings.debug) {
         console.log(`Busted ${player.id} ${hand.cardTotal}`);
       }
 
@@ -578,7 +584,7 @@ export default class Game extends EventEmitter {
           handFinished = this.stepHand(
             player,
             hand,
-            player === this.player ? this.betAmount : this.settings.minimumBet,
+            player === this.player ? this.betAmount : settings.minimumBet,
             player.getNPCInput(this, hand)
           );
         }
@@ -616,7 +622,7 @@ export default class Game extends EventEmitter {
       while (this.dealer.cardTotal <= 17 && !this.dealer.blackjack) {
         if (
           this.dealer.cardTotal === 17 &&
-          (this.dealer.isHard || !this.settings.hitSoft17)
+          (this.dealer.isHard || !settings.hitSoft17)
         ) {
           break;
         }
@@ -663,14 +669,14 @@ export default class Game extends EventEmitter {
     this.dealer.removeCards();
 
     if (this.shoe.needsReset) {
-      if (this.settings.debug) {
+      if (settings.debug) {
         console.log('Cut card reached');
       }
       this.shoe.resetCards();
       this.emit(Event.Shuffle);
     }
 
-    if (this.settings.debug) {
+    if (settings.debug) {
       console.log('End of hand', this.shoe.serialize());
       console.log();
     }

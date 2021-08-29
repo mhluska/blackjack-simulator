@@ -1,3 +1,4 @@
+import { settings } from './game';
 import GameObject from './game-object';
 import { Event } from './event-emitter';
 import Utils from './utils';
@@ -121,6 +122,26 @@ export default class Hand extends GameObject {
       blackjack: this.blackjack,
       firstMove: this.firstMove,
     };
+  }
+
+  get allowSplit(): boolean {
+    if (!this.hasPairs || this.player.handsCount >= settings.maxHandsAllowed) {
+      return false;
+    }
+
+    if (!this.hasAces || !this.fromSplit) {
+      return true;
+    }
+
+    return settings.allowResplitAces;
+  }
+
+  get allowSurrender(): boolean {
+    return this.firstMove && settings.allowLateSurrender;
+  }
+
+  get allowDouble(): boolean {
+    return this.firstMove;
   }
 
   get cardTotal(): number {

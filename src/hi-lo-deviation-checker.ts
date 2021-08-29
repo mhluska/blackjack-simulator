@@ -1,5 +1,5 @@
 import Utils from './utils';
-import Game, { GameSettings } from './game';
+import Game from './game';
 import Hand from './hand';
 import { Move, CheckResult, GameStep, GameMode } from './types';
 
@@ -83,10 +83,8 @@ export default class HiLoDeviationChecker {
 
     if (
       !deviation ||
-      (hand.hasPairs && deviation.correctMove !== Move.Split) ||
       (!hand.firstMove && deviation.correctMove === Move.Double) ||
-      (!this._allowSplit(hand, game.settings) &&
-        deviation.correctMove === Move.Split) ||
+      (!hand.allowSplit && deviation.correctMove === Move.Split) ||
       !Utils.compareRange(trueCount, deviation.index)
     ) {
       return { correctMove: false };
@@ -150,14 +148,5 @@ export default class HiLoDeviationChecker {
       code: correctMove,
       hint: hintMessage,
     };
-  }
-
-  // TODO: DRY with `BasicStrategyChecker` or move these `_allow*` functions
-  // into `Hand`.
-  static _allowSplit(hand: Hand, settings: GameSettings): boolean {
-    return (
-      hand.player.handsCount < settings.maxHandsAllowed &&
-      (!hand.hasAces || settings.allowResplitAces)
-    );
   }
 }

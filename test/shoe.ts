@@ -13,7 +13,7 @@ describe('Shoe', function () {
   let cards: Card[];
 
   beforeEach(function () {
-    shoe = new Shoe({ settings });
+    shoe = new Shoe();
     cards = [
       new Card(Suit.Hearts, Rank.Ace, shoe),
       new Card(Suit.Diamonds, Rank.Ace, shoe),

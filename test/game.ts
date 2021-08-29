@@ -14,7 +14,8 @@ import {
 
 type GameSetupOptions = {
   settings: DeepPartial<GameSettings>;
-  cards: Rank[];
+  playerCards: Rank[];
+  dealerCards: Rank[];
 };
 
 function setupGame(options: Partial<GameSetupOptions> = {}) {
@@ -24,7 +25,8 @@ function setupGame(options: Partial<GameSetupOptions> = {}) {
       playerTablePosition: 1,
       playerCount: 1,
     },
-    cards: [],
+    playerCards: [],
+    dealerCards: [Rank.Six],
   };
 
   // TODO: Avoid `as` here. Otherwise returns `Partial<GameSetupOptions>`.
@@ -33,13 +35,26 @@ function setupGame(options: Partial<GameSetupOptions> = {}) {
   const game = new Game(mergedOptions.settings);
   const length = game.shoe.cards.length;
 
-  mergedOptions.cards.forEach((cardRank: Rank, index: number) => {
+  const setCard = (index: number, rank: Rank): void => {
+    if (typeof rank === 'undefined') {
+      return;
+    }
+
     game.shoe.cards[length - index - 1] = new Card(
       Suit.Hearts,
-      cardRank,
+      rank,
       game.shoe
     );
-  });
+  };
+
+  setCard(0, mergedOptions.playerCards[0]);
+  setCard(1, mergedOptions.dealerCards[0]);
+  setCard(2, mergedOptions.playerCards[1]);
+  setCard(3, mergedOptions.dealerCards[1]);
+
+  for (let i = 2; i <= mergedOptions.playerCards.length - 1; i += 1) {
+    setCard(i + 2, i + mergedOptions.playerCards[i]);
+  }
 
   return game;
 }
@@ -125,7 +140,8 @@ describe('Game', function () {
 
       const game = setupGame({
         // Force a winning hand for the player (blackjack with A-J).
-        cards: [Rank.Ace, Rank.Two, Rank.Jack, Rank.Two],
+        dealerCards: [Rank.Two, Rank.Two],
+        playerCards: [Rank.Ace, Rank.Jack],
       });
 
       before(function () {
@@ -156,7 +172,8 @@ describe('Game', function () {
         game = setupGame({
           settings: { autoDeclineInsurance: true },
           // Force a hand that prompts for insurance (dealer Ace).
-          cards: [Rank.Two, Rank.Ace],
+          dealerCards: [Rank.Ace],
+          playerCards: [Rank.Two],
         });
 
         game.betAmount = betAmount;
@@ -183,7 +200,8 @@ describe('Game', function () {
             settings: {
               allowLateSurrender: true,
             },
-            cards: [Rank.Six, Rank.Queen, Rank.Jack, Rank.Jack],
+            dealerCards: [Rank.Queen, Rank.Jack],
+            playerCards: [Rank.Six, Rank.Jack],
           });
 
           game.betAmount = betAmount;
@@ -216,7 +234,8 @@ describe('Game', function () {
             },
             // Force a hand where the player has 16v10 and the next card will
             // not bust the player.
-            cards: [Rank.Six, Rank.Queen, Rank.Jack, Rank.Jack, Rank.Two],
+            dealerCards: [Rank.Queen, Rank.Jack],
+            playerCards: [Rank.Six, Rank.Jack, Rank.Two],
           });
 
           game.betAmount = betAmount;
@@ -246,8 +265,10 @@ describe('Game', function () {
             allowResplitAces: false,
           },
           // Force a hand where the player has AAv20 (the dealer total is
-          // irrelevant).
-          cards: [Rank.Ace, Rank.Queen, Rank.Ace, Rank.Jack],
+          // irrelevant). And after splitting, the player is dealt another ace
+          // on both hands.
+          dealerCards: [Rank.Queen, Rank.Jack],
+          playerCards: [Rank.Ace, Rank.Ace, Rank.Ace, Rank.Ace],
         });
 
         game.betAmount = betAmount;
@@ -257,12 +278,40 @@ describe('Game', function () {
             {
               [GameStep.WaitingForPlayInput]: Move.Split,
             },
+            {
+              [GameStep.WaitingForPlayInput]: Move.Split,
+            },
           ],
         });
       });
 
-      it('should not allow spitting', function () {
-        expect(game.player.hands).to.have.lengthOf(1);
+      it('should allow splitting but not resplitting', function () {
+        expect(game.player.hands).to.have.lengthOf(2);
+      });
+    });
+
+    context('when the player is dealt a pair of 5s', function () {
+      before(function () {
+        game = setupGame({
+          dealerCards: [Rank.Six],
+          playerCards: [Rank.Five, Rank.Five],
+        });
+
+        game.betAmount = betAmount;
+
+        runGame(game, {
+          input: [
+            {
+              [GameStep.WaitingForPlayInput]: Move.Hit,
+            },
+          ],
+        });
+      });
+
+      it('should suggest double as the correct move', function () {
+        expect(game.state.sessionMovesTotal).to.equal(1);
+        expect(game.state.sessionMovesCorrect).to.equal(0);
+        expect(game.state.playCorrection).to.include('double');
       });
     });
   });

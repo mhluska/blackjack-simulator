@@ -33,14 +33,12 @@ export default class BasicStrategyChecker {
       return Move.NoInsurance;
     }
 
-    const allowSplit = this._allowSplit(hand, game.settings);
-
     const { chart: chartGroup } = selectCharts(game.settings);
-    const chartType = this._chartType(hand, allowSplit);
+    const chartType = this._chartType(hand);
     const [chartMin, chartMax] = chartMinMax(chartType);
 
     const playerTotal = Utils.clamp(
-      hand.hasPairs && allowSplit ? hand.cards[0].value : hand.cardTotal,
+      hand.hasPairs ? hand.cards[0].value : hand.cardTotal,
       chartMin,
       chartMax
     );
@@ -58,8 +56,7 @@ export default class BasicStrategyChecker {
       correctMove === ChartMove.DoubleOrHit ||
       correctMove === ChartMove.DoubleOrStand
     ) {
-      const allowDouble = hand.firstMove;
-      if (allowDouble) {
+      if (hand.allowDouble) {
         return Move.Double;
       } else {
         return correctMove === ChartMove.DoubleOrHit ? Move.Hit : Move.Stand;
@@ -85,10 +82,8 @@ export default class BasicStrategyChecker {
       }
     }
 
-    const allowSurrender = this._allowSurrender(hand, game.settings);
-
     if (correctMove === ChartMove.SurrenderOrSplit) {
-      return allowSurrender && !game.settings.allowDoubleAfterSplit
+      return hand.allowSurrender && !game.settings.allowDoubleAfterSplit
         ? Move.Surrender
         : Move.Split;
     }
@@ -97,7 +92,7 @@ export default class BasicStrategyChecker {
       correctMove === ChartMove.SurrenderOrHit ||
       correctMove === ChartMove.SurrenderOrStand
     ) {
-      if (allowSurrender) {
+      if (hand.allowSurrender) {
         return Move.Surrender;
       } else {
         return correctMove === ChartMove.SurrenderOrHit ? Move.Hit : Move.Stand;
@@ -152,19 +147,8 @@ export default class BasicStrategyChecker {
     };
   }
 
-  static _allowSplit(hand: Hand, settings: GameSettings): boolean {
-    return (
-      hand.player.handsCount < settings.maxHandsAllowed &&
-      (!hand.hasAces || settings.allowResplitAces)
-    );
-  }
-
-  static _allowSurrender(hand: Hand, settings: GameSettings): boolean {
-    return hand.firstMove && settings.allowLateSurrender;
-  }
-
-  static _chartType(hand: Hand, allowSplit: boolean): ChartType {
-    if (hand.hasPairs && allowSplit) {
+  static _chartType(hand: Hand): ChartType {
+    if (hand.allowSplit) {
       return ChartType.Splits;
     } else if (hand.isSoft) {
       return ChartType.Soft;
