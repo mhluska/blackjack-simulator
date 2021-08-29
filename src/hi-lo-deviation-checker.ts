@@ -60,13 +60,6 @@ export const illustrious18Deviations = new Map<number, Map<number, Illustrious18
 
 export default class HiLoDeviationChecker {
   static _suggest(game: Game, hand: Hand): Illustrious18Deviation | undefined {
-    if (
-      !game.settings.checkDeviations &&
-      game.settings.mode !== GameMode.Illustrious18
-    ) {
-      return;
-    }
-
     const trueCount = game.shoe.hiLoTrueCount;
 
     if (!game.dealer.upcard || hand.isSoft) {
@@ -102,6 +95,13 @@ export default class HiLoDeviationChecker {
   // Returns false if a deviation was not present.
   // Returns an object with a `correctMove` code and a `hint` otherwise.
   static check(game: Game, hand: Hand, input: Move): CheckResult | boolean {
+    if (
+      !game.settings.checkDeviations &&
+      game.settings.mode !== GameMode.Illustrious18
+    ) {
+      return false;
+    }
+
     const deviation = this._suggest(game, hand);
 
     if (!deviation) {
