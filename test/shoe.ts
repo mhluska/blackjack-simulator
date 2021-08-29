@@ -4,8 +4,6 @@ import Shoe from '../src/shoe';
 import Card from '../src/card';
 import { Suit, Rank } from '../src/types';
 
-import { settings } from './mocks';
-
 const expect = chai.expect;
 
 describe('Shoe', function () {

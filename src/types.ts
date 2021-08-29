@@ -101,6 +101,7 @@ export type UncommonChart = Map<ChartType, Map<number, number[]>>;
 
 // TODO: Avoid any here.
 export type SimpleObject = {
+  // eslint-disable-next-line @typescript-eslint/no-explicit-any
   [key: string]: any;
 };
 

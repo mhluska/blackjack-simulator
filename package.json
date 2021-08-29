@@ -11,7 +11,7 @@
     "start": "webpack --watch",
     "test": "mocha --require @babel/register --require ts-node/register --require tsconfig-paths/register ./test/**/*.ts",
     "test:types": "tsc --noEmit --project .",
-    "lint": "eslint --fix ./src",
+    "lint": "eslint --fix ./src ./test",
     "build": "webpack",
     "prepare": "npm run build"
   },

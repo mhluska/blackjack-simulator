@@ -6,7 +6,6 @@ import BasicStrategyChecker from '../src/basic-strategy-checker';
 import HiLoDeviationChecker from '../src/hi-lo-deviation-checker';
 import { Event } from '../src/event-emitter';
 import Game, { GameSettings } from '../src/game';
-import Hand from '../src/Hand';
 import Card from '../src/card';
 import Utils from '../src/utils';
 import {
@@ -16,7 +15,6 @@ import {
   GameStep,
   Move,
   HandWinner,
-  CheckResult,
 } from '../src/types';
 
 const expect = chai.expect;
