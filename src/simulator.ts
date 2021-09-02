@@ -89,12 +89,13 @@ function defaultSettings(minimumBet = 10 * 100): SimulatorSettings {
     //
     // Simple linear bet spread example: for a $10 minimum where 1 unit is the
     // table minimum, spread 1-12 or $10-$120:
-    // TC 0: $10 * 2^0 = $10.00
-    // TC 1: $10 * 2^1 = $10.00
-    // TC 2: $10 * 2^2 = $37.50
-    // TC 3: $10 * 2^3 = $65.00
-    // TC 4: $10 * 2^3 = $92.50
-    // TC 5: $10 * 2^3 = $120.00
+    //
+    // TC 0: $10 * 2^0 = $10
+    // TC 1: $10 * 2^1 = $10
+    // TC 2: $10 * 2^2 = $40
+    // TC 3: $10 * 2^3 = $65
+    // TC 4: $10 * 2^3 = $95
+    // TC 5: $10 * 2^3 = $120
     playerBetSpread: Array.from(
       { length: maxTrueCount + 1 },
       (item, hiLoTrueCount) =>
