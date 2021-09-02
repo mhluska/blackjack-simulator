@@ -51,26 +51,59 @@ export type FormattedSimulatorResult = {
   timeElapsed: string;
 };
 
+function getChipUnit(minimumBet: number): number {
+  const chipSizes = [5000, 1000, 500, 100, 25, 5, 1].map(
+    (chipSize) => chipSize * 100
+  );
+
+  for (const chipSize of chipSizes) {
+    if (minimumBet % chipSize === 0) {
+      return chipSize;
+    }
+  }
+
+  return chipSizes.find((chipSize) => chipSize < minimumBet) ?? 100;
+}
+
+function roundToIncrement(increment: number, value: number) {
+  return Math.round(value / increment) * increment;
+}
+
 function defaultSettings(minimumBet = 10 * 100): SimulatorSettings {
   const maxTrueCount = 5;
+  const unit = minimumBet;
+  const spreadStep = (unit * 11) / (maxTrueCount - 1);
+  const chipUnit = getChipUnit(minimumBet);
 
   return {
     // Simulator-only settings.
     hands: 10 ** 7,
     playerStrategy: PlayerStrategy.BasicStrategyI18,
 
-    // TODO: Allow computing optimal bet spreads.
-    // Simple bet spread strategy, for $10 minimum:
-    // TC < 1: $10
-    // TC 1: $10 * 2^0 = $10
-    // TC 2: $10 * 2^1 = $20
-    // TC 3: $10 * 2^2 = $40
-    // TC 4: $10 * 2^3 = $80
+    // TODO: Allow computing optimal bet spreads (use kelly if a bankroll is
+    // specified: edge * bankroll / 1.15^2).
+    //
+    // TODO: Look into computing the edge and 1.15 sd value precisely instead of
+    // hard-coding constants. How can we compute player edge and variance
+    // irrespective of bet spread?
+    //
+    // Simple linear bet spread example: for a $10 minimum where 1 unit is the
+    // table minimum, spread 1-12 or $10-$120:
+    // TC 0: $10 * 2^0 = $10.00
+    // TC 1: $10 * 2^1 = $10.00
+    // TC 2: $10 * 2^2 = $37.50
+    // TC 3: $10 * 2^3 = $65.00
+    // TC 4: $10 * 2^3 = $92.50
+    // TC 5: $10 * 2^3 = $120.00
     playerBetSpread: Array.from(
-      { length: maxTrueCount },
-      (item, hiLoTrueCount) => minimumBet * 2 ** hiLoTrueCount
+      { length: maxTrueCount + 1 },
+      (item, hiLoTrueCount) =>
+        roundToIncrement(
+          chipUnit,
+          unit + spreadStep * Math.max(0, hiLoTrueCount - 1)
+        )
     ),
-    playerSpots: Array.from({ length: maxTrueCount }, () => 1),
+    playerSpots: Array.from({ length: maxTrueCount + 1 }, () => 1),
 
     debug: false,
     playerTablePosition: 1,
@@ -144,12 +177,9 @@ function estimateHandsPerHour(playerCount: number): number {
       return 60;
     case 7:
       return 52;
+    default:
+      throw new Error(`Unexpected player count ${playerCount}`);
   }
-
-  // For weird cases like playerCount > 7 or < 1, we just return the midpoint
-  // value to make TypeScript happy.
-  // TODO: Convert playerCount to an enum and this can go away.
-  return estimateHandsPerHour(4);
 }
 
 export function mergeResults(results: SimulatorResult[]): SimulatorResult {
@@ -328,6 +358,9 @@ export default class Simulator {
 
       for (const result of game.player.handWinner.values()) {
         handsPlayed += 1;
+        // TODO: Fix this. betAmount is wrong since splits and doubles can
+        // happen. This should come from `hand.betAmount`. Consider refactoring
+        // `handWinner` to hold more data like `hand.betAmount`.
         amountWagered += betAmount;
 
         switch (result) {
@@ -352,7 +385,7 @@ export default class Simulator {
 
     return {
       amountEarned,
-      amountWagered,
+      amountWagered: amountWagered * 2,
       bankrollMean,
       bankrollVariance,
       handsLost,
