@@ -386,7 +386,7 @@ export default class Simulator {
 
     return {
       amountEarned,
-      amountWagered: amountWagered * 2,
+      amountWagered,
       bankrollMean,
       bankrollVariance,
       handsLost,
