@@ -83,7 +83,7 @@ export default class Utils {
   }
 
   static compareRange(number: number, range: [string, number]): boolean {
-    return range[0][0] === '>' ? number >= range[1] : number < range[1];
+    return range[0][0] === '>' ? number >= range[1] : number <= range[1];
   }
 
   static hiLoValue(cards: Card[]): number {
