@@ -1,20 +1,17 @@
 <p align="center">
-  <a href="https://blackjacktrainer.app/" target="_blank">
-    <img width="450" src="https://github.com/mhluska/blackjack-simulator/raw/master/preview.gif" alt="Preview" />
-  </a>
+  <img src="https://github.com/mhluska/blackjack-simulator/raw/master/preview.gif" alt="Preview" />
 </p>
 
-<p align="center">
-  <a href="https://github.com/mhluska/blackjack-simulator/actions"><img src="https://github.com/mhluska/blackjack-simulator/workflows/tests/badge.svg?branch=master" alt="Build Status" /></a>
-  <a href="https://www.npmjs.com/package/@blackjacktrainer/blackjack-simulator"><img src="https://img.shields.io/npm/v/@blackjacktrainer/blackjack-simulator.svg" alt="Version"></a>
-  <a href="https://github.com/mhluska/blackjack-simulator/blob/master/LICENSE"><img src="https://img.shields.io/github/license/mhluska/blackjack-simulator" alt="License"></a>
-</p>
+# Blackjack Simulator
 
-<p align="center">
-  Realistic blackjack simulator (practice card counting and calculate EV for any table conditions)
-</p>
+<a href="https://github.com/mhluska/blackjack-simulator/actions"><img src="https://github.com/mhluska/blackjack-simulator/workflows/tests/badge.svg?branch=master" alt="Build Status" /></a>
+<a href="https://www.npmjs.com/package/@blackjacktrainer/blackjack-simulator"><img src="https://img.shields.io/npm/v/@blackjacktrainer/blackjack-simulator.svg" alt="Version"></a>
+<a href="https://github.com/mhluska/blackjack-simulator/blob/master/LICENSE"><img src="https://img.shields.io/github/license/mhluska/blackjack-simulator" alt="License"></a>
+<a href="https://discord.gg/GAQFFvfvW4"><img src="https://img.shields.io/discord/883161349214060545?logo=discord&logoColor=ffffff&color=7389D8&labelColor=6A7EC2" alt="Discord"></a>
 
-## Project goals
+> Realistic blackjack simulator (practice card counting and calculate EV for any table conditions)
+
+## Features
 
 * Simulator mode for computing EV given some table conditions (10M hands / second)
 * Game mode for practicing basic strategy and card counting with hints
@@ -98,21 +95,32 @@ Result contains the following data:
 
 ```
 {
-  amountEarned: string;
-  amountWagered: string;
-  bankrollRqd: string;
-  betSpread: string;
-  expectedValue: string;
-  handsLost: string;
-  handsPlayed: string;
-  handsPushed: string;
-  handsWon: string;
-  houseEdge: string;
-  penetration: string;
-  spotsPlayed: string;
-  stdDeviation: string;
-  tableRules: string;
-  timeElapsed: string;
+  amountEarned: number;
+  amountWagered: number;
+  bankrollMean: number;
+  bankrollVariance: number;
+  handsLost: number;
+  handsPlayed: number;
+  handsPushed: number;
+  handsWon: number;
+  hoursPlayed: number;
+  playerBetSpread: number[];
+  playerSpots: number[];
+  timeElapsed: number;
+
+  tableRules: {
+    allowDoubleAfterSplit: boolean;
+    allowLateSurrender: boolean;
+    allowResplitAces: boolean;
+    blackjackPayout: '3:2' | '6:5';
+    deckCount: number;
+    hitSoft17: boolean;
+    maxHandsAllowed: number;
+    maximumBet: number;
+    minimumBet: number;
+    penetration: number;
+    playerCount: number;
+  }
 }
 ```
 
