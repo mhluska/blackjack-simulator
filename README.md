@@ -7,9 +7,9 @@
 <a href="https://github.com/mhluska/blackjack-simulator/actions"><img src="https://github.com/mhluska/blackjack-simulator/workflows/tests/badge.svg?branch=master" alt="Build Status" /></a>
 <a href="https://www.npmjs.com/package/@blackjacktrainer/blackjack-simulator"><img src="https://img.shields.io/npm/v/@blackjacktrainer/blackjack-simulator.svg" alt="Version"></a>
 <a href="https://github.com/mhluska/blackjack-simulator/blob/master/LICENSE"><img src="https://img.shields.io/github/license/mhluska/blackjack-simulator" alt="License"></a>
-<a href="https://discord.gg/GAQFFvfvW4"><img src="https://img.shields.io/discord/883161349214060545?logo=discord&logoColor=ffffff&color=7389D8&labelColor=6A7EC2" alt="Discord"></a>
+<a href="https://discord.gg/GAQFFvfvW4"><img src="https://img.shields.io/badge/discord-join%20chat-7389D8?logo=discord&logoColor=ffffff&label=" alt="Discord"></a>
 
-> Realistic blackjack simulator (practice card counting and calculate EV for any table conditions)
+> Practice card counting and calculate EV for any table conditions
 
 ## Features
 
@@ -28,7 +28,7 @@ npm install -g @blackjacktrainer/blackjack-simulator
 ```
 
 ```sh
-blackjack-simulator simulate
+blackjack-simulator simulate --help
 ```
 
 Override the number of CPU cores used:
@@ -40,7 +40,7 @@ CORES=1 blackjack-simulator simulate
 ### Game mode
 
 ```sh
-blackjack-simulator game
+blackjack-simulator game --help
 ```
 
 ### Build and run locally
