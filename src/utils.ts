@@ -92,9 +92,9 @@ export default class Utils {
 
   // See https://stackoverflow.com/a/40724354/659910
   static abbreviateNumber(number: number): string {
-    const SI_SYMBOL = ['', 'K', 'M', 'G', 'T', 'P', 'E'];
+    const SI_SYMBOL = ['', 'K', 'M', 'B', 'T'];
 
-    // Determine SI symbol.
+    // Determine symbol.
     const tier = (Math.log10(Math.abs(number)) / 3) | 0;
 
     if (tier === 0) {

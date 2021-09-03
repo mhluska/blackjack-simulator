@@ -98,29 +98,15 @@ Result contains the following data:
   amountEarned: number;
   amountWagered: number;
   bankrollMean: number;
+  bankrollRqd: number;
   bankrollVariance: number;
   handsLost: number;
   handsPlayed: number;
   handsPushed: number;
   handsWon: number;
   hoursPlayed: number;
-  playerBetSpread: number[];
-  playerSpots: number[];
+  riskOfRuin: number;
   timeElapsed: number;
-
-  tableRules: {
-    allowDoubleAfterSplit: boolean;
-    allowLateSurrender: boolean;
-    allowResplitAces: boolean;
-    blackjackPayout: '3:2' | '6:5';
-    deckCount: number;
-    hitSoft17: boolean;
-    maxHandsAllowed: number;
-    maximumBet: number;
-    minimumBet: number;
-    penetration: number;
-    playerCount: number;
-  }
 }
 ```
 

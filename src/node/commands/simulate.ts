@@ -4,9 +4,10 @@ import { fork } from 'child_process';
 import Simulator, {
   SimulatorSettings,
   SimulatorResult,
+  FormattedResult,
+  FormattedSimulatorIntro,
   FormattedSimulatorResult,
   SETTINGS_DEFAULTS,
-  formatResult,
   mergeResults,
 } from '../../simulator';
 
@@ -37,20 +38,13 @@ function parseEnums(
   });
 }
 
-function printResult(result: FormattedSimulatorResult) {
-  const displayOrder: (keyof FormattedSimulatorResult)[] = [
-    'tableRules',
-    'penetration',
-    'betSpread',
-    'spotsPlayed',
-    'bankrollRqd',
-    'expectedValue',
-    'stdDeviation',
-    'houseEdge',
-    'handsPlayed',
-  ];
-
-  const longestLabelLength = Math.max(...keys(result).map((key) => key.length));
+function printEntries(
+  result: FormattedResult,
+  displayOrder: (keyof FormattedResult)[]
+) {
+  const longestLabelLength = Math.max(
+    ...keys(result).map((key) => key.toString().length)
+  );
 
   const print = (key: string, value: string | number) => {
     const label = `${Utils.titleCase(key)}:`;
@@ -60,14 +54,77 @@ function printResult(result: FormattedSimulatorResult) {
   // Print the most relevant options first (iteration order of a POJO is not
   // guaranteed).
   displayOrder.forEach((key) => {
-    print(key, result[key]);
+    const value = result[key];
+    if (value) {
+      print(key.toString(), value);
+    }
   });
 
   entries(result).forEach(([key, value]) => {
-    if (!displayOrder.includes(key)) {
-      print(key, value);
+    if (!displayOrder.includes(key) && value) {
+      print(key.toString(), value);
     }
   });
+}
+
+// TODO: Move these stdout-related functions to a renderer.
+function printIntro(result: FormattedSimulatorIntro, handsCount: number) {
+  printEntries(result, [
+    'tableRules',
+    'penetration',
+    'betSpread',
+    'spotsPlayed',
+  ]);
+
+  const handsWord = handsCount === 1 ? 'hand' : 'hands';
+  process.stdout.write(
+    `Simulating ${Utils.abbreviateNumber(handsCount)} ${handsWord}...`
+  );
+}
+
+function printResult(result: FormattedSimulatorResult) {
+  console.log();
+  console.log();
+
+  printEntries(result, [
+    'expectedValue',
+    'bankrollRqd',
+    'stdDeviation',
+    'houseEdge',
+    'handsPlayed',
+  ]);
+}
+
+function formatResult(result: SimulatorResult): FormattedSimulatorResult {
+  const {
+    amountEarned,
+    amountWagered,
+    bankrollRqd,
+    bankrollVariance,
+    handsLost,
+    handsPlayed,
+    handsPushed,
+    handsWon,
+    hoursPlayed,
+    riskOfRuin,
+    timeElapsed,
+  } = result;
+
+  return {
+    amountEarned: Utils.formatCents(amountEarned),
+    amountWagered: Utils.formatCents(amountWagered),
+    bankrollRqd: `${Utils.formatCents(bankrollRqd)} (${Utils.formatPercent(
+      riskOfRuin
+    )} RoR)`,
+    expectedValue: `${Utils.formatCents(amountEarned / hoursPlayed)}/hour`,
+    handsLost: Utils.abbreviateNumber(handsLost),
+    handsPlayed: Utils.abbreviateNumber(handsPlayed),
+    handsPushed: Utils.abbreviateNumber(handsPushed),
+    handsWon: Utils.abbreviateNumber(handsWon),
+    houseEdge: Utils.formatPercent(-amountEarned / amountWagered),
+    stdDeviation: Utils.formatCents(Math.sqrt(bankrollVariance)),
+    timeElapsed: Utils.formatTime(timeElapsed),
+  };
 }
 
 // HACK: Distributes hands between cores by changing the CLI arg value.
@@ -194,9 +251,20 @@ export default function (
     return;
   }
 
+  const simulator = new Simulator(parseEnums(options));
+
   if (process.argv[3] === 'child') {
-    process.send?.(new Simulator(parseEnums(options)).run());
+    process.send?.(simulator.run());
   } else {
+    if (
+      typeof simulator.settings.hands !== 'number' ||
+      simulator.settings.hands < 1
+    ) {
+      return;
+    }
+
+    printIntro(simulator.intro, simulator.settings.hands);
+
     getCoresResults(options).then((results) => {
       printResult(formatResult(mergeResults(results)));
     });

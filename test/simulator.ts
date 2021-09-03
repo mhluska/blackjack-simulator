@@ -18,15 +18,14 @@ describe('Simulator', function () {
       'amountEarned',
       'amountWagered',
       'bankrollMean',
+      'bankrollRqd',
       'bankrollVariance',
       'handsLost',
       'handsPlayed',
       'handsPushed',
       'handsWon',
       'hoursPlayed',
-      'playerBetSpread',
-      'playerSpots',
-      'tableRules',
+      'riskOfRuin',
       'timeElapsed'
     );
   });

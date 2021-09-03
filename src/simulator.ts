@@ -22,34 +22,42 @@ export type SimulatorSettings = {
 export type SimulatorResult = {
   amountEarned: number;
   amountWagered: number;
-  hoursPlayed: number;
+  bankrollMean: number;
+  bankrollRqd: number;
+  bankrollVariance: number;
   handsLost: number;
   handsPlayed: number;
   handsPushed: number;
   handsWon: number;
-  bankrollMean: number;
-  bankrollVariance: number;
+  hoursPlayed: number;
+  riskOfRuin: number;
   timeElapsed: number;
-  tableRules: TableRules;
-} & Pick<SimulatorSettings, 'playerBetSpread' | 'playerSpots'>;
+};
 
-export type FormattedSimulatorResult = {
+export type FormattedResult = {
+  [key: string]: string;
+};
+
+export interface FormattedSimulatorIntro extends FormattedResult {
+  betSpread: string;
+  penetration: string;
+  spotsPlayed: string;
+  tableRules: string;
+}
+
+export interface FormattedSimulatorResult extends FormattedResult {
   amountEarned: string;
   amountWagered: string;
   bankrollRqd: string;
-  betSpread: string;
   expectedValue: string;
   handsLost: string;
   handsPlayed: string;
   handsPushed: string;
   handsWon: string;
   houseEdge: string;
-  penetration: string;
-  spotsPlayed: string;
   stdDeviation: string;
-  tableRules: string;
   timeElapsed: string;
-};
+}
 
 function getChipUnit(minimumBet: number): number {
   const chipSizes = [5000, 1000, 500, 100, 25, 5, 1].map(
@@ -219,10 +227,9 @@ export function mergeResults(results: SimulatorResult[]): SimulatorResult {
       bankrollMean: average,
       bankrollVariance,
 
-      // Pass along relevant simulator and game settings.
-      playerBetSpread: results[0].playerBetSpread,
-      playerSpots: results[0].playerSpots,
-      tableRules: results[0].tableRules,
+      // Pass along relevant simulator and settings.
+      bankrollRqd: results[0].bankrollRqd,
+      riskOfRuin: results[0].riskOfRuin,
 
       amountEarned: 0,
       amountWagered: 0,
@@ -236,55 +243,10 @@ export function mergeResults(results: SimulatorResult[]): SimulatorResult {
   );
 }
 
-export function formatResult(
-  result: SimulatorResult
-): FormattedSimulatorResult {
-  const {
-    amountEarned,
-    amountWagered,
-    bankrollVariance,
-    handsLost,
-    handsPlayed,
-    handsPushed,
-    handsWon,
-    hoursPlayed,
-    playerBetSpread,
-    playerSpots,
-    tableRules,
-    timeElapsed,
-  } = result;
-
-  // TODO: Make RoR configurable.
-  const riskOfRuin = 0.05;
-  const formattedBankrollRequired = Utils.formatCents(
-    bankrollRequired(riskOfRuin, bankrollVariance, amountEarned / handsPlayed)
-  );
-
-  return {
-    amountEarned: Utils.formatCents(amountEarned),
-    amountWagered: Utils.formatCents(amountWagered),
-    bankrollRqd: `${formattedBankrollRequired} (${Utils.formatPercent(
-      riskOfRuin
-    )} RoR)`,
-    betSpread: Utils.arrayToRangeString(playerBetSpread, (amount) =>
-      Utils.formatCents(amount, { stripZeroCents: true })
-    ),
-    expectedValue: `${Utils.formatCents(amountEarned / hoursPlayed)}/hour`,
-    handsLost: Utils.abbreviateNumber(handsLost),
-    handsPlayed: Utils.abbreviateNumber(handsPlayed),
-    handsPushed: Utils.abbreviateNumber(handsPushed),
-    handsWon: Utils.abbreviateNumber(handsWon),
-    houseEdge: Utils.formatPercent(-amountEarned / amountWagered),
-    penetration: Utils.formatPercent(tableRules.penetration),
-    spotsPlayed: Utils.arrayToRangeString(playerSpots),
-    stdDeviation: Utils.formatCents(Math.sqrt(bankrollVariance)),
-    tableRules: formatTableRules(tableRules),
-    timeElapsed: Utils.formatTime(timeElapsed),
-  };
-}
-
 export default class Simulator {
   settings: SimulatorSettings;
+  game: Game;
+  intro: FormattedSimulatorIntro;
 
   constructor(settings: DeepPartial<SimulatorSettings>) {
     // TODO: Avoid `as` here. Otherwise returns `Partial<SimulatorSettings>`.
@@ -292,6 +254,38 @@ export default class Simulator {
       defaultSettings(settings.minimumBet),
       settings
     ) as SimulatorSettings;
+
+    this.game = new Game({
+      ...this.settings,
+
+      debug: this.settings.debug,
+      disableEvents: true,
+      playerStrategyOverride: {
+        [this.settings.playerTablePosition]: this.settings.playerStrategy,
+      },
+    });
+
+    this.intro = {
+      tableRules: formatTableRules({
+        allowDoubleAfterSplit: this.game.settings.allowDoubleAfterSplit,
+        allowLateSurrender: this.game.settings.allowLateSurrender,
+        allowResplitAces: this.game.settings.allowResplitAces,
+        blackjackPayout: this.game.settings.blackjackPayout,
+        deckCount: this.game.settings.deckCount,
+        hitSoft17: this.game.settings.hitSoft17,
+        maxHandsAllowed: this.game.settings.maxHandsAllowed,
+        maximumBet: this.game.settings.maximumBet,
+        minimumBet: this.game.settings.minimumBet,
+        penetration: this.game.settings.penetration,
+        playerCount: this.game.settings.playerCount,
+      }),
+      penetration: Utils.formatPercent(this.game.settings.penetration),
+      betSpread: Utils.arrayToRangeString(
+        this.settings.playerBetSpread,
+        (amount) => Utils.formatCents(amount, { stripZeroCents: true })
+      ),
+      spotsPlayed: Utils.arrayToRangeString(this.settings.playerSpots),
+    };
   }
 
   clampToArray(index: number, array: number[]): number {
@@ -309,17 +303,7 @@ export default class Simulator {
   run(): SimulatorResult {
     const startTime = Date.now();
 
-    const game = new Game({
-      ...this.settings,
-
-      debug: this.settings.debug,
-      disableEvents: true,
-      playerStrategyOverride: {
-        [this.settings.playerTablePosition]: this.settings.playerStrategy,
-      },
-    });
-
-    const bankrollStart = game.player.balance;
+    const bankrollStart = this.game.player.balance;
 
     let bankrollMean = 0;
     let bankrollVariance = 0;
@@ -334,19 +318,19 @@ export default class Simulator {
     // TODO: Fix `handsPlayed` going slightly over the limit if the next
     // iteration involves playing more than one hand.
     while (handsPlayed < this.settings.hands) {
-      const betAmount = this.betAmount(game.shoe.hiLoTrueCount);
-      const spotCount = this.spotCount(game.shoe.hiLoTrueCount);
+      const betAmount = this.betAmount(this.game.shoe.hiLoTrueCount);
+      const spotCount = this.spotCount(this.game.shoe.hiLoTrueCount);
 
-      const prevBalance = game.player.balance;
+      const prevBalance = this.game.player.balance;
 
-      game.run(betAmount, spotCount);
+      this.game.run(betAmount, spotCount);
 
       // We calculate mean and variance from a stream of values since a large
       // dataset (100M+ hands) will not fit in memory.
       // See https://math.stackexchange.com/a/116344
       // TODO: Update this value per `handWinner`. Currently one change can
       // correspond to multiple hands due to splits.
-      const bankrollChangeValue = game.player.balance - prevBalance;
+      const bankrollChangeValue = this.game.player.balance - prevBalance;
       const prevBankrollMean = bankrollMean;
       bankrollValues += 1;
       bankrollMean =
@@ -357,7 +341,7 @@ export default class Simulator {
         (bankrollChangeValue - prevBankrollMean) *
           (bankrollChangeValue - bankrollMean);
 
-      for (const result of game.player.handWinner.values()) {
+      for (const result of this.game.player.handWinner.values()) {
         handsPlayed += 1;
         // TODO: Fix this. betAmount is wrong since splits and doubles can
         // happen. This should come from `hand.betAmount`. Consider refactoring
@@ -380,38 +364,31 @@ export default class Simulator {
 
     bankrollVariance /= bankrollValues - 1;
 
-    const amountEarned = game.player.balance - bankrollStart;
+    const amountEarned = this.game.player.balance - bankrollStart;
     const handsPerHour = estimateHandsPerHour(this.settings.playerCount);
     const hoursPlayed = handsPlayed / handsPerHour;
+
+    // TODO: Make RoR configurable.
+    const riskOfRuin = 0.05;
+    const bankrollRqd = bankrollRequired(
+      riskOfRuin,
+      bankrollVariance,
+      amountEarned / handsPlayed
+    );
 
     return {
       amountEarned,
       amountWagered,
       bankrollMean,
+      bankrollRqd,
       bankrollVariance,
       handsLost,
       handsPlayed,
       handsPushed,
       handsWon,
       hoursPlayed,
+      riskOfRuin,
       timeElapsed: Date.now() - startTime,
-
-      playerBetSpread: this.settings.playerBetSpread,
-      playerSpots: this.settings.playerSpots,
-
-      tableRules: {
-        allowDoubleAfterSplit: game.settings.allowDoubleAfterSplit,
-        allowLateSurrender: game.settings.allowLateSurrender,
-        allowResplitAces: game.settings.allowResplitAces,
-        blackjackPayout: game.settings.blackjackPayout,
-        deckCount: game.settings.deckCount,
-        hitSoft17: game.settings.hitSoft17,
-        maxHandsAllowed: game.settings.maxHandsAllowed,
-        maximumBet: game.settings.maximumBet,
-        minimumBet: game.settings.minimumBet,
-        penetration: game.settings.penetration,
-        playerCount: game.settings.playerCount,
-      },
     };
   }
 }
