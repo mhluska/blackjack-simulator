@@ -247,6 +247,7 @@ export default class Player extends GameObject {
     }
 
     this.emit(Event.HandWinner, hand, winner);
+    this.emitChange();
   }
 
   _blackjackNumeratorDenominator(): number[] {
