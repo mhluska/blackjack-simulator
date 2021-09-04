@@ -228,8 +228,6 @@ export function actionDataKeyToCorrectMove(
       return Move.Surrender;
     case 'h':
       return Move.Hit;
-    default:
-      throw new Error(`Unexpected action data key ${actionDataKey}`);
   }
 }
 
