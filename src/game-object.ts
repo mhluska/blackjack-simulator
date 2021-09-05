@@ -6,11 +6,15 @@ export default class GameObject extends EventEmitter {
   static entityName = '';
 
   emitChange = (): void => {
-    this.emit(
-      Event.Change,
-      (this.constructor as typeof GameObject).entityName,
-      this.attributes()
-    );
+    // We need this here to prevent the expensive `attributes()` call during
+    // simulator runs.
+    if (!EventEmitter.disableEvents) {
+      this.emit(
+        Event.Change,
+        (this.constructor as typeof GameObject).entityName,
+        this.attributes()
+      );
+    }
   };
 
   attributes(): void {
