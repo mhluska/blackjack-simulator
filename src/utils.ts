@@ -1,5 +1,4 @@
-import Card from './card';
-import { SimpleObject, DeepPartial } from './types';
+import { SimpleObject, DeepPartial, Suit, Rank, enumValues } from './types';
 
 type Range<T> = { start: number; end: number; value: T };
 
@@ -84,10 +83,6 @@ export default class Utils {
 
   static compareRange(number: number, range: [string, number]): boolean {
     return range[0][0] === '>' ? number >= range[1] : number <= range[1];
-  }
-
-  static hiLoValue(cards: Card[]): number {
-    return cards.reduce((acc, card) => acc + card.hiLoValue, 0);
   }
 
   // See https://stackoverflow.com/a/40724354/659910
@@ -248,5 +243,13 @@ export default class Utils {
     });
 
     return object;
+  }
+
+  static randomSuit(): Suit {
+    return Utils.arraySample(enumValues(Suit));
+  }
+
+  static randomRank(): Rank {
+    return Utils.arraySample(enumValues(Rank));
   }
 }

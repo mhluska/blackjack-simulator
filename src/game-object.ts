@@ -5,13 +5,13 @@ export default class GameObject extends EventEmitter {
   // mangle the class name.
   static entityName = '';
 
-  emitChange(): void {
+  emitChange = (): void => {
     this.emit(
       Event.Change,
       (this.constructor as typeof GameObject).entityName,
       this.attributes()
     );
-  }
+  };
 
   attributes(): void {
     throw new Error('Implement this');

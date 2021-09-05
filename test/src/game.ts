@@ -2,12 +2,12 @@ import * as chai from 'chai';
 import * as sinonChai from 'sinon-chai';
 import * as sinon from 'sinon';
 
-import BasicStrategyChecker from '../src/basic-strategy-checker';
-import HiLoDeviationChecker from '../src/hi-lo-deviation-checker';
-import { Event } from '../src/event-emitter';
-import Game, { GameSettings } from '../src/game';
-import Card from '../src/card';
-import Utils from '../src/utils';
+import BasicStrategyChecker from '../../src/basic-strategy-checker';
+import HiLoDeviationChecker from '../../src/hi-lo-deviation-checker';
+import { Event } from '../../src/event-emitter';
+import Game, { GameSettings } from '../../src/game';
+import Card from '../../src/card';
+import Utils from '../../src/utils';
 import {
   DeepPartial,
   Suit,
@@ -15,7 +15,7 @@ import {
   GameStep,
   Move,
   HandWinner,
-} from '../src/types';
+} from '../../src/types';
 
 const expect = chai.expect;
 chai.use(sinonChai);
@@ -61,7 +61,7 @@ function setupGame(options: Partial<GameSetupOptions> = {}) {
   setCard(3, mergedOptions.dealerCards[1]);
 
   for (let i = 2; i <= mergedOptions.playerCards.length - 1; i += 1) {
-    setCard(i + 2, i + mergedOptions.playerCards[i]);
+    setCard(i + 2, mergedOptions.playerCards[i]);
   }
 
   return game;
@@ -192,7 +192,7 @@ describe('Game', function () {
       });
 
       it('should not pause for player input', function () {
-        expect(game.state.step).not.to.equal('ask-insurance');
+        expect(game.state.step).not.to.equal(GameStep.WaitingForInsuranceInput);
       });
     });
 

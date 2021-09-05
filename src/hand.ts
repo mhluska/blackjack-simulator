@@ -5,6 +5,7 @@ import Utils from './utils';
 import Player from './player';
 import Card, { CardAttributes } from './card';
 import { Rank, rankToString } from './types';
+import EventEmitter from './event-emitter';
 
 export type HandAttributes = {
   id: string;
@@ -50,7 +51,7 @@ export default class Hand extends GameObject {
   }
 
   takeCard(card: Card, { prepend = false } = {}): void {
-    card.on(Event.Change, () => this.emitChange());
+    card.on(Event.Change, this.emitChange);
 
     if (prepend) {
       this.cards.unshift(card);
@@ -58,7 +59,7 @@ export default class Hand extends GameObject {
       this.cards.push(card);
     }
 
-    if (card.visible) {
+    if (card.showingFace) {
       this.incrementTotalsForCard(card);
     }
 
@@ -78,26 +79,45 @@ export default class Hand extends GameObject {
   }
 
   incrementTotalsForCard(card: Card): void {
-    this.cardHighTotal += card.value;
-    this.cardLowTotal += card.rank === Rank.Ace ? 1 : card.value;
-
     if (card.rank === Rank.Ace) {
       this.acesCount += 1;
+      this.cardLowTotal += 1;
+
+      if (this.cardHighTotal + 11 <= 21) {
+        this.cardHighTotal += 11;
+      } else {
+        this.cardHighTotal += 1;
+      }
+    } else {
+      this.cardHighTotal += card.value;
+      this.cardLowTotal += card.value;
     }
   }
 
   decrementTotalsForCard(card: Card): void {
-    this.cardHighTotal -= card.value;
-    this.cardLowTotal -= card.rank === Rank.Ace ? 1 : card.value;
-
     if (card.rank === Rank.Ace) {
       this.acesCount -= 1;
+      this.cardLowTotal -= 1;
+
+      if (this.acesCount > 0 && this.cardHighTotal + 11 > 21) {
+        this.cardHighTotal -= 1;
+      } else {
+        this.cardHighTotal -= 11;
+      }
+    } else {
+      this.cardHighTotal -= card.value;
+      this.cardLowTotal -= card.value;
     }
   }
 
-  // TODO: Remove change handler when removing cards.
   removeCards(): Card[] {
     const cards = this.cards;
+
+    if (!EventEmitter.disableEvents) {
+      for (const card of cards) {
+        card.removeListener(Event.Change, this.emitChange);
+      }
+    }
 
     this.reset();
     this.emitChange();
@@ -108,7 +128,7 @@ export default class Hand extends GameObject {
   serialize({ showHidden = false } = {}): string {
     return this.cards
       .map((card) =>
-        card.visible || showHidden ? rankToString(card.rank) : '?'
+        card.showingFace || showHidden ? rankToString(card.rank) : '?'
       )
       .join(' ');
   }

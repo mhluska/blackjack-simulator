@@ -230,7 +230,7 @@ export default class Shoe extends GameObject {
   }
 
   _setupPairsMode(): void {
-    const rank = Deck.randomRank();
+    const rank = Utils.randomRank();
     this._moveCardsToFront(rank, rank);
   }
 

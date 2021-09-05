@@ -1,8 +1,9 @@
 import * as chai from 'chai';
 
-import Shoe from '../src/shoe';
-import Card from '../src/card';
-import { Suit, Rank } from '../src/types';
+import Shoe from '../../src/shoe';
+import Card from '../../src/card';
+
+import { CardFactory } from '../factories';
 
 const expect = chai.expect;
 
@@ -13,19 +14,19 @@ describe('Shoe', function () {
   beforeEach(function () {
     shoe = new Shoe();
     cards = [
-      new Card(Suit.Hearts, Rank.Ace, shoe),
-      new Card(Suit.Diamonds, Rank.Ace, shoe),
-      new Card(Suit.Clubs, Rank.Ace, shoe),
-      new Card(Suit.Spades, Rank.Ace, shoe),
+      CardFactory.build(),
+      CardFactory.build(),
+      CardFactory.build(),
+      CardFactory.build(),
     ];
     shoe.setCards(cards);
   });
 
   it('adds and draws cards', function () {
-    shoe.drawCard();
-
-    const card = shoe.drawCard();
-    expect(card?.suit).equals(Suit.Clubs);
+    expect(shoe.drawCard()).equals(cards[3]);
+    expect(shoe.drawCard()).equals(cards[2]);
+    expect(shoe.drawCard()).equals(cards[1]);
+    expect(shoe.drawCard()).equals(cards[0]);
   });
 
   it('gets shoe attributes', function () {

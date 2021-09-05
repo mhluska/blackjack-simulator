@@ -76,8 +76,4 @@ export default class Card extends GameObject {
       showingFace: this.showingFace,
     };
   }
-
-  get visible(): Card['showingFace'] {
-    return this.showingFace;
-  }
 }

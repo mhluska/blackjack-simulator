@@ -1,6 +1,6 @@
 import * as chai from 'chai';
 
-import Simulator from '../src/simulator';
+import Simulator from '../../src/simulator';
 
 const expect = chai.expect;
 

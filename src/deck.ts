@@ -10,14 +10,6 @@ export default class Deck extends GameObject {
   shoe: Shoe;
   cards: Card[];
 
-  static randomSuit(): Suit {
-    return Utils.arraySample(enumValues(Suit));
-  }
-
-  static randomRank(): Rank {
-    return Utils.arraySample(enumValues(Rank));
-  }
-
   constructor(shoe: Shoe) {
     super();
 
