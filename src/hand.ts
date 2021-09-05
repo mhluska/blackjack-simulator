@@ -50,6 +50,18 @@ export default class Hand extends GameObject {
     this.fromSplit = false;
   }
 
+  takeCards(cards: Card[]): void {
+    this.cards = cards;
+
+    for (const card of cards) {
+      if (card.showingFace) {
+        this.incrementTotalsForCard(card);
+      }
+    }
+
+    this.emitChange();
+  }
+
   takeCard(card: Card, { prepend = false } = {}): void {
     card.on(Event.Change, this.emitChange);
 

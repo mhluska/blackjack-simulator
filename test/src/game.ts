@@ -310,6 +310,32 @@ describe('Game', function () {
       });
     });
 
+    context('when the player is dealt 21 after splitting aces', function () {
+      before(function () {
+        game = setupGame({
+          dealerCards: [Rank.Six],
+          playerCards: [Rank.Ace, Rank.Ace, Rank.Ten, Rank.Ten],
+        });
+
+        runGame(game, {
+          input: [
+            {
+              [GameStep.WaitingForPlayInput]: Move.Split,
+            },
+            {
+              [GameStep.WaitingForPlayInput]: Move.Stand,
+            },
+          ],
+        });
+      });
+
+      it('should not correct the move', function () {
+        expect(game.state.sessionMovesTotal).to.equal(2);
+        expect(game.state.sessionMovesCorrect).to.equal(2);
+        expect(game.state.playCorrection).to.be.empty;
+      });
+    });
+
     context('when a typical hand is played', function () {
       before(function () {
         sinon.spy(BasicStrategyChecker, 'check');

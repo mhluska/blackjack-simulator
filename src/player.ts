@@ -110,7 +110,7 @@ export default class Player extends GameObject {
     this.handsCount += 1;
 
     const hand = this._hands[this.handsCount - 1];
-    hand.cards = cards;
+    hand.takeCards(cards);
 
     if (betAmount !== 0) {
       this.useChips(betAmount, { hand });
