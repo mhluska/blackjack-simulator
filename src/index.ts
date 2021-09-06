@@ -2,6 +2,6 @@ import Game from './game';
 import { Event } from './event-emitter';
 import Simulator from './simulator';
 import PlayerInputReader from './browser/player-input-reader';
-import { GameStep } from './types';
+import { GameStep, GameMode } from './types';
 
-export { Game, Event, Simulator, PlayerInputReader, GameStep };
+export { Game, Event, Simulator, PlayerInputReader, GameStep, GameMode };
