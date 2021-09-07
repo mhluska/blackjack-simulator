@@ -1,4 +1,11 @@
-import { SimpleObject, DeepPartial, Suit, Rank, enumValues } from './types';
+import {
+  SimpleObject,
+  DeepPartial,
+  Suit,
+  Rank,
+  enumValues,
+  entries,
+} from './types';
 
 type Range<T> = { start: number; end: number; value: T };
 
@@ -243,6 +250,21 @@ export default class Utils {
     });
 
     return object;
+  }
+
+  static mapValues<InputObject extends SimpleObject, MapReturnType>(
+    obj: InputObject,
+    map: (key: keyof InputObject) => MapReturnType
+  ): { [P in keyof InputObject]: MapReturnType } {
+    const result = {} as {
+      [P in keyof InputObject]: MapReturnType;
+    };
+
+    entries(obj).forEach(([key, value]) => {
+      result[key] = map(value);
+    });
+
+    return result;
   }
 
   static randomSuit(): Suit {

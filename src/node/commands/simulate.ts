@@ -4,11 +4,13 @@ import { fork } from 'child_process';
 import Simulator, {
   SimulatorSettings,
   SimulatorResult,
+  AugmentedSimulatorResult,
   FormattedResult,
   FormattedSimulatorIntro,
   FormattedSimulatorResult,
   SETTINGS_DEFAULTS,
   mergeResults,
+  bankrollRequired,
 } from '../../simulator';
 
 import { CliSettings, printUsageOptions } from '../utils';
@@ -89,41 +91,72 @@ function printResult(result: FormattedSimulatorResult) {
   printEntries(result, [
     'expectedValue',
     'bankrollRqd',
+    'riskOfRuin',
     'stdDeviation',
     'houseEdge',
     'handsPlayed',
   ]);
 }
 
-function formatResult(result: SimulatorResult): FormattedSimulatorResult {
+function createResultFormatter(
+  raw: CliSettings['raw']
+): (result: AugmentedSimulatorResult) => FormattedSimulatorResult {
+  return (result: AugmentedSimulatorResult): FormattedSimulatorResult => {
+    if (raw) {
+      return Utils.mapValues(result, (value) => value.toString());
+    }
+
+    const {
+      amountEarned,
+      amountWagered,
+      bankrollRqd,
+      expectedValue,
+      handsLost,
+      handsPlayed,
+      handsPushed,
+      handsWon,
+      houseEdge,
+      riskOfRuin,
+      stdDeviation,
+      timeElapsed,
+    } = result;
+
+    return {
+      amountEarned: Utils.formatCents(amountEarned),
+      amountWagered: Utils.formatCents(amountWagered),
+      bankrollRqd: Utils.formatCents(bankrollRqd),
+      expectedValue: `${Utils.formatCents(expectedValue)}/hour`,
+      handsLost: Utils.abbreviateNumber(handsLost),
+      handsPlayed: Utils.abbreviateNumber(handsPlayed),
+      handsPushed: Utils.abbreviateNumber(handsPushed),
+      handsWon: Utils.abbreviateNumber(handsWon),
+      houseEdge: Utils.formatPercent(houseEdge),
+      riskOfRuin: Utils.formatPercent(riskOfRuin),
+      stdDeviation: `${Utils.formatCents(stdDeviation)}/hand`,
+      timeElapsed: Utils.formatTime(timeElapsed),
+    };
+  };
+}
+
+function augmentResult(result: SimulatorResult): AugmentedSimulatorResult {
   const {
     amountEarned,
-    amountWagered,
-    bankrollRqd,
     bankrollVariance,
-    handsLost,
     handsPlayed,
-    handsPushed,
-    handsWon,
     hoursPlayed,
     riskOfRuin,
-    timeElapsed,
   } = result;
 
   return {
-    amountEarned: Utils.formatCents(amountEarned),
-    amountWagered: Utils.formatCents(amountWagered),
-    bankrollRqd: `${Utils.formatCents(bankrollRqd)} (${Utils.formatPercent(
-      riskOfRuin
-    )} RoR)`,
-    expectedValue: `${Utils.formatCents(amountEarned / hoursPlayed)}/hour`,
-    handsLost: Utils.abbreviateNumber(handsLost),
-    handsPlayed: Utils.abbreviateNumber(handsPlayed),
-    handsPushed: Utils.abbreviateNumber(handsPushed),
-    handsWon: Utils.abbreviateNumber(handsWon),
-    houseEdge: Utils.formatPercent(-amountEarned / amountWagered),
-    stdDeviation: Utils.formatCents(Math.sqrt(bankrollVariance)),
-    timeElapsed: Utils.formatTime(timeElapsed),
+    ...result,
+    bankrollRqd: bankrollRequired(
+      riskOfRuin,
+      bankrollVariance,
+      amountEarned / handsPlayed
+    ),
+    expectedValue: amountEarned / hoursPlayed,
+    houseEdge: -result.amountEarned / result.amountWagered,
+    stdDeviation: Math.sqrt(bankrollVariance),
   };
 }
 
@@ -265,8 +298,10 @@ export default function (
 
     printIntro(simulator.intro, simulator.settings.hands);
 
+    const formatResult = createResultFormatter(options.raw ?? false);
+
     getCoresResults(options).then((results) => {
-      printResult(formatResult(mergeResults(results)));
+      printResult(formatResult(augmentResult(mergeResults(results))));
     });
   }
 }

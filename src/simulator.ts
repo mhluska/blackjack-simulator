@@ -23,7 +23,6 @@ export type SimulatorResult = {
   amountEarned: number;
   amountWagered: number;
   bankrollMean: number;
-  bankrollRqd: number;
   bankrollVariance: number;
   handsLost: number;
   handsPlayed: number;
@@ -32,6 +31,13 @@ export type SimulatorResult = {
   hoursPlayed: number;
   riskOfRuin: number;
   timeElapsed: number;
+};
+
+export type AugmentedSimulatorResult = SimulatorResult & {
+  bankrollRqd: number;
+  expectedValue: number;
+  houseEdge: number;
+  stdDeviation: number;
 };
 
 export type FormattedResult = {
@@ -49,6 +55,7 @@ export interface FormattedSimulatorResult extends FormattedResult {
   amountEarned: string;
   amountWagered: string;
   bankrollRqd: string;
+  riskOfRuin: string;
   expectedValue: string;
   handsLost: string;
   handsPlayed: string;
@@ -140,7 +147,7 @@ export const SETTINGS_DEFAULTS = defaultSettings();
 
 // Calculates bankroll required given a risk of ruin. Based on equation 9 in
 // Sileo's paper: http://www12.plala.or.jp/doubledown/poker/sileo.pdf
-function bankrollRequired(
+export function bankrollRequired(
   riskOfRuin: number,
   variancePerHand: number,
   expectationPerHand: number
@@ -227,8 +234,7 @@ export function mergeResults(results: SimulatorResult[]): SimulatorResult {
       bankrollMean: average,
       bankrollVariance,
 
-      // Pass along relevant simulator and settings.
-      bankrollRqd: results[0].bankrollRqd,
+      // Pass along relevant settings.
       riskOfRuin: results[0].riskOfRuin,
 
       amountEarned: 0,
@@ -370,17 +376,11 @@ export default class Simulator {
 
     // TODO: Make RoR configurable.
     const riskOfRuin = 0.05;
-    const bankrollRqd = bankrollRequired(
-      riskOfRuin,
-      bankrollVariance,
-      amountEarned / handsPlayed
-    );
 
     return {
       amountEarned,
       amountWagered,
       bankrollMean,
-      bankrollRqd,
       bankrollVariance,
       handsLost,
       handsPlayed,

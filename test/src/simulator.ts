@@ -18,7 +18,6 @@ describe('Simulator', function () {
       'amountEarned',
       'amountWagered',
       'bankrollMean',
-      'bankrollRqd',
       'bankrollVariance',
       'handsLost',
       'handsPlayed',
