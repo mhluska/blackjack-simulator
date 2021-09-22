@@ -11,6 +11,7 @@ import {
 
 export type SimulatorSettings = {
   debug: boolean;
+  raw: boolean;
   playerStrategy: PlayerStrategy;
   playerBetSpread: number[];
   playerSpots: number[];
@@ -140,6 +141,7 @@ function defaultSettings(minimumBet = 10 * 100): SimulatorSettings {
     minimumBet,
     playerCount: 1,
     penetration: 0.75,
+    raw: false,
   };
 }
 
@@ -151,7 +153,7 @@ export function bankrollRequired(
   riskOfRuin: number,
   variancePerHand: number,
   expectationPerHand: number
-) {
+): number {
   return variancePerHand === 0
     ? 0
     : -(variancePerHand / (2 * expectationPerHand)) * Math.log(riskOfRuin);
@@ -285,12 +287,17 @@ export default class Simulator {
         penetration: this.game.settings.penetration,
         playerCount: this.game.settings.playerCount,
       }),
-      penetration: Utils.formatPercent(this.game.settings.penetration),
-      betSpread: Utils.arrayToRangeString(
-        this.settings.playerBetSpread,
-        (amount) => Utils.formatCents(amount, { stripZeroCents: true })
-      ),
-      spotsPlayed: Utils.arrayToRangeString(this.settings.playerSpots),
+      penetration: settings.raw
+        ? this.game.settings.penetration.toString()
+        : Utils.formatPercent(this.game.settings.penetration),
+      betSpread: settings.raw
+        ? this.settings.playerBetSpread.join()
+        : Utils.arrayToRangeString(this.settings.playerBetSpread, (amount) =>
+            Utils.formatCents(amount, { stripZeroCents: true })
+          ),
+      spotsPlayed: settings.raw
+        ? this.settings.playerSpots.join()
+        : Utils.arrayToRangeString(this.settings.playerSpots),
     };
   }
 
