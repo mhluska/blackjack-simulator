@@ -1,6 +1,7 @@
 #!/usr/bin/env node
 
 const fs = require('fs');
+const path = require('path');
 
 // See https://stackoverflow.com/a/52551910/659910
 function camelize(str) {
@@ -81,7 +82,11 @@ function parseArgs(args) {
 }
 
 if (process.argv.includes('--version') || process.argv.includes('-v')) {
-  console.log(JSON.parse(fs.readFileSync('package.json', 'utf8')).version);
+  console.log(
+    JSON.parse(
+      fs.readFileSync(path.join(__dirname, '..', 'package.json'), 'utf8')
+    ).version
+  );
   return;
 }
 
