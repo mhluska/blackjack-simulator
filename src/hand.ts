@@ -24,7 +24,7 @@ export default class Hand extends GameObject {
   cardHighTotal!: number;
   cardLowTotal!: number;
   cards!: Card[];
-  fromSplit!: boolean;
+  splitCount: number;
   id: string;
   player: Player;
 
@@ -35,6 +35,7 @@ export default class Hand extends GameObject {
 
     this.id = Utils.randomId();
     this.player = player;
+    this.splitCount = 0;
 
     for (const card of cards) {
       this.takeCard(card);
@@ -47,7 +48,7 @@ export default class Hand extends GameObject {
     this.cardHighTotal = 0;
     this.cardLowTotal = 0;
     this.cards = [];
-    this.fromSplit = false;
+    this.splitCount = 0;
   }
 
   takeCards(cards: Card[]): void {
@@ -157,15 +158,19 @@ export default class Hand extends GameObject {
   }
 
   get allowSplit(): boolean {
-    if (!this.hasPairs || this.player.handsCount >= settings.maxHandsAllowed) {
+    if (!this.hasPairs || this.splitCount >= settings.maxHandsAllowed - 1) {
       return false;
     }
 
-    if (!this.hasAces || !this.fromSplit) {
-      return true;
+    if (this.hasAces && this.fromSplit && !settings.allowResplitAces) {
+      return false;
     }
 
-    return settings.allowResplitAces;
+    return true;
+  }
+
+  get fromSplit(): boolean {
+    return this.splitCount > 0;
   }
 
   get allowSurrender(): boolean {

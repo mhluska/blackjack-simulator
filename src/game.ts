@@ -8,7 +8,6 @@ import HiLoDeviationChecker from './hi-lo-deviation-checker';
 import Hand from './hand';
 import {
   Move,
-  DeepPartial,
   SimpleObject,
   TableRules,
   GameStep,
@@ -77,7 +76,6 @@ export const settings = defaultSettings();
 
 export default class Game extends EventEmitter {
   _state!: GameState;
-  settings: GameSettings;
   betAmount!: number;
   spotCount!: number;
   dealer!: Dealer;
@@ -89,10 +87,10 @@ export default class Game extends EventEmitter {
   shoe!: Shoe;
   state!: GameState;
 
-  constructor(gameSettings: DeepPartial<GameSettings> = SETTINGS_DEFAULTS) {
+  constructor(gameSettings: Partial<GameSettings> = SETTINGS_DEFAULTS) {
     super();
 
-    this.settings = this.updateSettings(gameSettings);
+    this.updateSettings(gameSettings);
     this.betAmount = settings.minimumBet;
     this.spotCount = 1;
 
@@ -107,9 +105,8 @@ export default class Game extends EventEmitter {
     return this.player.getHand(this.state.focusedHandIndex);
   }
 
-  updateSettings(gameSettings: DeepPartial<GameSettings>): GameSettings {
-    Utils.mergeDeep(settings, gameSettings);
-    return settings;
+  updateSettings(gameSettings: Partial<GameSettings>): GameSettings {
+    return Utils.merge(settings, gameSettings);
   }
 
   setupState(): void {
@@ -485,14 +482,6 @@ export default class Game extends EventEmitter {
     return false;
   }
 
-  canSplitAces(hand: Hand, allowResplitAces: boolean): boolean {
-    if (!hand.hasAces || !hand.fromSplit) {
-      return true;
-    }
-
-    return allowResplitAces;
-  }
-
   stepHand(
     player: Player,
     hand: Hand,
@@ -521,11 +510,7 @@ export default class Game extends EventEmitter {
         player.takeCard(this.shoe.drawCard(), { hand });
       }
 
-      if (
-        input === Move.Split &&
-        player.handsCount < settings.maxHandsAllowed &&
-        hand.allowSplit
-      ) {
+      if (input === Move.Split && hand.allowSplit) {
         const newHandCard = hand.removeCard();
 
         // In practice this will never happen since the hand will always have
@@ -536,8 +521,8 @@ export default class Game extends EventEmitter {
 
         const newHand = player.addHand(betAmount, [newHandCard]);
 
-        newHand.fromSplit = true;
-        hand.fromSplit = true;
+        hand.splitCount += 1;
+        newHand.splitCount = hand.splitCount;
 
         player.takeCard(this.shoe.drawCard(), { hand });
         player.takeCard(this.shoe.drawCard(), { hand: newHand });

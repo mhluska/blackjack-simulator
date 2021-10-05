@@ -1,5 +1,5 @@
 import Utils from './utils';
-import Game from './game';
+import Game, { settings as gameSettings } from './game';
 import Hand from './hand';
 import { Move, CheckResult, GameStep, GameMode } from './types';
 
@@ -96,8 +96,8 @@ export default class HiLoDeviationChecker {
   // Returns an object with a `correctMove` code and a `hint` otherwise.
   static check(game: Game, hand: Hand, input: Move): CheckResult | boolean {
     if (
-      !game.settings.checkDeviations &&
-      game.settings.mode !== GameMode.Illustrious18
+      !gameSettings.checkDeviations &&
+      gameSettings.mode !== GameMode.Illustrious18
     ) {
       return false;
     }

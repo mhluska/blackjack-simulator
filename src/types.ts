@@ -105,10 +105,6 @@ export type SimpleObject = {
   [key: string]: any;
 };
 
-export type DeepPartial<T> = {
-  [P in keyof T]?: DeepPartial<T[P]>;
-};
-
 // See https://github.com/microsoft/TypeScript/pull/12253#issuecomment-353494273
 export const keys = Object.keys as <T>(o: T) => (keyof T)[];
 

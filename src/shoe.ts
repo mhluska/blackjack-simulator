@@ -107,15 +107,12 @@ export default class Shoe extends GameObject {
   }
 
   attributes(): ShoeAttributes {
-    return Object.assign(
-      {},
-      {
-        penetration: Utils.round(this.penetration, 2),
-        hiLoRunningCount: this.hiLoRunningCount,
-        hiLoTrueCount: Utils.round(this.hiLoTrueCount, 2),
-        cards: this.remainingCards().map((card) => card.attributes()),
-      }
-    );
+    return Utils.copy({
+      penetration: Utils.round(this.penetration, 2),
+      hiLoRunningCount: this.hiLoRunningCount,
+      hiLoTrueCount: Utils.round(this.hiLoTrueCount, 2),
+      cards: this.remainingCards().map((card) => card.attributes()),
+    });
   }
 
   serialize(): string {

@@ -1,7 +1,7 @@
 import * as readline from 'readline';
 
 import Renderer from './renderer';
-import Game from './game';
+import Game, { settings as gameSettings } from './game';
 import Player from './player';
 import Hand from './hand';
 import { HandWinner, GameStep, handWinnerToString } from './types';
@@ -63,7 +63,7 @@ export default class CLIRenderer implements Renderer {
       if (this.game.focusedHand.firstMove) {
         choices.push('D (double)');
 
-        if (this.game.settings.allowLateSurrender) {
+        if (gameSettings.allowLateSurrender) {
           choices.push('R (surrender)');
         }
       }

@@ -1,11 +1,4 @@
-import {
-  SimpleObject,
-  DeepPartial,
-  Suit,
-  Rank,
-  enumValues,
-  entries,
-} from './types';
+import { SimpleObject, Suit, Rank, enumValues, entries } from './types';
 
 type Range<T> = { start: number; end: number; value: T };
 
@@ -142,37 +135,12 @@ export default class Utils {
     return `${(timeMs / 1000).toFixed(2)} seconds`;
   }
 
-  // See https://stackoverflow.com/a/34749873/659910
-  static mergeDeep<T extends SimpleObject>(
-    target: T,
-    ...sources: DeepPartial<T>[]
-  ): T {
-    const isObject = (
-      item: DeepPartial<T> | undefined
-    ): item is DeepPartial<T> =>
-      !!item && typeof item === 'object' && !Array.isArray(item);
+  static merge<T extends SimpleObject>(target: T, ...sources: Partial<T>[]): T {
+    return Object.assign(target, ...sources);
+  }
 
-    const source = sources.shift();
-    if (!source) {
-      return target;
-    }
-
-    if (isObject(target) && isObject(source)) {
-      for (const key in source) {
-        const nextSource = source[key];
-        if (isObject(nextSource)) {
-          if (!target[key]) {
-            Object.assign(target, { [key]: {} });
-          }
-
-          this.mergeDeep(target[key], nextSource);
-        } else {
-          Object.assign(target, { [key]: source[key] });
-        }
-      }
-    }
-
-    return this.mergeDeep(target, ...sources);
+  static copy<T extends SimpleObject>(object: T): T {
+    return Object.assign({}, object);
   }
 
   static arrayToRanges<T>(array: T[]): Range<T>[] {

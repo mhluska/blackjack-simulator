@@ -1,5 +1,5 @@
 import Utils from './utils';
-import Game, { GameSettings } from './game';
+import Game, { settings as gameSettings, GameSettings } from './game';
 import Hand from './hand';
 import { selectCharts } from './charts/utils';
 import {
@@ -33,7 +33,7 @@ export default class BasicStrategyChecker {
       return Move.NoInsurance;
     }
 
-    const { chart: chartGroup } = selectCharts(game.settings);
+    const { chart: chartGroup } = selectCharts(gameSettings);
     const chartType = this._chartType(hand);
     const [chartMin, chartMax] = chartMinMax(chartType);
 
@@ -68,7 +68,7 @@ export default class BasicStrategyChecker {
       correctMove === ChartMove.SplitOrDouble ||
       correctMove === ChartMove.SplitOrStand
     ) {
-      if (game.settings.allowDoubleAfterSplit) {
+      if (gameSettings.allowDoubleAfterSplit) {
         return Move.Split;
       } else {
         switch (correctMove) {
@@ -83,7 +83,7 @@ export default class BasicStrategyChecker {
     }
 
     if (correctMove === ChartMove.SurrenderOrSplit) {
-      return hand.allowSurrender && !game.settings.allowDoubleAfterSplit
+      return hand.allowSurrender && !gameSettings.allowDoubleAfterSplit
         ? Move.Surrender
         : Move.Split;
     }

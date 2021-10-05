@@ -61,7 +61,10 @@ export default class Player extends GameObject {
     this.id = Utils.randomId();
     this.strategy = strategy;
 
-    this._hands = Array.from({ length: handsMax }, () => {
+    // TODO: We need two settings here. One is max resplits allowed and the
+    // other is max spots allowed. Assuming max spots allowed is 4 (`handsMax`
+    // is how many resplits are allowed).
+    this._hands = Array.from({ length: handsMax * 4 }, () => {
       // TODO: Use `chainEmitChange`.
       const hand = new Hand(this);
       hand.on(Event.Change, () => this.emitChange());

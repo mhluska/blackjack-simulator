@@ -8,20 +8,13 @@ import { Event } from '../../src/event-emitter';
 import Game, { GameSettings } from '../../src/game';
 import Card from '../../src/card';
 import Utils from '../../src/utils';
-import {
-  DeepPartial,
-  Suit,
-  Rank,
-  GameStep,
-  Move,
-  HandWinner,
-} from '../../src/types';
+import { Suit, Rank, GameStep, Move, HandWinner } from '../../src/types';
 
 const expect = chai.expect;
 chai.use(sinonChai);
 
 type GameSetupOptions = {
-  settings: DeepPartial<GameSettings>;
+  settings: Partial<GameSettings>;
   playerCards: Rank[];
   dealerCards: Rank[];
 };
@@ -37,8 +30,7 @@ function setupGame(options: Partial<GameSetupOptions> = {}) {
     dealerCards: [Rank.Six],
   };
 
-  // TODO: Avoid `as` here. Otherwise returns `Partial<GameSetupOptions>`.
-  const mergedOptions = Utils.mergeDeep(defaults, options) as GameSetupOptions;
+  const mergedOptions = Utils.merge(defaults, options);
 
   const game = new Game(mergedOptions.settings);
   const length = game.shoe.cards.length;

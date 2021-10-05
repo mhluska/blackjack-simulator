@@ -1,7 +1,6 @@
-import Game from './game';
+import Game, { settings as gameSettings } from './game';
 import Utils from './utils';
 import {
-  DeepPartial,
   TableRules,
   HandWinner,
   PlayerStrategy,
@@ -82,14 +81,37 @@ function getChipUnit(minimumBet: number): number {
 }
 
 function roundToIncrement(increment: number, value: number) {
-  return Math.round(value / increment) * increment;
+  return value;
+  // return Math.round(value / increment) * increment;
 }
 
-function defaultSettings(minimumBet = 10 * 100): SimulatorSettings {
-  const maxTrueCount = 5;
+// Use a lower bet size per spot to keep RoR consistent. Values are taken from
+// Blackjack Attack (table 2.4).
+function spotCountBetMultiplier(spotCount: number): number {
+  switch (spotCount) {
+    case 1:
+      return 1;
+    case 2:
+      return 0.73;
+    default:
+    case 3:
+      return 0.57;
+  }
+}
+
+function defaultSettings({
+  minimumBet = 10 * 100,
+  playerSpots,
+}: Partial<
+  Pick<SimulatorSettings, 'minimumBet' | 'playerSpots'>
+> = {}): SimulatorSettings {
+  const maxTrueCount = 4;
+  const maxBetMultiplier = 10;
   const unit = minimumBet;
-  const spreadStep = (unit * 11) / (maxTrueCount - 1);
+  const spreadStep = (unit * (maxBetMultiplier - 1)) / (maxTrueCount - 1);
   const chipUnit = getChipUnit(minimumBet);
+  const playerSpotsSetting =
+    playerSpots ?? Array.from({ length: maxTrueCount + 1 }, () => 1);
 
   return {
     // Simulator-only settings.
@@ -117,10 +139,13 @@ function defaultSettings(minimumBet = 10 * 100): SimulatorSettings {
       (item, hiLoTrueCount) =>
         roundToIncrement(
           chipUnit,
-          unit + spreadStep * Math.max(0, hiLoTrueCount - 1)
+          unit +
+            spreadStep *
+              Math.max(0, hiLoTrueCount - 1) *
+              spotCountBetMultiplier(playerSpotsSetting[hiLoTrueCount])
         )
     ),
-    playerSpots: Array.from({ length: maxTrueCount + 1 }, () => 1),
+    playerSpots: playerSpotsSetting,
 
     debug: false,
     playerTablePosition: 1,
@@ -256,12 +281,14 @@ export default class Simulator {
   game: Game;
   intro: FormattedSimulatorIntro;
 
-  constructor(settings: DeepPartial<SimulatorSettings>) {
-    // TODO: Avoid `as` here. Otherwise returns `Partial<SimulatorSettings>`.
-    this.settings = Utils.mergeDeep(
-      defaultSettings(settings.minimumBet),
+  constructor(settings: Partial<SimulatorSettings>) {
+    this.settings = Utils.merge(
+      defaultSettings({
+        minimumBet: settings.minimumBet,
+        playerSpots: settings.playerSpots,
+      }),
       settings
-    ) as SimulatorSettings;
+    );
 
     this.game = new Game({
       ...this.settings,
@@ -275,21 +302,21 @@ export default class Simulator {
 
     this.intro = {
       tableRules: formatTableRules({
-        allowDoubleAfterSplit: this.game.settings.allowDoubleAfterSplit,
-        allowLateSurrender: this.game.settings.allowLateSurrender,
-        allowResplitAces: this.game.settings.allowResplitAces,
-        blackjackPayout: this.game.settings.blackjackPayout,
-        deckCount: this.game.settings.deckCount,
-        hitSoft17: this.game.settings.hitSoft17,
-        maxHandsAllowed: this.game.settings.maxHandsAllowed,
-        maximumBet: this.game.settings.maximumBet,
-        minimumBet: this.game.settings.minimumBet,
-        penetration: this.game.settings.penetration,
-        playerCount: this.game.settings.playerCount,
+        allowDoubleAfterSplit: gameSettings.allowDoubleAfterSplit,
+        allowLateSurrender: gameSettings.allowLateSurrender,
+        allowResplitAces: gameSettings.allowResplitAces,
+        blackjackPayout: gameSettings.blackjackPayout,
+        deckCount: gameSettings.deckCount,
+        hitSoft17: gameSettings.hitSoft17,
+        maxHandsAllowed: gameSettings.maxHandsAllowed,
+        maximumBet: gameSettings.maximumBet,
+        minimumBet: gameSettings.minimumBet,
+        penetration: gameSettings.penetration,
+        playerCount: gameSettings.playerCount,
       }),
       penetration: settings.raw
-        ? this.game.settings.penetration.toString()
-        : Utils.formatPercent(this.game.settings.penetration),
+        ? gameSettings.penetration.toString()
+        : Utils.formatPercent(gameSettings.penetration),
       betSpread: settings.raw
         ? this.settings.playerBetSpread.join()
         : Utils.arrayToRangeString(this.settings.playerBetSpread, (amount) =>
@@ -331,8 +358,8 @@ export default class Simulator {
     // TODO: Fix `handsPlayed` going slightly over the limit if the next
     // iteration involves playing more than one hand.
     while (handsPlayed < this.settings.hands) {
-      const betAmount = this.betAmount(this.game.shoe.hiLoTrueCount);
       const spotCount = this.spotCount(this.game.shoe.hiLoTrueCount);
+      const betAmount = this.betAmount(this.game.shoe.hiLoTrueCount);
 
       const prevBalance = this.game.player.balance;
 
