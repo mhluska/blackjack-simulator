@@ -76,6 +76,7 @@ export enum PlayerStrategy {
   UserInput,
   BasicStrategy,
   BasicStrategyI18,
+  BasicStrategyI18Fab4,
   Dealer,
 }
 
@@ -335,6 +336,8 @@ export function playerStrategyToString(playerStrategy: PlayerStrategy): string {
       return 'basic-strategy';
     case PlayerStrategy.BasicStrategyI18:
       return 'basic-strategy-i18';
+    case PlayerStrategy.BasicStrategyI18Fab4:
+      return 'basic-strategy-i18-fab4';
     case PlayerStrategy.Dealer:
       return 'dealer';
     case PlayerStrategy.UserInput:
@@ -352,6 +355,8 @@ export function parsePlayerStrategy(
   }
 
   switch (playerStrategy) {
+    case 'basic-strategy-i18-fab4':
+      return PlayerStrategy.BasicStrategyI18Fab4;
     case 'basic-strategy-i18':
       return PlayerStrategy.BasicStrategyI18;
     case 'basic-strategy':

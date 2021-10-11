@@ -260,7 +260,7 @@ export default function (
         formatter: blackjackPayoutToString,
       },
       playerStrategy: {
-        hint: '[basic-strategy | basic-strategy-i18]',
+        hint: '[basic-strategy | basic-strategy-i18 | basic-strategy-i18-fab4]',
         formatter: playerStrategyToString,
       },
       playerBetSpread: {

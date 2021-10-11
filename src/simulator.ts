@@ -6,6 +6,7 @@ import {
   PlayerStrategy,
   BlackjackPayout,
   blackjackPayoutToString,
+  playerStrategyToString,
 } from './types';
 
 export type SimulatorSettings = {
@@ -49,6 +50,7 @@ export interface FormattedSimulatorIntro extends FormattedResult {
   penetration: string;
   spotsPlayed: string;
   tableRules: string;
+  strategy: string;
 }
 
 export interface FormattedSimulatorResult extends FormattedResult {
@@ -116,7 +118,7 @@ function defaultSettings({
   return {
     // Simulator-only settings.
     hands: 10 ** 7,
-    playerStrategy: PlayerStrategy.BasicStrategyI18,
+    playerStrategy: PlayerStrategy.BasicStrategyI18Fab4,
 
     // TODO: Allow computing optimal bet spreads (use kelly if a bankroll is
     // specified: edge * bankroll / 1.15^2).
@@ -198,6 +200,19 @@ function formatTableRules(tableRules: TableRules) {
   ]
     .filter(Boolean)
     .join(' ');
+}
+
+function formatPlayerStrategy(playerStrategy: PlayerStrategy) {
+  switch (playerStrategy) {
+    case PlayerStrategy.BasicStrategyI18Fab4:
+      return 'Basic Strategy + Illustrious 18 + Fab 4';
+    case PlayerStrategy.BasicStrategyI18:
+      return 'Basic Strategy + Illustrious 18';
+    case PlayerStrategy.BasicStrategy:
+      return 'Basic Strategy';
+    default:
+      throw new Error(`Unexpected player strategy ${playerStrategy}`);
+  }
 }
 
 // Hands per hour estimation based on:
@@ -325,6 +340,9 @@ export default class Simulator {
       spotsPlayed: settings.raw
         ? this.settings.playerSpots.join()
         : Utils.arrayToRangeString(this.settings.playerSpots),
+      strategy: settings.raw
+        ? playerStrategyToString(this.settings.playerStrategy)
+        : formatPlayerStrategy(this.settings.playerStrategy),
     };
   }
 

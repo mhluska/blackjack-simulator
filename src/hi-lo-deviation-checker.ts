@@ -87,7 +87,11 @@ export default class HiLoDeviationChecker {
     return deviations.get(playerTotal)?.get(dealersCard);
   }
 
-  static _suggest(game: Game, hand: Hand): Deviation | undefined {
+  static _suggest(
+    game: Game,
+    hand: Hand,
+    { suggestFab4 = false }: { suggestFab4: boolean }
+  ): Deviation | undefined {
     const trueCount = game.shoe.hiLoTrueCount;
 
     if (!game.dealer.upcard || hand.isSoft) {
@@ -100,10 +104,11 @@ export default class HiLoDeviationChecker {
         : hand.cardTotal;
     const dealersCard = game.dealer.upcard.value;
 
-    const deviation = hand.allowSurrender
-      ? this._getDeviation(fab4Deviations, playerTotal, dealersCard) ??
-        this._getDeviation(illustrious18Deviations, playerTotal, dealersCard)
-      : this._getDeviation(illustrious18Deviations, playerTotal, dealersCard);
+    const deviation =
+      hand.allowSurrender && suggestFab4
+        ? this._getDeviation(fab4Deviations, playerTotal, dealersCard) ??
+          this._getDeviation(illustrious18Deviations, playerTotal, dealersCard)
+        : this._getDeviation(illustrious18Deviations, playerTotal, dealersCard);
 
     if (
       !deviation ||
@@ -118,8 +123,12 @@ export default class HiLoDeviationChecker {
     return deviation;
   }
 
-  static suggest(game: Game, hand: Hand): Move | undefined {
-    return this._suggest(game, hand)?.correctMove;
+  static suggest(
+    game: Game,
+    hand: Hand,
+    { suggestFab4 = false }: { suggestFab4: boolean }
+  ): Move | undefined {
+    return this._suggest(game, hand, { suggestFab4 })?.correctMove;
   }
 
   // Returns true if an Illustrious 18 deviation was followed correctly.
@@ -133,7 +142,7 @@ export default class HiLoDeviationChecker {
       return false;
     }
 
-    const deviation = this._suggest(game, hand);
+    const deviation = this._suggest(game, hand, { suggestFab4: false });
 
     if (!deviation) {
       return false;

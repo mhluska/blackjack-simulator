@@ -66,7 +66,8 @@ const settings = {
   // Can be one of:
   // 'basic-strategy': play perfect basic strategy
   // 'basic-strategy-i18': play perfect basic strategy plus illustrious 18
-  playerStrategy: 'basic-strategy-i18',
+  // 'basic-strategy-i18-fab4': play perfect basic strategy plus illustrious 18 + fab 4
+  playerStrategy: 'basic-strategy-i18-fab4',
 
   playerBetSpread: [1000, 2000, 4000, 8000, 16000],
   playerSpots: [1, 1, 1, 1, 1],
