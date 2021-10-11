@@ -3,14 +3,21 @@ import Game, { settings as gameSettings } from './game';
 import Hand from './hand';
 import { Move, CheckResult, GameStep, GameMode } from './types';
 
-type Illustrious18Deviation = {
+type playerTotal = number;
+type dealerCard = number;
+type comparator = string;
+type index = number;
+
+type Deviation = {
   correctMove: Move;
-  index: [string, number];
+  index: [comparator, index];
 };
 
-// TODO: Consider different deviations for deck counts and s17.
+type Deviations = Map<playerTotal, Map<dealerCard, Deviation>>;
+
+// TODO: Consider different deviations for deck counts and s17?
 // prettier-ignore
-export const illustrious18Deviations = new Map<number, Map<number, Illustrious18Deviation>>([
+export const illustrious18Deviations: Deviations = new Map<playerTotal, Map<dealerCard, Deviation>>([
   [0,  new Map([
     [11, { correctMove: Move.AskInsurance, index: ['>=', 3] }],
   ]),
@@ -58,8 +65,29 @@ export const illustrious18Deviations = new Map<number, Map<number, Illustrious18
   ],
 ]);
 
+// prettier-ignore
+export const fab4Deviations: Deviations = new Map<playerTotal, Map<dealerCard, Deviation>>([
+  [14,  new Map([
+    [10, { correctMove: Move.Surrender, index: ['>=', 3] }],
+  ]),
+  ],
+  [15,  new Map([
+    [9,  { correctMove: Move.Surrender, index: ['>=', 2] }],
+    [10, { correctMove: Move.Surrender, index: ['>=', 0] }],
+    [11, { correctMove: Move.Surrender, index: ['>=', 1] }],
+  ])],
+]);
+
 export default class HiLoDeviationChecker {
-  static _suggest(game: Game, hand: Hand): Illustrious18Deviation | undefined {
+  static _getDeviation(
+    deviations: Deviations,
+    playerTotal: playerTotal,
+    dealersCard: dealerCard
+  ): Deviation | undefined {
+    return deviations.get(playerTotal)?.get(dealersCard);
+  }
+
+  static _suggest(game: Game, hand: Hand): Deviation | undefined {
     const trueCount = game.shoe.hiLoTrueCount;
 
     if (!game.dealer.upcard || hand.isSoft) {
@@ -71,14 +99,17 @@ export default class HiLoDeviationChecker {
         ? 0
         : hand.cardTotal;
     const dealersCard = game.dealer.upcard.value;
-    const deviation = illustrious18Deviations
-      .get(playerTotal)
-      ?.get(dealersCard);
+
+    const deviation = hand.allowSurrender
+      ? this._getDeviation(fab4Deviations, playerTotal, dealersCard) ??
+        this._getDeviation(illustrious18Deviations, playerTotal, dealersCard)
+      : this._getDeviation(illustrious18Deviations, playerTotal, dealersCard);
 
     if (
       !deviation ||
-      (!hand.firstMove && deviation.correctMove === Move.Double) ||
-      (!hand.allowSplit && deviation.correctMove === Move.Split) ||
+      (deviation.correctMove === Move.Double && !hand.firstMove) ||
+      (deviation.correctMove === Move.Split && !hand.allowSplit) ||
+      (deviation.correctMove === Move.Surrender && !hand.allowSurrender) ||
       !Utils.compareRange(trueCount, deviation.index)
     ) {
       return;
