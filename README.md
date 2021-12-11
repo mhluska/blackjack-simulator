@@ -9,7 +9,7 @@
 <a href="https://github.com/mhluska/blackjack-simulator/blob/master/LICENSE"><img src="https://img.shields.io/github/license/mhluska/blackjack-simulator" alt="License"></a>
 <a href="https://discord.gg/GAQFFvfvW4"><img src="https://img.shields.io/badge/discord-join%20chat-7389D8?logo=discord&logoColor=ffffff&label=" alt="Discord"></a>
 
-> Practice card counting and calculate EV for any table conditions
+> Practice card counting using Hi-Lo and calculate EV for any table conditions
 
 ## Features
 
