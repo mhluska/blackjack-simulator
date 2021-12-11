@@ -17,6 +17,7 @@ export type SimulatorSettings = {
   playerSpots: number[];
   playerTablePosition: number;
   playerBankroll: number;
+  playerWongOutTrueCount: number;
   hands: number;
 } & TableRules;
 
@@ -51,6 +52,7 @@ export interface FormattedSimulatorIntro extends FormattedResult {
   spotsPlayed: string;
   tableRules: string;
   strategy: string;
+  wongOut: string;
 }
 
 export interface FormattedSimulatorResult extends FormattedResult {
@@ -155,6 +157,7 @@ function defaultSettings({
     // bankrupt for the purpose of simulation.
     // TODO: Add support for infinite bankroll in the game module.
     playerBankroll: minimumBet * 10 ** 7,
+    playerWongOutTrueCount: -Infinity,
 
     // Table rules
     allowDoubleAfterSplit: true,
@@ -213,6 +216,10 @@ function formatPlayerStrategy(playerStrategy: PlayerStrategy) {
     default:
       throw new Error(`Unexpected player strategy ${playerStrategy}`);
   }
+}
+
+function formatWongOutTrueCount(wongOutTrueCount: number) {
+  return wongOutTrueCount === -Infinity ? '' : `TC ${wongOutTrueCount}`;
 }
 
 // Hands per hour estimation based on:
@@ -343,6 +350,9 @@ export default class Simulator {
       strategy: settings.raw
         ? playerStrategyToString(this.settings.playerStrategy)
         : formatPlayerStrategy(this.settings.playerStrategy),
+      wongOut: settings.raw
+        ? this.settings.playerWongOutTrueCount.toString()
+        : formatWongOutTrueCount(this.settings.playerWongOutTrueCount),
     };
   }
 
@@ -351,11 +361,15 @@ export default class Simulator {
   }
 
   betAmount(hiLoTrueCount: number): number {
-    return this.clampToArray(hiLoTrueCount, this.settings.playerBetSpread);
+    return hiLoTrueCount <= this.settings.playerWongOutTrueCount
+      ? 0
+      : this.clampToArray(hiLoTrueCount, this.settings.playerBetSpread);
   }
 
   spotCount(hiLoTrueCount: number): number {
-    return this.clampToArray(hiLoTrueCount, this.settings.playerSpots);
+    return hiLoTrueCount <= this.settings.playerWongOutTrueCount
+      ? 0
+      : this.clampToArray(hiLoTrueCount, this.settings.playerSpots);
   }
 
   run(): SimulatorResult {
@@ -376,8 +390,8 @@ export default class Simulator {
     // TODO: Fix `handsPlayed` going slightly over the limit if the next
     // iteration involves playing more than one hand.
     while (handsPlayed < this.settings.hands) {
-      const spotCount = this.spotCount(this.game.shoe.hiLoTrueCount);
       const betAmount = this.betAmount(this.game.shoe.hiLoTrueCount);
+      const spotCount = this.spotCount(this.game.shoe.hiLoTrueCount);
 
       const prevBalance = this.game.player.balance;
 

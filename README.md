@@ -73,6 +73,7 @@ const settings = {
   playerSpots: [1, 1, 1, 1, 1],
   playerTablePosition: 1,
   playerBankroll: 1000 * 10 ** 7,
+  playerWongOutTrueCount: null,
 
   // Table rules
   allowDoubleAfterSplit: true,

@@ -30,13 +30,17 @@ interface CliSimulatorSettings
   blackjackPayout: string;
 }
 
-function parseEnums(
+function parseOptions(
   options: Partial<CliSimulatorSettings & CliSettings>
 ): Partial<SimulatorSettings> {
   return Utils.compact({
     ...options,
     playerStrategy: parsePlayerStrategy(options.playerStrategy),
     blackjackPayout: parseBlackjackPayout(options.blackjackPayout),
+    playerWongOutTrueCount:
+      typeof options.playerWongOutTrueCount === 'number'
+        ? -options.playerWongOutTrueCount
+        : null,
   });
 }
 
@@ -213,7 +217,7 @@ function getCoresResults(
 
   // Avoid spawning child processes if only one core is available.
   if (cores === 1) {
-    results.push(new Simulator(parseEnums(options)).run());
+    results.push(new Simulator(parseOptions(options)).run());
     return Promise.resolve(results);
   }
 
@@ -277,6 +281,10 @@ export default function (
       },
       playerSpots: { hint: '(spots played at TC 0, 1, 2 etc)' },
       playerBankroll: { formatter: Utils.formatCents },
+      playerWongOutTrueCount: {
+        formatter: () => '3',
+        hint: '(parsed as true count -3)',
+      },
       maximumBet: { formatter: Utils.formatCents },
       minimumBet: { formatter: Utils.formatCents },
     });
@@ -284,7 +292,7 @@ export default function (
     return;
   }
 
-  const simulator = new Simulator(parseEnums(options));
+  const simulator = new Simulator(parseOptions(options));
 
   if (process.argv[3] === 'child') {
     process.send?.(simulator.run());
