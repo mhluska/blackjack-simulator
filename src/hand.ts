@@ -79,11 +79,11 @@ export default class Hand extends GameObject {
     this.emitChange();
   }
 
-  removeCard(): Card | void {
+  removeCard(): Card {
     const card = this.cards.pop();
 
     if (!card) {
-      return;
+      throw new Error('No cards left!');
     }
 
     this.decrementTotalsForCard(card);
@@ -173,6 +173,10 @@ export default class Hand extends GameObject {
     return this.splitCount > 0;
   }
 
+  get fromAceSplit(): boolean {
+    return this.fromSplit && this.cards[0].rank === Rank.Ace;
+  }
+
   get allowSurrender(): boolean {
     return this.firstMove && settings.allowLateSurrender;
   }
@@ -200,7 +204,9 @@ export default class Hand extends GameObject {
   }
 
   get finished(): boolean {
-    return this.busted || this.blackjack;
+    return (
+      this.busted || this.blackjack || (this.fromAceSplit && !this.hasAces)
+    );
   }
 
   get hasPairs(): boolean {

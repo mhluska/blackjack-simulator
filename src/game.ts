@@ -203,9 +203,9 @@ export default class Game extends EventEmitter {
     this.emit(Event.ResetState);
   }
 
-  allPlayerHandsFinished(): boolean {
+  allPlayerHandsBusted(): boolean {
     return this.players.every((player) =>
-      player.hands.every((hand) => hand.finished)
+      player.hands.every((hand) => hand.busted || hand.blackjack)
     );
   }
 
@@ -511,14 +511,8 @@ export default class Game extends EventEmitter {
       }
 
       if (input === Move.Split && hand.allowSplit) {
+        const handHadAces = hand.hasAces;
         const newHandCard = hand.removeCard();
-
-        // In practice this will never happen since the hand will always have
-        // a card at this point. It just makes TypeScript happy.
-        if (!newHandCard) {
-          return true;
-        }
-
         const newHand = player.addHand(betAmount, [newHandCard]);
 
         hand.splitCount += 1;
@@ -526,6 +520,10 @@ export default class Game extends EventEmitter {
 
         player.takeCard(this.shoe.drawCard(), { hand });
         player.takeCard(this.shoe.drawCard(), { hand: newHand });
+
+        if (handHadAces) {
+          return true;
+        }
       }
 
       if (input === Move.Surrender) {
@@ -585,15 +583,24 @@ export default class Game extends EventEmitter {
       input
     );
 
-    if (handFinished) {
-      if (this.state.focusedHandIndex < this.player.handsCount - 1) {
-        this.state.focusedHandIndex += 1;
-      } else {
-        return GameStep.PlayHandsLeft;
-      }
+    if (
+      handFinished &&
+      this.state.focusedHandIndex === this.player.handsCount - 1
+    ) {
+      return GameStep.PlayHandsLeft;
     }
 
-    return GameStep.WaitingForPlayInput;
+    // If aces were split, we may have to advance focus multiple times.
+    while (
+      this.state.focusedHandIndex < this.player.handsCount - 1 &&
+      this.focusedHand.finished
+    ) {
+      this.state.focusedHandIndex += 1;
+    }
+
+    return this.focusedHand.finished
+      ? GameStep.PlayHandsLeft
+      : GameStep.WaitingForPlayInput;
   }
 
   playDealer(): void {
@@ -603,7 +610,7 @@ export default class Game extends EventEmitter {
     // Dealer draws cards until they reach 17. However, if all player hands have
     // busted, this step is skipped.
     // TODO: Move this into `getNPCInput()` for `PlayerStrategy.DEALER`.
-    if (!this.allPlayerHandsFinished()) {
+    if (!this.allPlayerHandsBusted()) {
       while (this.dealer.cardTotal <= 17 && !this.dealer.blackjack) {
         if (
           this.dealer.cardTotal === 17 &&

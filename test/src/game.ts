@@ -302,11 +302,11 @@ describe('Game', function () {
       });
     });
 
-    context('when the player is dealt 21 after splitting aces', function () {
+    context('when the player splits aces and without more aces', function () {
       before(function () {
         game = setupGame({
           dealerCards: [Rank.Six],
-          playerCards: [Rank.Ace, Rank.Ace, Rank.Ten, Rank.Ten],
+          playerCards: [Rank.Ace, Rank.Ace, Rank.Three, Rank.Four],
         });
 
         runGame(game, {
@@ -314,17 +314,14 @@ describe('Game', function () {
             {
               [GameStep.WaitingForPlayInput]: Move.Split,
             },
-            {
-              [GameStep.WaitingForPlayInput]: Move.Stand,
-            },
           ],
         });
       });
 
-      it('should not correct the move', function () {
-        expect(game.state.sessionMovesTotal).to.equal(2);
-        expect(game.state.sessionMovesCorrect).to.equal(2);
-        expect(game.state.playCorrection).to.be.empty;
+      it('should not allow further action', function () {
+        expect(game.state.sessionMovesTotal).to.equal(1);
+        expect(game.state.sessionMovesCorrect).to.equal(1);
+        expect(game.state.step).to.equal(GameStep.PlayHandsLeft);
       });
     });
 

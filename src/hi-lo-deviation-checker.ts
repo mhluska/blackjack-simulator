@@ -68,13 +68,13 @@ export const illustrious18Deviations: Deviations = new Map<playerTotal, Map<deal
 // prettier-ignore
 export const fab4Deviations: Deviations = new Map<playerTotal, Map<dealerCard, Deviation>>([
   [14,  new Map([
-    [10, { correctMove: Move.Surrender, index: ['>=', 3] }],
+    [10, { correctMove: Move.Surrender, index: ['>=',  3] }],
   ]),
   ],
   [15,  new Map([
-    [9,  { correctMove: Move.Surrender, index: ['>=', 2] }],
-    [10, { correctMove: Move.Surrender, index: ['>=', 0] }],
-    [11, { correctMove: Move.Surrender, index: ['>=', 1] }],
+    [9,  { correctMove: Move.Surrender, index: ['>=',  2] }],
+    [10, { correctMove: Move.Hit,       index: ['<=', -1] }],
+    [11, { correctMove: Move.Hit,       index: ['<=',  0] }],
   ])],
 ]);
 
