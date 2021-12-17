@@ -435,7 +435,7 @@ export function gameModeToString(mode: GameMode): string {
     case GameMode.Illustrious18:
       return 'illustrious18';
     default:
-      throw new Error(`Unexpected blackjack payout ${mode}`);
+      throw new Error(`Unexpected game mode ${mode}`);
   }
 }
 
@@ -454,7 +454,7 @@ export function parseGameMode(mode: string | undefined): GameMode | undefined {
     case 'illustrious18':
       return GameMode.Illustrious18;
     default:
-      throw new Error(`Unexpected blackjack payout ${mode}`);
+      throw new Error(`Unexpected game mode ${mode}`);
   }
 }
 

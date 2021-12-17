@@ -302,7 +302,7 @@ describe('Game', function () {
       });
     });
 
-    context('when the player splits aces and without more aces', function () {
+    context('when the player splits aces without more aces', function () {
       before(function () {
         game = setupGame({
           dealerCards: [Rank.Six],
@@ -322,6 +322,33 @@ describe('Game', function () {
         expect(game.state.sessionMovesTotal).to.equal(1);
         expect(game.state.sessionMovesCorrect).to.equal(1);
         expect(game.state.step).to.equal(GameStep.PlayHandsLeft);
+      });
+    });
+
+    context('when the player splits non-aces', function () {
+      before(function () {
+        game = setupGame({
+          dealerCards: [Rank.Six],
+          playerCards: [Rank.Six, Rank.Six, Rank.Ten, Rank.Ten],
+        });
+
+        runGame(game, {
+          input: [
+            {
+              [GameStep.WaitingForPlayInput]: Move.Split,
+            },
+            {
+              [GameStep.WaitingForPlayInput]: Move.Stand,
+            },
+          ],
+        });
+      });
+
+      it('should allow further action', function () {
+        expect(game.state.sessionMovesTotal).to.equal(2);
+        expect(game.state.sessionMovesCorrect).to.equal(2);
+        expect(game.state.step).to.equal(GameStep.WaitingForPlayInput);
+        expect(game.state.focusedHandIndex).to.equal(1);
       });
     });
 
@@ -347,6 +374,32 @@ describe('Game', function () {
       it('checked deviations and basic strategy', function () {
         expect(BasicStrategyChecker.check).to.have.been.calledOnce;
         expect(HiLoDeviationChecker.check).to.have.been.calledOnce;
+      });
+    });
+
+    context('when resplitting is not allowed', function () {
+      before(function () {
+        game = setupGame({
+          dealerCards: [Rank.Six],
+          playerCards: [Rank.Ten, Rank.Ten],
+          settings: {
+            maxHandsAllowed: 1,
+          },
+        });
+
+        runGame(game, {
+          input: [
+            {
+              [GameStep.WaitingForPlayInput]: Move.Stand,
+            },
+          ],
+        });
+      });
+
+      it('should use the hard totals chart for suggestions', function () {
+        expect(game.state.sessionMovesTotal).to.equal(1);
+        expect(game.state.sessionMovesCorrect).to.equal(1);
+        expect(game.state.playCorrection).to.equal('');
       });
     });
   });

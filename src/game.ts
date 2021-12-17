@@ -583,11 +583,12 @@ export default class Game extends EventEmitter {
       input
     );
 
-    if (
-      handFinished &&
-      this.state.focusedHandIndex === this.player.handsCount - 1
-    ) {
-      return GameStep.PlayHandsLeft;
+    if (handFinished) {
+      if (this.state.focusedHandIndex < this.player.handsCount - 1) {
+        this.state.focusedHandIndex += 1;
+      } else {
+        return GameStep.PlayHandsLeft;
+      }
     }
 
     // If aces were split, we may have to advance focus multiple times.

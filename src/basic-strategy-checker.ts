@@ -38,7 +38,7 @@ export default class BasicStrategyChecker {
     const [chartMin, chartMax] = chartMinMax(chartType);
 
     const playerTotal = Utils.clamp(
-      hand.hasPairs ? hand.cards[0].value : hand.cardTotal,
+      hand.allowSplit ? hand.cards[0].value : hand.cardTotal,
       chartMin,
       chartMax
     );
