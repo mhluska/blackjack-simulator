@@ -218,9 +218,17 @@ export default class Game extends EventEmitter {
   }
 
   validateInput(input: Move, hand: Hand): void {
+    const hiLoResult = HiLoDeviationChecker.check(this, hand, input);
+    const basicStrategyResult = BasicStrategyChecker.check(this, hand, input);
+
+    // If surrender is correct, it should take priority over I18 deviations.
+    // TODO: After we add a game mode for Fab4, we should split those checks out
+    // into their own checker since we do want to still run those in the
+    // surrender case.
     const checkerResult =
-      HiLoDeviationChecker.check(this, hand, input) ||
-      BasicStrategyChecker.check(this, hand, input);
+      input === Move.Surrender && basicStrategyResult === true
+        ? true
+        : hiLoResult || basicStrategyResult;
 
     if (typeof checkerResult === 'object' && checkerResult.hint) {
       this.state.playCorrection = checkerResult.hint;
@@ -512,7 +520,6 @@ export default class Game extends EventEmitter {
       }
 
       if (input === Move.Split && hand.allowSplit) {
-        const handHadAces = hand.hasAces;
         const newHandCard = hand.removeCard();
         const newHand = player.addHand(betAmount, [newHandCard]);
 
@@ -522,7 +529,7 @@ export default class Game extends EventEmitter {
         player.takeCard(this.shoe.drawCard(), { hand });
         player.takeCard(this.shoe.drawCard(), { hand: newHand });
 
-        if (handHadAces) {
+        if (hand.hasAces) {
           return true;
         }
       }

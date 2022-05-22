@@ -8,13 +8,22 @@ import { Event } from '../../src/event-emitter';
 import Game, { GameSettings } from '../../src/game';
 import Card from '../../src/card';
 import Utils from '../../src/utils';
-import { Suit, Rank, GameStep, Move, HandWinner } from '../../src/types';
+import {
+  Suit,
+  Rank,
+  GameStep,
+  Move,
+  HandWinner,
+  GameMode,
+  cardRankToValue,
+} from '../../src/types';
 
 const expect = chai.expect;
 chai.use(sinonChai);
 
 type GameSetupOptions = {
   settings: Partial<GameSettings>;
+  setupDeviationScenario: boolean;
   playerCards: Rank[];
   dealerCards: Rank[];
 };
@@ -26,34 +35,42 @@ function setupGame(options: Partial<GameSetupOptions> = {}) {
       playerTablePosition: 1,
       playerCount: 1,
     },
+    setupDeviationScenario: false,
     playerCards: [],
     dealerCards: [Rank.Six],
   };
 
   const mergedOptions = Utils.merge(defaults, options);
-
   const game = new Game(mergedOptions.settings);
-  const length = game.shoe.cards.length;
 
-  const setCard = (index: number, rank: Rank): void => {
-    if (typeof rank === 'undefined') {
-      return;
+  if (mergedOptions.setupDeviationScenario) {
+    const playerTotal =
+      cardRankToValue(mergedOptions.playerCards[0]) +
+      cardRankToValue(mergedOptions.playerCards[1]);
+    const dealerTotal = cardRankToValue(mergedOptions.dealerCards[0]);
+    game.shoe.setupDeviationScenario(playerTotal, dealerTotal);
+  } else {
+    const length = game.shoe.cards.length;
+    const setCard = (index: number, rank: Rank): void => {
+      if (typeof rank === 'undefined') {
+        return;
+      }
+
+      game.shoe.cards[length - index - 1] = new Card(
+        Suit.Hearts,
+        rank,
+        game.shoe
+      );
+    };
+
+    setCard(0, mergedOptions.playerCards[0]);
+    setCard(1, mergedOptions.dealerCards[0]);
+    setCard(2, mergedOptions.playerCards[1]);
+    setCard(3, mergedOptions.dealerCards[1]);
+
+    for (let i = 2; i <= mergedOptions.playerCards.length - 1; i += 1) {
+      setCard(i + 2, mergedOptions.playerCards[i]);
     }
-
-    game.shoe.cards[length - index - 1] = new Card(
-      Suit.Hearts,
-      rank,
-      game.shoe
-    );
-  };
-
-  setCard(0, mergedOptions.playerCards[0]);
-  setCard(1, mergedOptions.dealerCards[0]);
-  setCard(2, mergedOptions.playerCards[1]);
-  setCard(3, mergedOptions.dealerCards[1]);
-
-  for (let i = 2; i <= mergedOptions.playerCards.length - 1; i += 1) {
-    setCard(i + 2, mergedOptions.playerCards[i]);
   }
 
   return game;
@@ -279,6 +296,34 @@ describe('Game', function () {
 
       it('should use the six deck, stay soft 17 chart (allow 16vA hit)', function () {
         expect(game.state.step).to.equal(GameStep.Start);
+      });
+    });
+
+    context('when surrender is allowed', function () {
+      before(function () {
+        game = setupGame({
+          settings: {
+            deckCount: 6,
+            allowLateSurrender: true,
+            mode: GameMode.Illustrious18,
+          },
+          setupDeviationScenario: true,
+          dealerCards: [Rank.Ten],
+          playerCards: [Rank.Six, Rank.Ten],
+        });
+
+        runGame(game, {
+          input: [
+            {
+              [GameStep.WaitingForPlayInput]: Move.Surrender,
+            },
+          ],
+        });
+      });
+
+      it('should take priority over illustrious 18', function () {
+        expect(game.state.sessionMovesTotal).to.equal(1);
+        expect(game.state.sessionMovesCorrect).to.equal(1);
       });
     });
 

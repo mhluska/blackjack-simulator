@@ -1,14 +1,14 @@
 import Utils from './utils';
 import Game, { settings as gameSettings } from './game';
 import Hand from './hand';
-import { Move, CheckResult, GameStep, GameMode } from './types';
+import { Move, CheckResult, GameStep, GameMode, PlayerStrategy } from './types';
 
 type playerTotal = number;
 type dealerCard = number;
 type comparator = string;
 type index = number;
 
-type Deviation = {
+export type Deviation = {
   correctMove: Move;
   index: [comparator, index];
 };
@@ -123,12 +123,10 @@ export default class HiLoDeviationChecker {
     return deviation;
   }
 
-  static suggest(
-    game: Game,
-    hand: Hand,
-    { suggestFab4 = false }: { suggestFab4: boolean }
-  ): Move | undefined {
-    return this._suggest(game, hand, { suggestFab4 })?.correctMove;
+  static suggest(game: Game, hand: Hand): Move | undefined {
+    return this._suggest(game, hand, {
+      suggestFab4: hand.player.strategy === PlayerStrategy.BasicStrategyI18Fab4,
+    })?.correctMove;
   }
 
   // Returns true if an Illustrious 18 deviation was followed correctly.
@@ -142,7 +140,10 @@ export default class HiLoDeviationChecker {
       return false;
     }
 
-    const deviation = this._suggest(game, hand, { suggestFab4: false });
+    // TODO: Enable `suggestFab4` after a game mode is added for it.
+    const deviation = this._suggest(game, hand, {
+      suggestFab4: false,
+    });
 
     if (!deviation) {
       return false;

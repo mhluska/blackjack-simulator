@@ -90,9 +90,8 @@ export default class Player extends GameObject {
       this.strategy === PlayerStrategy.BasicStrategyI18Fab4
     ) {
       correctMove =
-        HiLoDeviationChecker.suggest(game, hand, {
-          suggestFab4: this.strategy === PlayerStrategy.BasicStrategyI18Fab4,
-        }) || BasicStrategyChecker.suggest(game, hand);
+        HiLoDeviationChecker.suggest(game, hand) ||
+        BasicStrategyChecker.suggest(game, hand);
     } else {
       correctMove = BasicStrategyChecker.suggest(game, hand);
     }
