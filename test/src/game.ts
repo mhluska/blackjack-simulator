@@ -79,6 +79,9 @@ function runGame(
     const inputChoices = input[callCount];
     if (inputChoices) {
       playerInput = inputChoices[game.state.step];
+      if (!playerInput && game.state.step >= 3) {
+        throw new Error(`No action provided for game step ${game.state.step}`);
+      }
     } else if (!repeatPlayerInput) {
       break;
     }
@@ -256,7 +259,7 @@ describe('Game', function () {
             allowLateSurrender: true,
           },
           dealerCards: [Rank.Ace],
-          playerCards: [Rank.Six, Rank.Ten],
+          playerCards: [Rank.Six, Rank.Ten, Rank.Ten],
         });
 
         runGame(game, {
