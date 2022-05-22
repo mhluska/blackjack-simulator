@@ -72,7 +72,7 @@ function defaultSettings(minimumBet = 10 * 100): GameSettings {
 }
 
 export const SETTINGS_DEFAULTS = defaultSettings();
-export const settings = defaultSettings();
+export let settings: GameSettings;
 
 export default class Game extends EventEmitter {
   _state!: GameState;
@@ -90,6 +90,7 @@ export default class Game extends EventEmitter {
   constructor(gameSettings: Partial<GameSettings> = SETTINGS_DEFAULTS) {
     super();
 
+    settings = defaultSettings();
     this.updateSettings(gameSettings);
     this.betAmount = settings.minimumBet;
     this.spotCount = 1;

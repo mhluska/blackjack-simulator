@@ -162,8 +162,6 @@ describe('Game', function () {
     });
 
     context('when autoDeclineInsurance is enabled', function () {
-      let game: Game;
-
       before(function () {
         game = setupGame({
           settings: { autoDeclineInsurance: true },
@@ -246,6 +244,38 @@ describe('Game', function () {
         it('should not allow late surrender', function () {
           expect(game.state.step).to.equal(GameStep.WaitingForPlayInput);
         });
+      });
+    });
+
+    context('when six deck, stay soft 17 is enabled', function () {
+      before(function () {
+        game = setupGame({
+          settings: {
+            hitSoft17: false,
+            deckCount: 6,
+            allowLateSurrender: true,
+          },
+          dealerCards: [Rank.Ace],
+          playerCards: [Rank.Six, Rank.Ten],
+        });
+
+        runGame(game, {
+          input: [
+            {
+              [GameStep.WaitingForInsuranceInput]: Move.NoInsurance,
+            },
+            {
+              [GameStep.WaitingForPlayInput]: Move.Hit,
+            },
+            {
+              [GameStep.WaitingForNewGameInput]: Move.Hit,
+            },
+          ],
+        });
+      });
+
+      it('should use the six deck, stay soft 17 chart (allow 16vA hit)', function () {
+        expect(game.state.step).to.equal(GameStep.Start);
       });
     });
 
