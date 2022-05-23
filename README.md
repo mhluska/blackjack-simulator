@@ -43,6 +43,8 @@ CORES=1 blackjack-simulator simulate
 blackjack-simulator game --help
 ```
 
+See it live as a web app [here](https://blackjacktrainer.app).
+
 ### Build and run locally
 
 ```sh
