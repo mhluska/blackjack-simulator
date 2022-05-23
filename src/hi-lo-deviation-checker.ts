@@ -8,7 +8,7 @@ type dealerCard = number;
 type comparator = string;
 type index = number;
 
-export type Deviation = {
+type Deviation = {
   correctMove: Move;
   index: [comparator, index];
 };

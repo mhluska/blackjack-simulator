@@ -4,7 +4,7 @@ import Card, { CardAttributes } from './card';
 import GameObject from './game-object';
 import BasicStrategyChecker from './basic-strategy-checker';
 import ExtendableError from './extendable-error';
-import { illustrious18Deviations, Deviation } from './hi-lo-deviation-checker';
+import { illustrious18Deviations } from './hi-lo-deviation-checker';
 import { settings } from './game';
 import {
   Rank,

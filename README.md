@@ -7,7 +7,6 @@
 <a href="https://github.com/mhluska/blackjack-simulator/actions"><img src="https://github.com/mhluska/blackjack-simulator/workflows/tests/badge.svg?branch=master" alt="Build Status" /></a>
 <a href="https://www.npmjs.com/package/@blackjacktrainer/blackjack-simulator"><img src="https://img.shields.io/npm/v/@blackjacktrainer/blackjack-simulator.svg" alt="Version"></a>
 <a href="https://github.com/mhluska/blackjack-simulator/blob/master/LICENSE"><img src="https://img.shields.io/github/license/mhluska/blackjack-simulator" alt="License"></a>
-<a href="https://discord.gg/GAQFFvfvW4"><img src="https://img.shields.io/badge/discord-join%20chat-7389D8?logo=discord&logoColor=ffffff&label=" alt="Discord"></a>
 
 > Practice card counting using Hi-Lo and calculate EV for any table conditions
 
