@@ -327,6 +327,32 @@ describe('Game', function () {
       });
     });
 
+    context('when splitting is allowed', function () {
+      before(function () {
+        game = setupGame({
+          settings: {
+            deckCount: 6,
+            mode: GameMode.Illustrious18,
+          },
+          dealerCards: [Rank.Two],
+          playerCards: [Rank.Six, Rank.Six],
+        });
+
+        runGame(game, {
+          input: [
+            {
+              [GameStep.WaitingForPlayInput]: Move.Split,
+            },
+          ],
+        });
+      });
+
+      it('should take priority over illustrious 18', function () {
+        expect(game.state.sessionMovesTotal).to.equal(1);
+        expect(game.state.sessionMovesCorrect).to.equal(1);
+      });
+    });
+
     context('when resplit aces is disabled', function () {
       before(function () {
         game = setupGame({
