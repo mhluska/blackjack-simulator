@@ -3,7 +3,9 @@ import * as sinonChai from 'sinon-chai';
 import * as sinon from 'sinon';
 
 import BasicStrategyChecker from '../../src/basic-strategy-checker';
-import HiLoDeviationChecker from '../../src/hi-lo-deviation-checker';
+import HiLoDeviationChecker, {
+  illustrious18Deviations,
+} from '../../src/hi-lo-deviation-checker';
 import { Event } from '../../src/event-emitter';
 import Game, { GameSettings } from '../../src/game';
 import Card from '../../src/card';
@@ -48,7 +50,17 @@ function setupGame(options: Partial<GameSetupOptions> = {}) {
       cardRankToValue(mergedOptions.playerCards[0]) +
       cardRankToValue(mergedOptions.playerCards[1]);
     const dealerTotal = cardRankToValue(mergedOptions.dealerCards[0]);
-    game.shoe.setupDeviationScenario(playerTotal, dealerTotal);
+
+    const deviation = illustrious18Deviations
+      .get(playerTotal)
+      ?.get(dealerTotal);
+
+    if (!deviation) {
+      throw new Error(
+        `No deviation found for ${playerTotal} vs ${dealerTotal}`
+      );
+    }
+    game.shoe.setupDeviationScenario(playerTotal, dealerTotal, deviation);
   } else {
     const length = game.shoe.cards.length;
     const setCard = (index: number, rank: Rank): void => {
@@ -305,7 +317,7 @@ describe('Game', function () {
           settings: {
             deckCount: 6,
             allowLateSurrender: true,
-            mode: GameMode.Illustrious18,
+            mode: GameMode.Deviations,
           },
           setupDeviationScenario: true,
           dealerCards: [Rank.Ten],
@@ -332,7 +344,7 @@ describe('Game', function () {
         game = setupGame({
           settings: {
             deckCount: 6,
-            mode: GameMode.Illustrious18,
+            mode: GameMode.Deviations,
           },
           dealerCards: [Rank.Two],
           playerCards: [Rank.Six, Rank.Six],

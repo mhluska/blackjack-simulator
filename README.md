@@ -12,11 +12,11 @@
 
 ## Features
 
-* Simulator mode for computing EV given some table conditions (10M hands / second)
-* Game mode for practicing basic strategy and card counting with hints
-* No package dependencies
-* Runs in any JS environment (CLI, browser, React Native app etc)
-* Multi-core support in Node
+- Simulator mode for computing EV given some table conditions (10M hands / second)
+- Game mode for practicing basic strategy and card counting with hints
+- No package dependencies
+- Runs in any JS environment (CLI, browser, React Native app etc)
+- Multi-core support in Node
 
 ## Usage
 
@@ -87,7 +87,7 @@ const settings = {
   maximumBet: 1000 * 100,
   minimumBet: 1000,
   playerCount: 1,
-  penetration: 0.75,
+  penetration: 0.75
 };
 
 const simulator = new Simulator(settings);
@@ -120,7 +120,7 @@ import {
   Event,
   Game,
   GameStep,
-  PlayerInputReader,
+  PlayerInputReader
 } from '@blackjacktrainer/blackjack-simulator';
 
 // Default settings:
@@ -129,8 +129,8 @@ const settings = {
   disableEvents: false,
   checkDeviations: false,
 
-  // Can be one of 'default', 'pairs', 'uncommon', 'illustrious18'. If the mode
-  // is set to 'illustrious18', `checkDeviations` will be forced to true.
+  // Can be one of 'default', 'pairs', 'uncommon', 'deviations'. If the mode is set to 'deviations', `checkDeviations`
+  // will be forced to true.
   mode: 'default',
   debug: false,
 
@@ -149,7 +149,7 @@ const settings = {
   maximumBet: 1000 * 100,
   minimumBet: 1000,
   playerCount: 1,
-  penetration: 0.75,
+  penetration: 0.75
 };
 
 const game = new Game(settings);
@@ -186,8 +186,8 @@ game.on(Event.CreateRecord, (entityName, data) => {
     body: JSON.serialize(data),
     headers: {
       Accept: 'application/json',
-      'Content-Type': 'application/json',
-    },
+      'Content-Type': 'application/json'
+    }
   });
 });
 
@@ -198,7 +198,7 @@ function stepGame(game, playerInputReader, input) {
     ![
       GameStep.WaitingForPlayInput,
       GameStep.WaitingForInsuranceInput,
-      GameStep.WaitingForNewGameInput,
+      GameStep.WaitingForNewGameInput
     ].includes(step)
   ) {
     return Promise.resolve();
@@ -226,24 +226,30 @@ event on `document.body`. Your DOM just has to declare the following buttons
 somewhere for user interaction:
 
 ```jsx
-{game.state.step === GameStep.WaitingForPlayInput && (
-  <>
-    <button data-action="s">Stand (S)</button>
-    <button data-action="h">Hit (H)</button>
-    <button data-action="d">Double (D)</button>
-    <button data-action="r">Surrender (R)</button>
-    <button data-action="p">Split (P)</button>
-  </>
-)}
-{game.state.step === GameStep.WaitingForInsuranceInput && (
-  <>
-    <button data-action="n">No (N)</button>
-    <button data-action="y">Yes (Y)</button>
-  </>
-)}
-{game.state.step === GameStep.WaitingForNewGameInput && (
-  <>
-    <button data-action="d">Deal (press any key)</button>
-  </>
-)}
+{
+  game.state.step === GameStep.WaitingForPlayInput && (
+    <>
+      <button data-action="s">Stand (S)</button>
+      <button data-action="h">Hit (H)</button>
+      <button data-action="d">Double (D)</button>
+      <button data-action="r">Surrender (R)</button>
+      <button data-action="p">Split (P)</button>
+    </>
+  );
+}
+{
+  game.state.step === GameStep.WaitingForInsuranceInput && (
+    <>
+      <button data-action="n">No (N)</button>
+      <button data-action="y">Yes (Y)</button>
+    </>
+  );
+}
+{
+  game.state.step === GameStep.WaitingForNewGameInput && (
+    <>
+      <button data-action="d">Deal (press any key)</button>
+    </>
+  );
+}
 ```

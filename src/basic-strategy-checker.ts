@@ -102,12 +102,10 @@ export default class BasicStrategyChecker {
     return chartMoveToCorrectMove(correctMove);
   }
 
-  // Returns true if basic strategy was followed correctly.
-  // Returns an object with a `correctMove` code and a `hint` otherwise.
-  static check(game: Game, hand: Hand, input: Move): CheckResult | true {
+  static check(game: Game, hand: Hand, input: Move): CheckResult {
     const correctMove = this.suggest(game, hand);
     if (!correctMove) {
-      return true;
+      return { result: true, code: null, hint: null };
     }
 
     let hint;
@@ -137,12 +135,13 @@ export default class BasicStrategyChecker {
       hint = 'surrender';
     }
 
-    return hint ? this._makeHintResult(correctMove, hint) : true;
-  }
+    if (!hint) {
+      return { result: true, code: null, hint: null };
+    }
 
-  static _makeHintResult(code: CheckResult['code'], hint: string): CheckResult {
     return {
-      code,
+      result: false,
+      code: correctMove,
       hint: `Basic strategy: last play should have been ${hint}!`,
     };
   }
