@@ -4,7 +4,10 @@ import Card, { CardAttributes } from './card';
 import GameObject from './game-object';
 import BasicStrategyChecker from './basic-strategy-checker';
 import ExtendableError from './extendable-error';
-import { illustrious18Deviations } from './hi-lo-deviation-checker';
+import {
+  illustrious18Deviations,
+  fab4Deviations,
+} from './hi-lo-deviation-checker';
 import { settings } from './game';
 import {
   Rank,
@@ -13,6 +16,7 @@ import {
   rankToString,
   GameMode,
   Move,
+  Deviation,
 } from './types';
 
 type ShoeAttributes = {
@@ -68,8 +72,8 @@ export default class Shoe extends GameObject {
       this._setupUncommonMode();
     }
 
-    if (settings.mode === GameMode.Illustrious18) {
-      this._setupIllustrious18Mode();
+    if (settings.mode === GameMode.Deviations) {
+      this._setupDeviationsMode();
     }
 
     if (settings.debug) {
@@ -157,17 +161,11 @@ export default class Shoe extends GameObject {
     return this.hiLoRunningCount / this.decksRemaining;
   }
 
-  setupDeviationScenario(playerTotal: number, dealerTotal: number): void {
-    const deviation = illustrious18Deviations
-      .get(playerTotal)
-      ?.get(dealerTotal);
-
-    if (!deviation) {
-      throw new Error(
-        `Deviation not found for player total ${playerTotal} and dealer total ${dealerTotal}`
-      );
-    }
-
+  setupDeviationScenario(
+    playerTotal: number,
+    dealerTotal: number,
+    deviation: Deviation
+  ): void {
     let total =
       deviation.correctMove === Move.AskInsurance
         ? Utils.random(2, 20)
@@ -192,11 +190,11 @@ export default class Shoe extends GameObject {
     const i2 = this.cards[this.cards.length - 2].hiLoValue;
     const i3 = this.cards[this.cards.length - 3].hiLoValue;
 
-    // We artificially set the running count so that the true count works out
-    // to what is required to act on the current illustrious 18 deviation. We
-    // use the formula `true_count = running_count / decks_remaining`. We are
-    // careful to subtract the next 3 cards from the running count since they
-    // are about to be drawn by the dealer.
+    // We artificially set the running count so that the true count works out to
+    // what is required to act on the current deviation. We use the formula
+    // `true_count = running_count / decks_remaining`. We are careful to
+    // subtract the next 3 cards from the running count since they are about to
+    // be drawn by the dealer.
     let runningCount =
       deviation.index[1] *
         (((this.maxCards - 3) * settings.deckCount) / this.maxCards) -
@@ -207,9 +205,8 @@ export default class Shoe extends GameObject {
     const lt = deviation.index[0][0] === '<';
 
     // Since we forced the true count to a nice number, the running count will
-    // be an ugly decimal. We round it up or down depending on whether the
-    // illustrious 18 deviation acts on indices going further negative or
-    // positive.
+    // be a decimal. We round it up or down depending on whether the deviation
+    // acts on indices going further negative or positive.
     runningCount = Math[lt ? 'floor' : 'ceil'](runningCount);
 
     // Force the true count one point less for the '<' comparison since it
@@ -318,19 +315,27 @@ export default class Shoe extends GameObject {
     this._moveCardsToFront(rank1, rank2, dealerUpcard);
   }
 
-  _setupIllustrious18Mode(): void {
-    const [playerTotal, entries] = Utils.arraySample(
-      Array.from(illustrious18Deviations.entries())
+  _setupDeviationsMode(): void {
+    const illustrious18DeviationsArray = Array.from(
+      illustrious18Deviations.entries()
     );
+    const fab4DeviationsArray = settings.allowLateSurrender
+      ? Array.from(fab4Deviations.entries())
+      : [];
+
+    const [playerTotal, entries] = Utils.arraySample([
+      ...illustrious18DeviationsArray,
+      ...fab4DeviationsArray,
+    ]);
 
     const [dealerTotal, deviation] = Utils.arraySample(Array.from(entries));
 
-    this.setupDeviationScenario(playerTotal, dealerTotal);
+    this.setupDeviationScenario(playerTotal, dealerTotal, deviation);
 
     const lt = deviation.index[0][0] === '<';
 
     // Half time time we randomly alter the running count to something
-    // incorrect to be able to test the users knowledge.
+    // incorrect to be able to test the user's knowledge.
     if (Utils.random(0, 1) === 0) {
       this.hiLoRunningCount += this.decksRemaining * (lt ? 1 : -1);
     }

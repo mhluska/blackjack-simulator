@@ -12,11 +12,11 @@
 
 ## Features
 
-* Simulator mode for computing EV given some table conditions (10M hands / second)
-* Game mode for practicing basic strategy and card counting with hints
-* No package dependencies
-* Runs in any JS environment (CLI, browser, React Native app etc)
-* Multi-core support in Node
+- Simulator mode for computing EV given some table conditions (10M hands / second)
+- Game mode for practicing basic strategy and card counting with hints
+- No package dependencies
+- Runs in any JS environment (CLI, browser, React Native app etc)
+- Multi-core support in Node
 
 ## Usage
 
@@ -56,7 +56,7 @@ NODE_ENV=development npm run build
 ### Use as a library (simulator mode)
 
 ```js
-import { Simulator } from '@blackjacktrainer/blackjack-simulator';
+import { Simulator } from "@blackjacktrainer/blackjack-simulator";
 
 // Default settings:
 const settings = {
@@ -68,7 +68,7 @@ const settings = {
   // 'basic-strategy': play perfect basic strategy
   // 'basic-strategy-i18': play perfect basic strategy plus illustrious 18
   // 'basic-strategy-i18-fab4': play perfect basic strategy plus illustrious 18 + fab 4
-  playerStrategy: 'basic-strategy-i18-fab4',
+  playerStrategy: "basic-strategy-i18-fab4",
 
   playerBetSpread: [1000, 2000, 4000, 8000, 16000],
   playerSpots: [1, 1, 1, 1, 1],
@@ -80,7 +80,7 @@ const settings = {
   allowDoubleAfterSplit: true,
   allowLateSurrender: true,
   allowResplitAces: false,
-  blackjackPayout: '3:2',
+  blackjackPayout: "3:2",
   deckCount: 2,
   hitSoft17: true,
   maxHandsAllowed: 4,
@@ -121,7 +121,7 @@ import {
   Game,
   GameStep,
   PlayerInputReader,
-} from '@blackjacktrainer/blackjack-simulator';
+} from "@blackjacktrainer/blackjack-simulator";
 
 // Default settings:
 const settings = {
@@ -129,9 +129,9 @@ const settings = {
   disableEvents: false,
   checkDeviations: false,
 
-  // Can be one of 'default', 'pairs', 'uncommon', 'illustrious18'. If the mode
-  // is set to 'illustrious18', `checkDeviations` will be forced to true.
-  mode: 'default',
+  // Can be one of 'default', 'pairs', 'uncommon', 'deviations'. If the mode is set to 'deviations', `checkDeviations`
+  // will be forced to true.
+  mode: "default",
   debug: false,
 
   playerBankroll: 1000 * 10 ** 7,
@@ -142,7 +142,7 @@ const settings = {
   allowDoubleAfterSplit: true,
   allowLateSurrender: false,
   allowResplitAces: false,
-  blackjackPayout: '3:2',
+  blackjackPayout: "3:2",
   deckCount: 2,
   hitSoft17: true,
   maxHandsAllowed: 4,
@@ -174,7 +174,7 @@ game.on(Event.Change, (name, value) => {
 });
 
 game.on(Event.Shuffle, () => {
-  console.log('End of shoe, cards shuffled!');
+  console.log("End of shoe, cards shuffled!");
 });
 
 // Emitted when the game wants to save optional game statistics.
@@ -182,11 +182,11 @@ game.on(Event.Shuffle, () => {
 // `data` is a plain object with values to save to the backend.
 game.on(Event.CreateRecord, (entityName, data) => {
   fetch(`/api/v1/${entityName}`, {
-    method: 'POST',
+    method: "POST",
     body: JSON.serialize(data),
     headers: {
-      Accept: 'application/json',
-      'Content-Type': 'application/json',
+      Accept: "application/json",
+      "Content-Type": "application/json",
     },
   });
 });
@@ -226,24 +226,30 @@ event on `document.body`. Your DOM just has to declare the following buttons
 somewhere for user interaction:
 
 ```jsx
-{game.state.step === GameStep.WaitingForPlayInput && (
-  <>
-    <button data-action="s">Stand (S)</button>
-    <button data-action="h">Hit (H)</button>
-    <button data-action="d">Double (D)</button>
-    <button data-action="r">Surrender (R)</button>
-    <button data-action="p">Split (P)</button>
-  </>
-)}
-{game.state.step === GameStep.WaitingForInsuranceInput && (
-  <>
-    <button data-action="n">No (N)</button>
-    <button data-action="y">Yes (Y)</button>
-  </>
-)}
-{game.state.step === GameStep.WaitingForNewGameInput && (
-  <>
-    <button data-action="d">Deal (press any key)</button>
-  </>
-)}
+{
+  game.state.step === GameStep.WaitingForPlayInput && (
+    <>
+      <button data-action="s">Stand (S)</button>
+      <button data-action="h">Hit (H)</button>
+      <button data-action="d">Double (D)</button>
+      <button data-action="r">Surrender (R)</button>
+      <button data-action="p">Split (P)</button>
+    </>
+  );
+}
+{
+  game.state.step === GameStep.WaitingForInsuranceInput && (
+    <>
+      <button data-action="n">No (N)</button>
+      <button data-action="y">Yes (Y)</button>
+    </>
+  );
+}
+{
+  game.state.step === GameStep.WaitingForNewGameInput && (
+    <>
+      <button data-action="d">Deal (press any key)</button>
+    </>
+  );
+}
 ```

@@ -89,13 +89,36 @@ export enum GameMode {
   Default,
   Pairs,
   Uncommon,
-  Illustrious18,
+  Deviations,
 }
 
-export type CheckResult = {
-  code: Move;
-  hint: string;
+export type playerTotal = number;
+export type dealerCard = number;
+
+type comparator = string;
+type index = number;
+
+export type Deviation = {
+  correctMove: Move;
+  index: [comparator, index];
+  fab4?: boolean;
 };
+
+export type Deviations = Map<playerTotal, Map<dealerCard, Deviation>>;
+
+export type CheckResult =
+  | {
+      result: false;
+      code: Move;
+      hint: string;
+    }
+  | {
+      result: true;
+      code: null;
+      hint: null;
+    };
+
+export type CheckDeviationResult = CheckResult & { deviation: Deviation };
 
 export type BasicStrategyChart = Map<ChartType, ChartMove[][]>;
 export type UncommonChart = Map<ChartType, Map<number, number[]>>;
@@ -432,8 +455,8 @@ export function gameModeToString(mode: GameMode): string {
       return 'pairs';
     case GameMode.Uncommon:
       return 'uncommon';
-    case GameMode.Illustrious18:
-      return 'illustrious18';
+    case GameMode.Deviations:
+      return 'deviations';
     default:
       throw new Error(`Unexpected game mode ${mode}`);
   }
@@ -451,8 +474,8 @@ export function parseGameMode(mode: string | undefined): GameMode | undefined {
       return GameMode.Pairs;
     case 'uncommon':
       return GameMode.Uncommon;
-    case 'illustrious18':
-      return GameMode.Illustrious18;
+    case 'deviations':
+      return GameMode.Deviations;
     default:
       throw new Error(`Unexpected game mode ${mode}`);
   }
