@@ -56,7 +56,7 @@ NODE_ENV=development npm run build
 ### Use as a library (simulator mode)
 
 ```js
-import { Simulator } from "@blackjacktrainer/blackjack-simulator";
+import { Simulator } from '@blackjacktrainer/blackjack-simulator';
 
 // Default settings:
 const settings = {
@@ -68,7 +68,7 @@ const settings = {
   // 'basic-strategy': play perfect basic strategy
   // 'basic-strategy-i18': play perfect basic strategy plus illustrious 18
   // 'basic-strategy-i18-fab4': play perfect basic strategy plus illustrious 18 + fab 4
-  playerStrategy: "basic-strategy-i18-fab4",
+  playerStrategy: 'basic-strategy-i18-fab4',
 
   playerBetSpread: [1000, 2000, 4000, 8000, 16000],
   playerSpots: [1, 1, 1, 1, 1],
@@ -80,14 +80,14 @@ const settings = {
   allowDoubleAfterSplit: true,
   allowLateSurrender: true,
   allowResplitAces: false,
-  blackjackPayout: "3:2",
+  blackjackPayout: '3:2',
   deckCount: 2,
   hitSoft17: true,
   maxHandsAllowed: 4,
   maximumBet: 1000 * 100,
   minimumBet: 1000,
   playerCount: 1,
-  penetration: 0.75,
+  penetration: 0.75
 };
 
 const simulator = new Simulator(settings);
@@ -120,8 +120,8 @@ import {
   Event,
   Game,
   GameStep,
-  PlayerInputReader,
-} from "@blackjacktrainer/blackjack-simulator";
+  PlayerInputReader
+} from '@blackjacktrainer/blackjack-simulator';
 
 // Default settings:
 const settings = {
@@ -131,7 +131,7 @@ const settings = {
 
   // Can be one of 'default', 'pairs', 'uncommon', 'deviations'. If the mode is set to 'deviations', `checkDeviations`
   // will be forced to true.
-  mode: "default",
+  mode: 'default',
   debug: false,
 
   playerBankroll: 1000 * 10 ** 7,
@@ -142,14 +142,14 @@ const settings = {
   allowDoubleAfterSplit: true,
   allowLateSurrender: false,
   allowResplitAces: false,
-  blackjackPayout: "3:2",
+  blackjackPayout: '3:2',
   deckCount: 2,
   hitSoft17: true,
   maxHandsAllowed: 4,
   maximumBet: 1000 * 100,
   minimumBet: 1000,
   playerCount: 1,
-  penetration: 0.75,
+  penetration: 0.75
 };
 
 const game = new Game(settings);
@@ -174,7 +174,7 @@ game.on(Event.Change, (name, value) => {
 });
 
 game.on(Event.Shuffle, () => {
-  console.log("End of shoe, cards shuffled!");
+  console.log('End of shoe, cards shuffled!');
 });
 
 // Emitted when the game wants to save optional game statistics.
@@ -182,12 +182,12 @@ game.on(Event.Shuffle, () => {
 // `data` is a plain object with values to save to the backend.
 game.on(Event.CreateRecord, (entityName, data) => {
   fetch(`/api/v1/${entityName}`, {
-    method: "POST",
+    method: 'POST',
     body: JSON.serialize(data),
     headers: {
-      Accept: "application/json",
-      "Content-Type": "application/json",
-    },
+      Accept: 'application/json',
+      'Content-Type': 'application/json'
+    }
   });
 });
 
@@ -198,7 +198,7 @@ function stepGame(game, playerInputReader, input) {
     ![
       GameStep.WaitingForPlayInput,
       GameStep.WaitingForInsuranceInput,
-      GameStep.WaitingForNewGameInput,
+      GameStep.WaitingForNewGameInput
     ].includes(step)
   ) {
     return Promise.resolve();
