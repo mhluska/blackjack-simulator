@@ -6,8 +6,9 @@ import Player from './player';
 import Hand from './hand';
 import { HandWinner, GameStep, handWinnerToString } from './types';
 
+const PLAY_CORRECTION_VISIBLE_TIME_MS = 4000;
+
 // Renders the game state to the terminal.
-// TODO: Make this draw ascii-based cards. For now just basic text output.
 export default class CLIRenderer implements Renderer {
   game: Game;
 
@@ -22,11 +23,33 @@ export default class CLIRenderer implements Renderer {
     console.log();
   }
 
+  get outputLines(): string[] {
+    return [
+      this._playerLine(this.game.dealer, HandWinner.Dealer),
+      this._playerLine(this.game.player, HandWinner.Player),
+      this._statsLine(),
+      this._questionLine(),
+    ];
+  }
+
   render(): void {
-    this._renderDealerCards();
-    this._renderPlayerCards();
-    this._renderPlayCorrection();
-    this._renderQuestion();
+    const lines = this.outputLines;
+
+    if (this.game.state.playCorrection) {
+      lines[2] = this.game.state.playCorrection;
+
+      setTimeout(() => {
+        this._renderLines(this.outputLines);
+      }, PLAY_CORRECTION_VISIBLE_TIME_MS);
+    }
+
+    this._renderLines(lines);
+  }
+
+  _renderLines(lines: string[]): void {
+    lines.forEach((line, i) => {
+      this._renderLine(line, lines.length - i - 1);
+    });
   }
 
   _setupCliInput(): void {
@@ -38,21 +61,28 @@ export default class CLIRenderer implements Renderer {
     }
   }
 
-  _renderDealerCards(): void {
-    this._renderPlayerLine(this.game.dealer, HandWinner.Dealer, 3);
+  _playerLine(player: Player, type: HandWinner): string {
+    const line = player.hands
+      .map((hand) => {
+        const padding = hand.cardTotal < 10 ? ' ' : '';
+        const handFocus = this.game.focusedHand === hand ? '>' : ' ';
+
+        return `${handFocus} (total ${
+          hand.cardTotal
+        }): ${padding}${this._colorizeHand(hand.serialize())}`;
+      })
+      .join('   ');
+
+    return `${handWinnerToString(type)} ${line}`;
   }
 
-  _renderPlayerCards(): void {
-    this._renderPlayerLine(this.game.player, HandWinner.Player, 2);
+  _statsLine(): string {
+    return `TC: ${this.game.shoe.hiLoTrueCount.toFixed(2)}`;
   }
 
-  _renderPlayCorrection(): void {
-    this._renderLine(this.game.state.playCorrection, 1);
-  }
-
-  _renderQuestion(): void {
+  _questionLine(): string {
     if (!this.game.state.step || !this.game.focusedHand) {
-      return;
+      return '';
     }
 
     let question;
@@ -98,9 +128,7 @@ export default class CLIRenderer implements Renderer {
       question = `${result} (press any key for next hand)`;
     }
 
-    if (question) {
-      this._renderLine(question);
-    }
+    return question ?? '';
   }
 
   _renderLine(text: string, yPosBottom = 0): void {
@@ -112,21 +140,6 @@ export default class CLIRenderer implements Renderer {
     readline.clearLine(process.stdout, 0);
 
     process.stdout.write(text);
-  }
-
-  _renderPlayerLine(player: Player, type: HandWinner, row: number): void {
-    const line = player.hands
-      .map((hand) => {
-        const padding = hand.cardTotal < 10 ? ' ' : '';
-        const handFocus = this.game.focusedHand === hand ? '>' : ' ';
-
-        return `${handFocus} (total ${
-          hand.cardTotal
-        }): ${padding}${this._colorizeHand(hand.serialize())}`;
-      })
-      .join('   ');
-
-    this._renderLine(`${handWinnerToString(type)} ${line}`, row);
   }
 
   // Alters the text with ANSI escape codes. For example, bold ace cards.

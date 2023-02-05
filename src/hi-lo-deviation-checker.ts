@@ -1,19 +1,17 @@
 import Utils from './utils';
 import Game, { settings as gameSettings } from './game';
 import Hand from './hand';
-import { Move, CheckResult, GameStep, GameMode, PlayerStrategy } from './types';
-
-type playerTotal = number;
-type dealerCard = number;
-type comparator = string;
-type index = number;
-
-type Deviation = {
-  correctMove: Move;
-  index: [comparator, index];
-};
-
-type Deviations = Map<playerTotal, Map<dealerCard, Deviation>>;
+import {
+  Move,
+  GameStep,
+  GameMode,
+  PlayerStrategy,
+  Deviation,
+  Deviations,
+  playerTotal,
+  dealerCard,
+  CheckDeviationResult,
+} from './types';
 
 // TODO: Consider different deviations for deck counts and s17?
 // prettier-ignore
@@ -68,13 +66,13 @@ export const illustrious18Deviations: Deviations = new Map<playerTotal, Map<deal
 // prettier-ignore
 export const fab4Deviations: Deviations = new Map<playerTotal, Map<dealerCard, Deviation>>([
   [14,  new Map([
-    [10, { correctMove: Move.Surrender, index: ['>=',  3] }],
+    [10, { correctMove: Move.Surrender, index: ['>=',  3], fab4: true }],
   ]),
   ],
   [15,  new Map([
-    [9,  { correctMove: Move.Surrender, index: ['>=',  2] }],
-    [10, { correctMove: Move.Hit,       index: ['<=', -1] }],
-    [11, { correctMove: Move.Hit,       index: ['<=',  0] }],
+    [9,  { correctMove: Move.Surrender, index: ['>=',  2], fab4: true }],
+    [10, { correctMove: Move.Hit,       index: ['<=', -1], fab4: true }],
+    [11, { correctMove: Move.Hit,       index: ['<=',  0], fab4: true }],
   ])],
 ]);
 
@@ -90,7 +88,7 @@ export default class HiLoDeviationChecker {
   static _suggest(
     game: Game,
     hand: Hand,
-    { suggestFab4 = false }: { suggestFab4: boolean }
+    { suggestFab4 = true }: { suggestFab4?: boolean } = {}
   ): Deviation | undefined {
     const trueCount = game.shoe.hiLoTrueCount;
 
@@ -129,24 +127,23 @@ export default class HiLoDeviationChecker {
     })?.correctMove;
   }
 
-  // Returns true if an Illustrious 18 deviation was followed correctly.
-  // Returns false if a deviation was not present.
-  // Returns an object with a `correctMove` code and a `hint` otherwise.
-  static check(game: Game, hand: Hand, input: Move): CheckResult | boolean {
+  // Returns undefined if a deviation was not present. Otherwise returns a
+  // `CheckDeviationResult` object.
+  static check(
+    game: Game,
+    hand: Hand,
+    input: Move
+  ): CheckDeviationResult | undefined {
     if (
       !gameSettings.checkDeviations &&
-      gameSettings.mode !== GameMode.Illustrious18
+      gameSettings.mode !== GameMode.Deviations
     ) {
-      return false;
+      return;
     }
 
-    // TODO: Enable `suggestFab4` after a game mode is added for it.
-    const deviation = this._suggest(game, hand, {
-      suggestFab4: false,
-    });
-
+    const deviation = this._suggest(game, hand);
     if (!deviation) {
-      return false;
+      return;
     }
 
     let hint;
@@ -176,14 +173,17 @@ export default class HiLoDeviationChecker {
     }
 
     if (!hint) {
-      return true;
+      return { result: true, code: null, hint: null, deviation };
     }
 
-    const hintMessage = `Illustrious 18 deviation: last play should have been ${hint} for true counts ${index[0]} ${index[1]}`;
+    const deviationType = deviation.fab4 ? 'Fab 4' : 'Illustrious 18';
+    const hintMessage = `${deviationType} deviation: last play should have been ${hint} for true counts ${index[0]} ${index[1]}`;
 
     return {
+      result: false,
       code: correctMove,
       hint: hintMessage,
+      deviation,
     };
   }
 }

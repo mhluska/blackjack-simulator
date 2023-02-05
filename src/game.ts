@@ -15,6 +15,8 @@ import {
   PlayerStrategy,
   BlackjackPayout,
   GameMode,
+  CheckDeviationResult,
+  CheckResult,
 } from './types';
 
 export type GameSettings = {
@@ -47,7 +49,7 @@ function defaultSettings(minimumBet = 10 * 100): GameSettings {
     checkDeviations: false,
 
     // Can be one of 'GameMode.Default', 'GameMode.Pairs', 'GameMode.Uncommon',
-    // 'GameMode.Illustrious18'. If the mode is set to 'GameMode.Illustrious18',
+    // 'GameMode.Deviations'. If the mode is set to 'GameMode.Deviations',
     // `checkDeviations` will be forced to true.
     mode: GameMode.Default,
     debug: false,
@@ -217,20 +219,37 @@ export default class Game extends EventEmitter {
     return object;
   }
 
+  getCheckerResult(
+    hiLoResult: CheckDeviationResult | undefined,
+    basicStrategyResult: CheckResult,
+    input: Move
+  ): CheckDeviationResult | CheckResult {
+    // A basic strategy split takes priority over any deviation.
+    // For example pair 6s vs 2 should be a split even though I18 says to hit.
+    if (input === Move.Split && basicStrategyResult.result) {
+      return basicStrategyResult;
+    }
+
+    // A basic strategy surrender takes priority over non-Fab4 deviations.
+    // For example 15v10 should be a surrender even though I18 says to hit.
+    if (input === Move.Surrender && basicStrategyResult.result) {
+      return hiLoResult?.deviation.fab4 ? hiLoResult : basicStrategyResult;
+    }
+
+    return hiLoResult || basicStrategyResult;
+  }
+
   validateInput(input: Move, hand: Hand): void {
     const hiLoResult = HiLoDeviationChecker.check(this, hand, input);
     const basicStrategyResult = BasicStrategyChecker.check(this, hand, input);
 
-    // If surrender is correct, it should take priority over I18 deviations.
-    // TODO: After we add a game mode for Fab4, we should split those checks out
-    // into their own checker since we do want to still run those in the
-    // surrender case.
-    const checkerResult =
-      input === Move.Surrender && basicStrategyResult === true
-        ? true
-        : hiLoResult || basicStrategyResult;
+    const checkerResult = this.getCheckerResult(
+      hiLoResult,
+      basicStrategyResult,
+      input
+    );
 
-    if (typeof checkerResult === 'object' && checkerResult.hint) {
+    if (checkerResult.hint) {
       this.state.playCorrection = checkerResult.hint;
     } else {
       this.state.sessionMovesCorrect += 1;

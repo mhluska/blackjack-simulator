@@ -62,7 +62,7 @@ export default async function (
 
     printUsageOptions<GameSettings>(SETTINGS_DEFAULTS, {
       mode: {
-        hint: '[default | pairs | uncommon | illustrious18]',
+        hint: '[default | pairs | uncommon | deviations]',
         formatter: gameModeToString,
       },
       blackjackPayout: {
