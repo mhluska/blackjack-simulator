@@ -70,9 +70,9 @@ export const fab4Deviations: Deviations = new Map<playerTotal, Map<dealerCard, D
   ]),
   ],
   [15,  new Map([
-    [9,  { correctMove: Move.Surrender, index: ['>=',  2], fab4: true }],
-    [10, { correctMove: Move.Hit,       index: ['<=', -1], fab4: true }],
-    [11, { correctMove: Move.Hit,       index: ['<=',  0], fab4: true }],
+    [9,  { correctMove: Move.Hit, index: ['<=', 2], fab4: true }],
+    [10, { correctMove: Move.Hit, index: ['<=', 0], fab4: true }],
+    [11, { correctMove: Move.Hit, index: ['<=', 1], fab4: true }],
   ])],
 ]);
 
