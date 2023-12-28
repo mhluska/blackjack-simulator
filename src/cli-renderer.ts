@@ -107,14 +107,18 @@ export default class CLIRenderer implements Renderer {
       question = 'Y (buy insurance), N (no insurance)? ';
     } else if (this.game.state.step === GameStep.WaitingForNewGameInput) {
       const getGameResult = (hand: Hand) => {
-        const blackjack =
-          hand.blackjack && !this.game.dealer.blackjack ? 'Blackjack! ' : '';
-
         switch (this.game.player.handWinner.get(hand.id)) {
-          case HandWinner.Player:
+          case HandWinner.Player: {
+            const blackjack =
+              hand.blackjack && !this.game.dealer.blackjack
+                ? 'Blackjack! '
+                : '';
             return `${blackjack}Player wins`;
-          case HandWinner.Dealer:
-            return `${blackjack}Dealer wins`;
+          }
+          case HandWinner.Dealer: {
+            const blackjack = this.game.dealer.blackjack ? ' (blackjack)' : '';
+            return `Dealer wins${blackjack}`;
+          }
           case HandWinner.Push:
             return HandWinner.Push;
         }

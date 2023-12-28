@@ -426,8 +426,8 @@ export default class Game extends EventEmitter {
 
     // Dealer peeks at the hole card if the upcard is 10 to check blackjack.
     if (this.dealer.upcard.value === 10 && this.dealer.holeCard.value === 11) {
-      this.dealer.cards[0].flip();
       this.dealer.firstHand.incrementTotalsForCard(this.dealer.cards[0]);
+      this.dealer.cards[0].flip();
 
       for (const player of this.players) {
         player.eachHand((hand) => {
@@ -632,8 +632,8 @@ export default class Game extends EventEmitter {
   }
 
   playDealer(): void {
-    this.dealer.cards[0].flip();
     this.dealer.firstHand.incrementTotalsForCard(this.dealer.cards[0]);
+    this.dealer.cards[0].flip();
 
     // Dealer draws cards until they reach 17. However, if all player hands have
     // busted, this step is skipped.

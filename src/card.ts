@@ -62,9 +62,7 @@ export default class Card extends GameObject {
 
   flip(): void {
     this.showingFace = !this.showingFace;
-
     this.shoe.hiLoRunningCount += (this.showingFace ? 1 : -1) * this.hiLoValue;
-
     this.emitChange();
   }
 

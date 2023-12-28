@@ -54,6 +54,14 @@ export default class EventEmitter {
     events.splice(index, 1);
   }
 
+  removeAllListeners(event: Event): void {
+    if (EventEmitter.disableEvents) {
+      return;
+    }
+
+    this.events.delete(event);
+  }
+
   emit(event: Event, ...args: unknown[]): void {
     if (EventEmitter.disableEvents) {
       return;

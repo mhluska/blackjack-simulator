@@ -115,10 +115,8 @@ function runGame(
       break;
     }
 
-    if (!repeatPlayerInput) {
-      if (playerInput) {
-        callCount += 1;
-      }
+    if (!repeatPlayerInput && playerInput) {
+      callCount += 1;
     }
 
     game.step(playerInput);
@@ -415,6 +413,40 @@ describe('Game', function () {
         expect(game.state.sessionMovesTotal).to.equal(1);
         expect(game.state.sessionMovesCorrect).to.equal(0);
         expect(game.state.playCorrection).to.include('double');
+      });
+    });
+
+    context('when the dealer is dealt a blackjack', function () {
+      let emittedBlackjack = false;
+
+      before(function () {
+        game = setupGame({
+          dealerCards: [Rank.Jack, Rank.Ace],
+          playerCards: [Rank.Five, Rank.Five],
+        });
+
+        game.on(Event.Change, (name, value) => {
+          console.log('EMIT', name, value);
+          if (name === 'dealer' && value.hands[0].blackjack) {
+            emittedBlackjack = true;
+          }
+        });
+
+        runGame(game, {
+          input: [
+            {
+              [GameStep.Start]: Move.Hit,
+            },
+          ],
+        });
+      });
+
+      after(function () {
+        game.removeAllListeners(Event.Change);
+      });
+
+      it('should emit correct state for dealer.blackjack', function () {
+        expect(emittedBlackjack).to.be.true;
       });
     });
 

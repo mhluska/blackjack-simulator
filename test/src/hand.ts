@@ -39,6 +39,14 @@ function testCardTotals(ranks: Rank[], expectedTotals: number[]): Hand {
 }
 
 describe('Hand', () => {
+  describe('#blackjack', () => {
+    it('should be true when the hand contains blackjack (J, A)', () => {
+      const hand = setupHand(Rank.Jack, Rank.Ace);
+      expect(hand.blackjack).to.be.true;
+      expect(hand.cardHighTotal).to.equal(21);
+    });
+  });
+
   describe('#cardTotal', () => {
     it('should count correctly when the player is dealt 11 (7, 4)', () => {
       const hand = testCardTotals([Rank.Seven, Rank.Four], [7, 11]);
@@ -51,11 +59,6 @@ describe('Hand', () => {
         [10, 19, 21]
       );
       expect(hand.isHard).to.be.true;
-    });
-
-    it('should count correctly when the player is dealt blackjack (A, J)', () => {
-      const hand = testCardTotals([Rank.Ace, Rank.Jack], [11, 21]);
-      expect(hand.isSoft).to.be.true;
     });
 
     it('should count correctly when the player is dealt soft 21 (3, A, A, 3, 3)', () => {
