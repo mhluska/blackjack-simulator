@@ -165,6 +165,7 @@ describe('Game', function () {
 
     context('when the player bets and wins', function () {
       let playerBalanceBefore: number;
+      let emittedHandWinner = false;
 
       const game = setupGame({
         // Force a winning hand for the player (blackjack with A-J).
@@ -174,6 +175,15 @@ describe('Game', function () {
 
       before(function () {
         playerBalanceBefore = game.player.balance;
+
+        game.on(Event.Change, (name, value) => {
+          if (
+            name === 'player' &&
+            value.handWinner[value.hands[0].id] === 'player'
+          ) {
+            emittedHandWinner = true;
+          }
+        });
 
         runGame(game, {
           input: [
@@ -188,6 +198,10 @@ describe('Game', function () {
         expect(game.player.balance).to.equal(
           playerBalanceBefore + game.betAmount * (3 / 2)
         );
+      });
+
+      it('should emit the correct handWinner state', () => {
+        expect(emittedHandWinner).to.be.true;
       });
     });
 
@@ -426,7 +440,6 @@ describe('Game', function () {
         });
 
         game.on(Event.Change, (name, value) => {
-          console.log('EMIT', name, value);
           if (name === 'dealer' && value.hands[0].blackjack) {
             emittedBlackjack = true;
           }

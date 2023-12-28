@@ -156,11 +156,10 @@ export default class Player extends GameObject {
   }
 
   attributes(): PlayerAttributes {
-    // TODO: Get `Object.fromEntries` working when running `npm run test`.
-    const handWinner: { [key: string]: string } = {};
-    for (const key of this.handWinner.keys()) {
-      const value = this.handWinner.get(key);
-      if (value) {
+    const handWinner: Record<string, string> = {};
+
+    for (const [key, value] of this.handWinner.entries()) {
+      if (typeof value !== 'undefined') {
         handWinner[key] = handWinnerToString(value);
       }
     }
@@ -169,7 +168,6 @@ export default class Player extends GameObject {
       id: this.id,
       balance: this.balance,
       hands: this.hands.map((hand) => hand.attributes()),
-      // handWinner: Object.fromEntries(this.handWinner),
       handWinner,
     };
   }
