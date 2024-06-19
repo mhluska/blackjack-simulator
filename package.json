@@ -1,6 +1,6 @@
 {
   "name": "@blackjacktrainer/blackjack-simulator",
-  "version": "0.33.4",
+  "version": "0.34.0",
   "description": "Core game logic for a Blackjack basic strategy and card counting trainer",
   "main": "dist/main.js",
   "bin": {
