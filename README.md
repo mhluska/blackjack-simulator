@@ -36,6 +36,14 @@ Override the number of CPU cores used:
 CORES=1 blackjack-simulator simulate
 ```
 
+#### Simulate with Variable Parameter
+
+You can now simulate with one variable parameter by using the `--variable-parameter` option. Specify the parameter to be varied and provide the values for that parameter.
+
+```sh
+blackjack-simulator simulate --variable-parameter playerBankroll --parameter-values 1000000,2000000,3000000
+```
+
 ### Game mode
 
 ```sh

@@ -28,4 +28,27 @@ describe('Simulator', function () {
       'timeElapsed'
     );
   });
+
+  it('simulates with variable parameter', function () {
+    const parameterName = 'playerBankroll';
+    const parameterValues = [1000000, 2000000, 3000000];
+    const results = simulator.simulateWithVariableParameter(parameterName, parameterValues);
+
+    expect(results).to.have.keys(parameterValues.map(String));
+    parameterValues.forEach((value) => {
+      expect(results[value]).to.have.all.keys(
+        'amountEarned',
+        'amountWagered',
+        'bankrollMean',
+        'bankrollVariance',
+        'handsLost',
+        'handsPlayed',
+        'handsPushed',
+        'handsWon',
+        'hoursPlayed',
+        'riskOfRuin',
+        'timeElapsed'
+      );
+    });
+  });
 });

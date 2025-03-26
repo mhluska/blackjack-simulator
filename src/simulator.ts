@@ -457,4 +457,18 @@ export default class Simulator {
       timeElapsed: Date.now() - startTime,
     };
   }
+
+  simulateWithVariableParameter(
+    parameterName: keyof SimulatorSettings,
+    parameterValues: number[]
+  ): { [key: number]: SimulatorResult } {
+    const results: { [key: number]: SimulatorResult } = {};
+
+    for (const value of parameterValues) {
+      this.settings[parameterName] = value;
+      results[value] = this.run();
+    }
+
+    return results;
+  }
 }

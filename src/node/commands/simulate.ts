@@ -287,6 +287,7 @@ export default function (
       },
       maximumBet: { formatter: Utils.formatCents },
       minimumBet: { formatter: Utils.formatCents },
+      variableParameter: { hint: '(parameter to be varied)' },
     });
 
     return;
@@ -301,6 +302,14 @@ export default function (
       typeof simulator.settings.hands !== 'number' ||
       simulator.settings.hands < 1
     ) {
+      return;
+    }
+
+    if (options.variableParameter) {
+      const parameterName = options.variableParameter as keyof SimulatorSettings;
+      const parameterValues = options.parameterValues?.split(',').map(Number) || [];
+      const results = simulator.simulateWithVariableParameter(parameterName, parameterValues);
+      console.log(results);
       return;
     }
 
