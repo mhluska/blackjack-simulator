@@ -33,6 +33,9 @@ export type SimulatorResult = {
   hoursPlayed: number;
   riskOfRuin: number;
   timeElapsed: number;
+  expectedValuePerHour: number;
+  standardDeviationPerHour: number;
+  n0: number;
 };
 
 export type AugmentedSimulatorResult = SimulatorResult & {
@@ -68,6 +71,9 @@ export interface FormattedSimulatorResult extends FormattedResult {
   houseEdge: string;
   stdDeviation: string;
   timeElapsed: string;
+  expectedValuePerHour: string;
+  standardDeviationPerHour: string;
+  n0: string;
 }
 
 function getChipUnit(minimumBet: number): number {
@@ -294,6 +300,9 @@ export function mergeResults(results: SimulatorResult[]): SimulatorResult {
       handsPushed: 0,
       handsWon: 0,
       timeElapsed: 0,
+      expectedValuePerHour: 0,
+      standardDeviationPerHour: 0,
+      n0: 0,
     }
   );
 }
@@ -443,6 +452,10 @@ export default class Simulator {
     // TODO: Make RoR configurable.
     const riskOfRuin = 0.05;
 
+    const expectedValuePerHour = amountEarned / hoursPlayed;
+    const standardDeviationPerHour = Math.sqrt(bankrollVariance) * Math.sqrt(handsPerHour);
+    const n0 = bankrollVariance / (amountEarned / handsPlayed) ** 2;
+
     return {
       amountEarned,
       amountWagered,
@@ -455,6 +468,9 @@ export default class Simulator {
       hoursPlayed,
       riskOfRuin,
       timeElapsed: Date.now() - startTime,
+      expectedValuePerHour,
+      standardDeviationPerHour,
+      n0,
     };
   }
 }
