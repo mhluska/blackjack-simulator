@@ -468,7 +468,7 @@ export function parseGameMode(mode: string | undefined): GameMode | undefined {
   }
 
   switch (mode) {
-    case 'defalt':
+    case 'default':
       return GameMode.Default;
     case 'pairs':
       return GameMode.Pairs;
