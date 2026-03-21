@@ -95,12 +95,12 @@ export enum GameMode {
 export type playerTotal = number;
 export type dealerCard = number;
 
-type comparator = string;
-type index = number;
+export type Comparator = '<=' | '>=';
+type Index = number;
 
 export type Deviation = {
   correctMove: Move;
-  index: [comparator, index];
+  index: [Comparator, Index];
   fab4?: boolean;
 };
 
