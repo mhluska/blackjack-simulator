@@ -10,7 +10,7 @@ export function kebabCase(str: string): string {
   return str.replace(/([a-z0-9]|(?=[A-Z]))([A-Z])/g, '$1-$2').toLowerCase();
 }
 
-function isPlainObject(object: SimpleObject): boolean {
+function isPlainObject(object: unknown): object is SimpleObject {
   return (
     typeof object === 'object' && object !== null && !Array.isArray(object)
   );
@@ -30,7 +30,7 @@ export function printUsageOptions<T extends SimpleObject>(
   keys(defaultSettings).forEach((key) => {
     const value = defaultSettings[key];
     if (isPlainObject(value)) {
-      printUsageOptions(value, options);
+      printUsageOptions(value as T, options);
     } else {
       const items = [`  --${kebabCase(key.toString())}`];
 
@@ -40,7 +40,7 @@ export function printUsageOptions<T extends SimpleObject>(
           formattedValue = `'${formattedValue}'`;
         }
 
-        items.push(formattedValue ?? value);
+        items.push(formattedValue ?? String(value));
       }
 
       if (options[key]?.hint) {
