@@ -16,7 +16,7 @@ export type CardAttributes = {
   showingFace: boolean;
 };
 
-function hiLoValue(rank: Rank): number {
+export function hiLoValue(rank: Rank): number {
   switch (rank) {
     case Rank.Ace:
     case Rank.King:
@@ -34,6 +34,8 @@ function hiLoValue(rank: Rank): number {
     case Rank.Three:
     case Rank.Two:
       return 1;
+    default:
+      throw new Error(`Unexpected rank ${rank}`);
   }
 }
 

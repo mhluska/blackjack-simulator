@@ -1,4 +1,4 @@
-import { SimpleObject, Suit, Rank, enumValues, entries } from './types';
+import { SimpleObject, Suit, Rank, Comparator, enumValues, entries } from './types';
 
 type Range<T> = { start: number; end: number; value: T };
 
@@ -81,8 +81,8 @@ export default class Utils {
     return value;
   }
 
-  static compareRange(number: number, range: [string, number]): boolean {
-    return range[0][0] === '>' ? number >= range[1] : number <= range[1];
+  static compareRange(number: number, range: [Comparator, number]): boolean {
+    return range[0] === '>=' ? number >= range[1] : number <= range[1];
   }
 
   // See https://stackoverflow.com/a/40724354/659910

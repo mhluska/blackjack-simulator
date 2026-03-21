@@ -95,12 +95,12 @@ export enum GameMode {
 export type playerTotal = number;
 export type dealerCard = number;
 
-type comparator = string;
-type index = number;
+export type Comparator = '<=' | '>=';
+type Index = number;
 
 export type Deviation = {
   correctMove: Move;
-  index: [comparator, index];
+  index: [Comparator, Index];
   fab4?: boolean;
 };
 
@@ -202,6 +202,8 @@ export function cardRankToValue(cardRank: Rank): number {
       return 10;
     case Rank.Ace:
       return 11;
+    default:
+      throw new Error(`Unexpected card rank ${cardRank}`);
   }
 }
 
