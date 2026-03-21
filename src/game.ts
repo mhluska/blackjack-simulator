@@ -434,7 +434,10 @@ export default class Game extends EventEmitter {
 
       for (const player of this.players) {
         player.eachHand((hand) => {
-          player.setHandWinner({ winner: HandWinner.Dealer, hand });
+          player.setHandWinner({
+            winner: hand.blackjack ? HandWinner.Push : HandWinner.Dealer,
+            hand,
+          });
         });
       }
 
@@ -480,7 +483,10 @@ export default class Game extends EventEmitter {
 
     for (const player of this.players) {
       player.eachHand((hand) => {
-        player.setHandWinner({ winner: HandWinner.Dealer, hand });
+        player.setHandWinner({
+          winner: hand.blackjack ? HandWinner.Push : HandWinner.Dealer,
+          hand,
+        });
 
         // TODO: Store this in state so we don't have to check it again.
         const input = player.isUser

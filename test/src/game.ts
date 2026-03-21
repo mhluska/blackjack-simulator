@@ -604,6 +604,72 @@ describe('Game', function () {
       });
     });
 
+    context('when dealer has 10-up blackjack and player also has blackjack', function () {
+      let playerBalanceBefore: number;
+
+      before(function () {
+        game = setupGame({
+          // Dealer: Jack up, Ace hole = blackjack
+          // Player: Ace, King = blackjack
+          dealerCards: [Rank.Jack, Rank.Ace],
+          playerCards: [Rank.Ace, Rank.King],
+        });
+
+        playerBalanceBefore = game.player.balance;
+
+        runGame(game, {
+          input: [
+            {
+              [GameStep.Start]: Move.Hit,
+            },
+          ],
+        });
+      });
+
+      it('should be a push (not dealer win)', function () {
+        expect(game.player.handWinner.values().next().value).to.equal(
+          HandWinner.Push
+        );
+      });
+
+      it('should return the full bet to the player', function () {
+        expect(game.player.balance).to.equal(playerBalanceBefore);
+      });
+    });
+
+    context('when dealer has Ace-up blackjack and player also has blackjack', function () {
+      let playerBalanceBefore: number;
+
+      before(function () {
+        game = setupGame({
+          settings: {
+            autoDeclineInsurance: false,
+          },
+          // Dealer: Ace up, Ten hole = blackjack
+          // Player: Ace, Jack = blackjack
+          dealerCards: [Rank.Ace, Rank.Ten],
+          playerCards: [Rank.Ace, Rank.Jack],
+        });
+
+        playerBalanceBefore = game.player.balance;
+
+        // Step to deal initial cards (will prompt for insurance since dealer has Ace up).
+        game.step();
+        // Decline insurance.
+        game.step(Move.NoInsurance);
+      });
+
+      it('should be a push (not dealer win)', function () {
+        expect(game.player.handWinner.values().next().value).to.equal(
+          HandWinner.Push
+        );
+      });
+
+      it('should return the full bet to the player', function () {
+        expect(game.player.balance).to.equal(playerBalanceBefore);
+      });
+    });
+
     context('when an NPC splits aces and receives non-ace cards', function () {
       let npcPlayer: InstanceType<typeof Game>['players'][number];
 
