@@ -299,7 +299,7 @@ describe('Game', function () {
             deckCount: 6,
             allowLateSurrender: true,
           },
-          dealerCards: [Rank.Ace],
+          dealerCards: [Rank.Ace, Rank.Six],
           playerCards: [Rank.Six, Rank.Ten, Rank.Ten],
         });
 
@@ -460,6 +460,46 @@ describe('Game', function () {
 
       it('should emit correct state for dealer.blackjack', function () {
         expect(emittedBlackjack).to.be.true;
+      });
+    });
+
+    context('when dealer has blackjack with ace up and autoDeclineInsurance is false', function () {
+      let playerBalanceBefore: number;
+
+      before(function () {
+        game = setupGame({
+          settings: {
+            autoDeclineInsurance: false,
+          },
+          dealerCards: [Rank.Ace, Rank.Ten],
+          playerCards: [Rank.Five, Rank.Five],
+        });
+
+        playerBalanceBefore = game.player.balance;
+
+        // Step to deal initial cards.
+        game.step();
+      });
+
+      it('should prompt for insurance input', function () {
+        expect(game.state.step).to.equal(GameStep.WaitingForInsuranceInput);
+      });
+
+      it('should end the round after insurance is declined', function () {
+        game.step(Move.NoInsurance);
+        expect(game.state.step).to.equal(GameStep.WaitingForNewGameInput);
+      });
+
+      it('should mark all hands as dealer wins', function () {
+        expect(game.player.handWinner.values().next().value).to.equal(
+          HandWinner.Dealer
+        );
+      });
+
+      it('should only deduct the initial bet from the player', function () {
+        expect(playerBalanceBefore - game.player.balance).to.equal(
+          game.betAmount
+        );
       });
     });
 
