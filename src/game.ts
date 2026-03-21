@@ -6,6 +6,7 @@ import Player from './player';
 import BasicStrategyChecker from './basic-strategy-checker';
 import HiLoDeviationChecker from './hi-lo-deviation-checker';
 import Hand from './hand';
+import { hasAttributes } from './event-types';
 import type { EventMap, ChangeValue } from './event-types';
 import {
   Move,
@@ -183,31 +184,18 @@ export default class Game extends EventEmitter<EventMap> {
     this.state = settings.disableEvents
       ? this._state
       : new Proxy(this._state, {
-          // The Proxy set trap's `value` parameter is inherently `any` in
-          // TypeScript's ProxyHandler definition. This is the one place where
-          // an internal cast is acceptable.
           set: (target, key, value: unknown) => {
             if (hasKey(target, key)) {
-              (target as Record<string | symbol, unknown>)[key] = value;
+              Reflect.set(target, key, value);
             }
 
-            if (
-              typeof value === 'object' &&
-              value !== null &&
-              'attributes' in value &&
-              typeof (value as { attributes: unknown }).attributes ===
-                'function'
+            if (hasAttributes(value)) {
+              this.emit(Event.Change, String(key), value.attributes());
+            } else if (
+              typeof value === 'string' ||
+              typeof value === 'number'
             ) {
-              const attrValue = (
-                value as { attributes: () => ChangeValue }
-              ).attributes();
-              this.emit(Event.Change, String(key), attrValue);
-            } else {
-              this.emit(
-                Event.Change,
-                String(key),
-                value as ChangeValue
-              );
+              this.emit(Event.Change, String(key), value);
             }
 
             return true;

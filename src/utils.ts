@@ -208,25 +208,21 @@ export default class Utils {
       .join(', ');
   }
 
-  static compact<T extends SimpleObject>(
-    object: T
-  ): { [P in keyof T]: NonNullable<T[P]> } {
+  static compact<T extends SimpleObject>(object: T): T {
     Object.keys(object).forEach((key) => {
       if (object[key] === null || typeof object[key] === 'undefined') {
         delete object[key];
       }
     });
 
-    return object as { [P in keyof T]: NonNullable<T[P]> };
+    return object;
   }
 
   static mapValues<InputObject extends SimpleObject, MapReturnType>(
     obj: InputObject,
     map: (value: InputObject[keyof InputObject]) => MapReturnType
   ): { [P in keyof InputObject]: MapReturnType } {
-    const result = {} as {
-      [P in keyof InputObject]: MapReturnType;
-    };
+    const result = {} as { [P in keyof InputObject]: MapReturnType };
 
     entries(obj).forEach(([key, value]) => {
       result[key] = map(value);

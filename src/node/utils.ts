@@ -30,7 +30,7 @@ export function printUsageOptions<T extends SimpleObject>(
   keys(defaultSettings).forEach((key) => {
     const value = defaultSettings[key];
     if (isPlainObject(value)) {
-      printUsageOptions(value as Record<string, unknown>);
+      printUsageOptions(value);
       return;
     }
 
@@ -45,8 +45,9 @@ export function printUsageOptions<T extends SimpleObject>(
       items.push(formattedValue ?? String(value));
     }
 
-    if (options[key]?.hint) {
-      items.push(options[key]?.hint as string);
+    const hint = options[key]?.hint;
+    if (hint) {
+      items.push(hint);
     }
 
     console.log(items.join(' '));

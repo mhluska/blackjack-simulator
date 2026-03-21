@@ -128,10 +128,14 @@ export type SimpleObject = {
 };
 
 // See https://github.com/microsoft/TypeScript/pull/12253#issuecomment-353494273
-export const keys = Object.keys as <T>(o: T) => (keyof T)[];
+export function keys<T extends object>(o: T): (keyof T)[] {
+  return Object.keys(o) as (keyof T)[];
+}
 
 // See https://github.com/microsoft/TypeScript/pull/12253#issuecomment-479851685
-export const entries = Object.entries as <T>(o: T) => [keyof T, T[keyof T]][];
+export function entries<T extends object>(o: T): [keyof T, T[keyof T]][] {
+  return Object.entries(o) as [keyof T, T[keyof T]][];
+}
 
 export function enumValues<T>(object: T): T[keyof T][] {
   return Object.values(object).filter((value) => typeof value === 'number');

@@ -39,6 +39,21 @@ export function isPlayerAttributes(
   );
 }
 
+// Type guard for objects with an attributes() method (e.g. GameObject subclasses).
+function isRecord(value: unknown): value is Record<string, unknown> {
+  return typeof value === 'object' && value !== null;
+}
+
+export function hasAttributes(
+  value: unknown
+): value is { attributes: () => ChangeValue } {
+  return (
+    isRecord(value) &&
+    'attributes' in value &&
+    typeof value.attributes === 'function'
+  );
+}
+
 // Maps each Event enum member to its argument tuple.
 export type EventMap = {
   [Event.Change]: [name: string, value: ChangeValue];
