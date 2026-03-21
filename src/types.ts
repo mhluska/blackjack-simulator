@@ -200,6 +200,8 @@ export function cardRankToValue(cardRank: Rank): number {
       return 10;
     case Rank.Ace:
       return 11;
+    default:
+      throw new Error(`Unexpected card rank ${cardRank}`);
   }
 }
 
