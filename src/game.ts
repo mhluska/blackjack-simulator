@@ -520,6 +520,10 @@ export default class Game extends EventEmitter {
       return true;
     }
 
+    if (hand.fromAceSplit && !hand.allowSplit) {
+      return true;
+    }
+
     if (hand.cardTotal <= 21) {
       if (!player.isNPC) {
         this.validateInput(input, hand);

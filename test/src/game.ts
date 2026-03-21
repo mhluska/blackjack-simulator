@@ -563,5 +563,66 @@ describe('Game', function () {
         expect(game.state.playCorrection).to.equal('');
       });
     });
+
+    context('when an NPC splits aces and receives non-ace cards', function () {
+      let npcPlayer: InstanceType<typeof Game>['players'][number];
+
+      before(function () {
+        // Set up a 2-player game: user at position 1, NPC at position 2.
+        // The NPC is in playersRight and plays before the user.
+        game = new Game({
+          debug: !!process.env.DEBUG,
+          playerTablePosition: 1,
+          playerCount: 2,
+        });
+
+        const length = game.shoe.cards.length;
+        const setCard = (index: number, rank: Rank): void => {
+          game.shoe.cards[length - index - 1] = new Card(
+            Suit.Hearts,
+            rank,
+            game.shoe
+          );
+        };
+
+        // Deal order for 2 players (players array reversed: [NPC, User]):
+        // Draw 0: NPC first card
+        // Draw 1: User first card
+        // Draw 2: Dealer upcard
+        // Draw 3: NPC second card
+        // Draw 4: User second card
+        // Draw 5: Dealer hole card
+        // Draw 6: NPC first hand card after split
+        // Draw 7: NPC new hand card after split
+
+        setCard(0, Rank.Ace);   // NPC first card: Ace
+        setCard(1, Rank.Ten);   // User first card: Ten
+        setCard(2, Rank.Six);   // Dealer upcard: Six
+        setCard(3, Rank.Ace);   // NPC second card: Ace
+        setCard(4, Rank.Ten);   // User second card: Ten
+        setCard(5, Rank.Two);   // Dealer hole card: Two
+        setCard(6, Rank.Seven); // NPC first hand after split: Seven
+        setCard(7, Rank.Eight); // NPC new hand after split: Eight
+
+        // Identify the NPC player (playersRight[0]).
+        npcPlayer = game.playersRight[0];
+
+        runGame(game, {
+          input: [
+            {
+              [GameStep.WaitingForPlayInput]: Move.Stand,
+            },
+          ],
+        });
+      });
+
+      it('should stop NPC hands after one card each (2 cards total per hand)', function () {
+        // After splitting aces, each NPC hand should have exactly 2 cards:
+        // one ace + one dealt card. The NPC should not hit further.
+        expect(npcPlayer.hands).to.have.lengthOf(2);
+        expect(npcPlayer.hands[0].cards).to.have.lengthOf(2);
+        expect(npcPlayer.hands[1].cards).to.have.lengthOf(2);
+      });
+    });
   });
 });
