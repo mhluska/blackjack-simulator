@@ -56,9 +56,9 @@ export function hasAttributes(
 
 // Maps each Event enum member to its argument tuple.
 export type EventMap = {
-  [Event.Change]: [name: string, value: ChangeValue];
-  [Event.HandWinner]: [hand: Hand, winner: HandWinner];
-  [Event.CreateRecord]: [recordName: string, data: Record<string, unknown>];
+  [Event.Change]: [string, ChangeValue];
+  [Event.HandWinner]: [Hand, HandWinner];
+  [Event.CreateRecord]: [string, Record<string, unknown>];
   [Event.Shuffle]: [];
   [Event.ResetState]: [];
 };

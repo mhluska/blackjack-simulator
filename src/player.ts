@@ -1,6 +1,6 @@
 import Utils from './utils';
 import { Event } from './event-emitter';
-import GameObject, { getEntityName } from './game-object';
+import GameObject from './game-object';
 import Game from './game';
 import Hand from './hand';
 import Card from './card';
@@ -18,7 +18,7 @@ import {
 } from './types';
 
 export default class Player extends GameObject {
-  static entityName = 'player';
+  entityName = 'player';
 
   balance: number;
   blackjackPayout: BlackjackPayout;
@@ -130,7 +130,7 @@ export default class Player extends GameObject {
 
     if (this.debug) {
       console.log(
-        Utils.titleCase(getEntityName(this.constructor)),
+        Utils.titleCase(this.entityName),
         this.id,
         'draws card',
         targetHand.serialize({ showHidden: true }),

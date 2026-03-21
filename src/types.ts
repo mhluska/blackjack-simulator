@@ -128,12 +128,14 @@ export type SimpleObject = {
 };
 
 // See https://github.com/microsoft/TypeScript/pull/12253#issuecomment-353494273
-export function keys<T extends object>(o: T): (keyof T)[] {
+export function keys<T extends Record<string, unknown>>(o: T): (keyof T)[] {
   return Object.keys(o) as (keyof T)[];
 }
 
 // See https://github.com/microsoft/TypeScript/pull/12253#issuecomment-479851685
-export function entries<T extends object>(o: T): [keyof T, T[keyof T]][] {
+export function entries<T extends Record<string, unknown>>(
+  o: T
+): [keyof T, T[keyof T]][] {
   return Object.entries(o) as [keyof T, T[keyof T]][];
 }
 

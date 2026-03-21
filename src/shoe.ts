@@ -23,7 +23,7 @@ import {
 export class OutOfCardsError extends ExtendableError {}
 
 export default class Shoe extends GameObject {
-  static entityName = 'shoe';
+  entityName = 'shoe';
 
   cards!: Card[];
   currentCardIndex!: number;

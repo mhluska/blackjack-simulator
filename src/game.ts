@@ -7,7 +7,7 @@ import BasicStrategyChecker from './basic-strategy-checker';
 import HiLoDeviationChecker from './hi-lo-deviation-checker';
 import Hand from './hand';
 import { hasAttributes } from './event-types';
-import type { EventMap, ChangeValue } from './event-types';
+import type { EventMap } from './event-types';
 import {
   Move,
   SimpleObject,
@@ -191,10 +191,7 @@ export default class Game extends EventEmitter<EventMap> {
 
             if (hasAttributes(value)) {
               this.emit(Event.Change, String(key), value.attributes());
-            } else if (
-              typeof value === 'string' ||
-              typeof value === 'number'
-            ) {
+            } else if (typeof value === 'string' || typeof value === 'number') {
               this.emit(Event.Change, String(key), value);
             }
 
