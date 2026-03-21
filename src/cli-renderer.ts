@@ -120,7 +120,7 @@ export default class CLIRenderer implements Renderer {
             return `Dealer wins${blackjack}`;
           }
           case HandWinner.Push:
-            return HandWinner.Push;
+            return 'Push';
         }
       };
 
