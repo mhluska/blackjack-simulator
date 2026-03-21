@@ -12,7 +12,7 @@ export default class FileStorage implements Storage {
     this.databaseDir = databaseDir ?? DEFAULT_DATABASE_DIR;
   }
 
-  createRecord(recordName: string, data: { [key: string]: string }): void {
+  createRecord(recordName: string, data: Record<string, unknown>): void {
     fs.mkdirSync(this.databaseDir, { recursive: true });
     fs.appendFileSync(
       path.join(this.databaseDir, `${recordName}.txt`),

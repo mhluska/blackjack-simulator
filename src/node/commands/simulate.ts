@@ -40,7 +40,7 @@ function parseOptions(
     playerWongOutTrueCount:
       typeof options.playerWongOutTrueCount === 'number'
         ? -options.playerWongOutTrueCount
-        : null,
+        : undefined,
   });
 }
 
@@ -204,6 +204,10 @@ function adjustHandsCliArg() {
   };
 }
 
+function isSimulatorResult(value: unknown): value is SimulatorResult {
+  return typeof value === 'object' && value !== null && 'handsPlayed' in value;
+}
+
 function getCoresResults(
   options: Partial<CliSimulatorSettings & CliSettings>
 ): Promise<SimulatorResult[]> {
@@ -235,7 +239,9 @@ function getCoresResults(
       ]);
 
       child.on('message', (message) => {
-        results.push(message as SimulatorResult);
+        if (isSimulatorResult(message)) {
+          results.push(message);
+        }
 
         if (results.length === cores) {
           resolve(results);

@@ -40,7 +40,7 @@ export function hiLoValue(rank: Rank): number {
 }
 
 export default class Card extends GameObject {
-  static entityName = 'card';
+  entityName = 'card';
 
   id: string;
   suit: Suit;

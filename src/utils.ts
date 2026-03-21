@@ -208,9 +208,7 @@ export default class Utils {
       .join(', ');
   }
 
-  static compact<T extends SimpleObject>(
-    object: T
-  ): { [P in keyof T]: NonNullable<T[P]> } {
+  static compact<T extends SimpleObject>(object: T): T {
     Object.keys(object).forEach((key) => {
       if (object[key] === null || typeof object[key] === 'undefined') {
         delete object[key];
@@ -222,11 +220,9 @@ export default class Utils {
 
   static mapValues<InputObject extends SimpleObject, MapReturnType>(
     obj: InputObject,
-    map: (key: keyof InputObject) => MapReturnType
+    map: (value: InputObject[keyof InputObject]) => MapReturnType
   ): { [P in keyof InputObject]: MapReturnType } {
-    const result = {} as {
-      [P in keyof InputObject]: MapReturnType;
-    };
+    const result = {} as { [P in keyof InputObject]: MapReturnType };
 
     entries(obj).forEach(([key, value]) => {
       result[key] = map(value);

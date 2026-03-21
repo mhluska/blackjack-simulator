@@ -5,7 +5,7 @@ import Shoe from './shoe';
 import { Suit, Rank, enumValues } from './types';
 
 export default class Deck extends GameObject {
-  static entityName = 'deck';
+  entityName = 'deck';
 
   shoe: Shoe;
   cards: Card[];

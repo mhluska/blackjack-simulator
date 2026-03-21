@@ -6,6 +6,8 @@ import Player from './player';
 import BasicStrategyChecker from './basic-strategy-checker';
 import HiLoDeviationChecker from './hi-lo-deviation-checker';
 import Hand from './hand';
+import { hasAttributes } from './event-types';
+import type { EventMap } from './event-types';
 import {
   Move,
   SimpleObject,
@@ -76,7 +78,7 @@ function defaultSettings(minimumBet = 10 * 100): GameSettings {
 export const SETTINGS_DEFAULTS = defaultSettings();
 export let settings: GameSettings;
 
-export default class Game extends EventEmitter {
+export default class Game extends EventEmitter<EventMap> {
   _state!: GameState;
   betAmount!: number;
   spotCount!: number;
@@ -182,18 +184,15 @@ export default class Game extends EventEmitter {
     this.state = settings.disableEvents
       ? this._state
       : new Proxy(this._state, {
-          set: (target, key, value) => {
+          set: (target, key, value: unknown) => {
             if (hasKey(target, key)) {
-              // TODO: Fix this TypeScript issue.
-              // eslint-disable-next-line @typescript-eslint/ban-ts-comment
-              // @ts-ignore Type 'any' is not assignable to type 'never'.
-              target[key] = value;
+              Reflect.set(target, key, value);
             }
 
-            if (typeof value === 'object' && value.attributes) {
-              this.emit(Event.Change, key, value.attributes());
-            } else {
-              this.emit(Event.Change, key, value);
+            if (hasAttributes(value)) {
+              this.emit(Event.Change, String(key), value.attributes());
+            } else if (typeof value === 'string' || typeof value === 'number') {
+              this.emit(Event.Change, String(key), value);
             }
 
             return true;
@@ -212,8 +211,8 @@ export default class Game extends EventEmitter {
     );
   }
 
-  chainEmitChange<T extends EventEmitter>(object: T): T {
-    object.on(Event.Change, (name: string, value: SimpleObject) =>
+  chainEmitChange<T extends EventEmitter<EventMap>>(object: T): T {
+    object.on(Event.Change, (name, value) =>
       this.emit(Event.Change, name, value)
     );
     return object;

@@ -10,7 +10,7 @@ export function kebabCase(str: string): string {
   return str.replace(/([a-z0-9]|(?=[A-Z]))([A-Z])/g, '$1-$2').toLowerCase();
 }
 
-function isPlainObject(object: SimpleObject): boolean {
+function isPlainObject(object: unknown): object is Record<string, unknown> {
   return (
     typeof object === 'object' && object !== null && !Array.isArray(object)
   );
@@ -30,24 +30,26 @@ export function printUsageOptions<T extends SimpleObject>(
   keys(defaultSettings).forEach((key) => {
     const value = defaultSettings[key];
     if (isPlainObject(value)) {
-      printUsageOptions(value, options);
-    } else {
-      const items = [`  --${kebabCase(key.toString())}`];
-
-      if (value !== null && typeof value !== 'undefined') {
-        let formattedValue = options[key]?.formatter?.(value);
-        if (formattedValue && formattedValue.includes('$')) {
-          formattedValue = `'${formattedValue}'`;
-        }
-
-        items.push(formattedValue ?? value);
-      }
-
-      if (options[key]?.hint) {
-        items.push(options[key]?.hint as string);
-      }
-
-      console.log(items.join(' '));
+      printUsageOptions(value);
+      return;
     }
+
+    const items = [`  --${kebabCase(key.toString())}`];
+
+    if (value !== null && typeof value !== 'undefined') {
+      let formattedValue = options[key]?.formatter?.(value);
+      if (formattedValue && formattedValue.includes('$')) {
+        formattedValue = `'${formattedValue}'`;
+      }
+
+      items.push(formattedValue ?? String(value));
+    }
+
+    const hint = options[key]?.hint;
+    if (hint) {
+      items.push(hint);
+    }
+
+    console.log(items.join(' '));
   });
 }

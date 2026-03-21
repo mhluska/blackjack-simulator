@@ -1,6 +1,6 @@
 import Utils from './utils';
 import Deck from './deck';
-import Card, { CardAttributes } from './card';
+import Card from './card';
 import GameObject from './game-object';
 import BasicStrategyChecker from './basic-strategy-checker';
 import ExtendableError from './extendable-error';
@@ -9,6 +9,7 @@ import {
   fab4Deviations,
 } from './hi-lo-deviation-checker';
 import { settings } from './game';
+import type { ShoeAttributes } from './event-types';
 import {
   Rank,
   ChartType,
@@ -19,17 +20,10 @@ import {
   Deviation,
 } from './types';
 
-type ShoeAttributes = {
-  cards: CardAttributes[];
-  hiLoRunningCount: number;
-  hiLoTrueCount: number;
-  penetration: number;
-};
-
 export class OutOfCardsError extends ExtendableError {}
 
 export default class Shoe extends GameObject {
-  static entityName = 'shoe';
+  entityName = 'shoe';
 
   cards!: Card[];
   currentCardIndex!: number;
