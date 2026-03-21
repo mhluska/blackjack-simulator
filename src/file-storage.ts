@@ -3,24 +3,20 @@ import * as path from 'path';
 
 import Storage from './storage';
 
-const DATABASE_DIR = path.join(__dirname, '..', 'db');
+const DEFAULT_DATABASE_DIR = path.join(__dirname, '..', 'db');
 
 export default class FileStorage implements Storage {
-  createRecord(recordName: string, data: { [key: string]: string }): void {
-    fs.mkdir(DATABASE_DIR, { recursive: true }, (error) => {
-      if (error) {
-        throw error;
-      }
-    });
+  private databaseDir: string;
 
-    fs.appendFile(
-      path.join(DATABASE_DIR, `${recordName}.txt`),
-      `${JSON.stringify(data)}\n`,
-      (error) => {
-        if (error) {
-          throw error;
-        }
-      }
+  constructor(databaseDir?: string) {
+    this.databaseDir = databaseDir ?? DEFAULT_DATABASE_DIR;
+  }
+
+  createRecord(recordName: string, data: { [key: string]: string }): void {
+    fs.mkdirSync(this.databaseDir, { recursive: true });
+    fs.appendFileSync(
+      path.join(this.databaseDir, `${recordName}.txt`),
+      `${JSON.stringify(data)}\n`
     );
   }
 }
