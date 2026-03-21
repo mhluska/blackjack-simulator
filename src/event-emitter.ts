@@ -1,6 +1,4 @@
-// TODO: Avoid using `any` here.
-// eslint-disable-next-line @typescript-eslint/no-explicit-any
-type Listener = (...args: any[]) => void;
+type Listener = (...args: unknown[]) => void;
 
 export enum Event {
   Change = 0,

@@ -84,7 +84,9 @@ export default async function (
   const playerInputReader = new PlayerInputReader();
 
   game.on(Event.Change, () => renderer.render());
-  game.on(Event.CreateRecord, storage.createRecord);
+  game.on(Event.CreateRecord, (...args: unknown[]) =>
+    storage.createRecord(args[0] as string, args[1] as { [key: string]: string })
+  );
 
   let input: Move | undefined;
 

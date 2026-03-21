@@ -156,7 +156,9 @@ export default class Game extends EventEmitter {
     this.playersLeft = this.players.slice(reversedTablePosition);
     this.playersRight = this.players.slice(0, reversedTablePosition - 1);
 
-    this.player.on(Event.HandWinner, (hand, winner) => {
+    this.player.on(Event.HandWinner, (...args: unknown[]) => {
+      const hand = args[0] as Hand;
+      const winner = args[1] as HandWinner;
       this.emit(Event.CreateRecord, 'hand-result', {
         createdAt: Date.now(),
         gameId: this.gameId,
@@ -213,8 +215,8 @@ export default class Game extends EventEmitter {
   }
 
   chainEmitChange<T extends EventEmitter>(object: T): T {
-    object.on(Event.Change, (name: string, value: SimpleObject) =>
-      this.emit(Event.Change, name, value)
+    object.on(Event.Change, (...args: unknown[]) =>
+      this.emit(Event.Change, ...args)
     );
     return object;
   }

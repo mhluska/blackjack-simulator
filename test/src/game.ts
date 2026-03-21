@@ -176,10 +176,12 @@ describe('Game', function () {
       before(function () {
         playerBalanceBefore = game.player.balance;
 
-        game.on(Event.Change, (name, value) => {
+        game.on(Event.Change, (...args: unknown[]) => {
+          const name = args[0] as string;
+          const value = args[1] as Record<string, unknown>;
           if (
             name === 'player' &&
-            value.handWinner[value.hands[0].id] === 'player'
+            (value.handWinner as Record<string, string>)[((value.hands as { id: string }[])[0]).id] === 'player'
           ) {
             emittedHandWinner = true;
           }
@@ -439,8 +441,10 @@ describe('Game', function () {
           playerCards: [Rank.Five, Rank.Five],
         });
 
-        game.on(Event.Change, (name, value) => {
-          if (name === 'dealer' && value.hands[0].blackjack) {
+        game.on(Event.Change, (...args: unknown[]) => {
+          const name = args[0] as string;
+          const value = args[1] as Record<string, unknown>;
+          if (name === 'dealer' && ((value.hands as { blackjack: boolean }[])[0]).blackjack) {
             emittedBlackjack = true;
           }
         });
