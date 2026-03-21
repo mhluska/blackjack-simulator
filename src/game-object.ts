@@ -1,6 +1,7 @@
 import EventEmitter, { Event } from './event-emitter';
+import type { EventMap, ChangeValue } from './event-types';
 
-export default class GameObject extends EventEmitter {
+export default class GameObject extends EventEmitter<EventMap> {
   // NOTE: Implement this in a subclass. We need this because the minifier will
   // mangle the class name.
   static entityName = '';
@@ -17,7 +18,7 @@ export default class GameObject extends EventEmitter {
     }
   };
 
-  attributes(): void {
+  attributes(): ChangeValue {
     throw new Error('Implement this');
   }
 }

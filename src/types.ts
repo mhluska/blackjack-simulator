@@ -123,10 +123,8 @@ export type CheckDeviationResult = CheckResult & { deviation: Deviation };
 export type BasicStrategyChart = Map<ChartType, ChartMove[][]>;
 export type UncommonChart = Map<ChartType, Map<number, number[]>>;
 
-// TODO: Avoid any here.
 export type SimpleObject = {
-  // eslint-disable-next-line @typescript-eslint/no-explicit-any
-  [key: string]: any;
+  [key: string]: unknown;
 };
 
 // See https://github.com/microsoft/TypeScript/pull/12253#issuecomment-353494273

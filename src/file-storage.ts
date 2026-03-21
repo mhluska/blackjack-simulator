@@ -6,7 +6,7 @@ import Storage from './storage';
 const DATABASE_DIR = path.join(__dirname, '..', 'db');
 
 export default class FileStorage implements Storage {
-  createRecord(recordName: string, data: { [key: string]: string }): void {
+  createRecord(recordName: string, data: Record<string, unknown>): void {
     fs.mkdir(DATABASE_DIR, { recursive: true }, (error) => {
       if (error) {
         throw error;

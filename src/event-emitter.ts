@@ -1,6 +1,6 @@
-// TODO: Avoid using `any` here.
-// eslint-disable-next-line @typescript-eslint/no-explicit-any
-type Listener = (...args: any[]) => void;
+interface EventMapBase {
+  [key: number]: unknown[];
+}
 
 export enum Event {
   Change = 0,
@@ -10,16 +10,21 @@ export enum Event {
   ResetState = 4,
 }
 
-export default class EventEmitter {
+export default class EventEmitter<
+  TMap extends EventMapBase = Record<number, unknown[]>,
+> {
   static disableEvents: boolean;
 
-  events: Map<Event, Listener[]>;
+  events: Map<number, ((...args: unknown[]) => void)[]>;
 
   constructor() {
     this.events = new Map();
   }
 
-  on(event: Event, listener: Listener): void {
+  on<E extends keyof TMap & number>(
+    event: E,
+    listener: (...args: TMap[E]) => void
+  ): void {
     if (EventEmitter.disableEvents) {
       return;
     }
@@ -33,10 +38,13 @@ export default class EventEmitter {
       return;
     }
 
-    events.push(listener);
+    events.push(listener as (...args: unknown[]) => void);
   }
 
-  removeListener(event: Event, listener: Listener): void {
+  removeListener<E extends keyof TMap & number>(
+    event: E,
+    listener: (...args: TMap[E]) => void
+  ): void {
     if (EventEmitter.disableEvents) {
       return;
     }
@@ -46,7 +54,7 @@ export default class EventEmitter {
       return;
     }
 
-    const index = events.indexOf(listener);
+    const index = events.indexOf(listener as (...args: unknown[]) => void);
     if (index === -1) {
       return;
     }
@@ -54,7 +62,7 @@ export default class EventEmitter {
     events.splice(index, 1);
   }
 
-  removeAllListeners(event: Event): void {
+  removeAllListeners<E extends keyof TMap & number>(event: E): void {
     if (EventEmitter.disableEvents) {
       return;
     }
@@ -62,7 +70,7 @@ export default class EventEmitter {
     this.events.delete(event);
   }
 
-  emit(event: Event, ...args: unknown[]): void {
+  emit<E extends keyof TMap & number>(event: E, ...args: TMap[E]): void {
     if (EventEmitter.disableEvents) {
       return;
     }

@@ -1,3 +1,3 @@
 export default interface Storage {
-  createRecord(recordName: string, data: { [key: string]: string }): void;
+  createRecord(recordName: string, data: Record<string, unknown>): void;
 }

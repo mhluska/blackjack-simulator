@@ -2,10 +2,11 @@ import Utils from './utils';
 import { Event } from './event-emitter';
 import GameObject from './game-object';
 import Game from './game';
-import Hand, { HandAttributes } from './hand';
+import Hand from './hand';
 import Card from './card';
 import BasicStrategyChecker from './basic-strategy-checker';
 import HiLoDeviationChecker from './hi-lo-deviation-checker';
+import type { PlayerAttributes } from './event-types';
 import {
   HandWinner,
   Move,
@@ -15,13 +16,6 @@ import {
   playerStrategyToString,
   moveToString,
 } from './types';
-
-type PlayerAttributes = {
-  id: string;
-  balance: number;
-  hands: HandAttributes[];
-  handWinner: { [id: string]: string };
-};
 
 export default class Player extends GameObject {
   static entityName = 'player';

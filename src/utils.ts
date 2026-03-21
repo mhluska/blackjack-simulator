@@ -217,12 +217,12 @@ export default class Utils {
       }
     });
 
-    return object;
+    return object as { [P in keyof T]: NonNullable<T[P]> };
   }
 
   static mapValues<InputObject extends SimpleObject, MapReturnType>(
     obj: InputObject,
-    map: (key: keyof InputObject) => MapReturnType
+    map: (value: InputObject[keyof InputObject]) => MapReturnType
   ): { [P in keyof InputObject]: MapReturnType } {
     const result = {} as {
       [P in keyof InputObject]: MapReturnType;

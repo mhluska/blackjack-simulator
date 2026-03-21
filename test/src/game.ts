@@ -10,6 +10,7 @@ import { Event } from '../../src/event-emitter';
 import Game, { GameSettings } from '../../src/game';
 import Card from '../../src/card';
 import Utils from '../../src/utils';
+import { isPlayerAttributes } from '../../src/event-types';
 import {
   Suit,
   Rank,
@@ -179,6 +180,7 @@ describe('Game', function () {
         game.on(Event.Change, (name, value) => {
           if (
             name === 'player' &&
+            isPlayerAttributes(value) &&
             value.handWinner[value.hands[0].id] === 'player'
           ) {
             emittedHandWinner = true;
@@ -440,7 +442,11 @@ describe('Game', function () {
         });
 
         game.on(Event.Change, (name, value) => {
-          if (name === 'dealer' && value.hands[0].blackjack) {
+          if (
+            name === 'dealer' &&
+            isPlayerAttributes(value) &&
+            value.hands[0].blackjack
+          ) {
             emittedBlackjack = true;
           }
         });
