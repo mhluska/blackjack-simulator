@@ -181,7 +181,7 @@ export default class Player extends GameObject {
       throw new Error(`Player ${this.id} has no hand to add chips to`);
     }
 
-    if (this.balance < hand.betAmount) {
+    if (this.balance < betAmount) {
       // TODO: Format cents.
       throw new Error(
         `Insufficient player balance: ${this.balance} < ${betAmount}`
