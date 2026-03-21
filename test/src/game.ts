@@ -299,7 +299,7 @@ describe('Game', function () {
             deckCount: 6,
             allowLateSurrender: true,
           },
-          dealerCards: [Rank.Ace],
+          dealerCards: [Rank.Ace, Rank.Six],
           playerCards: [Rank.Six, Rank.Ten, Rank.Ten],
         });
 

@@ -321,7 +321,7 @@ export default class Game extends EventEmitter {
           this.askInsurance(input, this.player, ...this.playersLeft);
           this.payoutInsurance(input);
           step =
-            this.dealer.holeCard?.value === 10
+            this.dealer.holeCard.value === 10
               ? GameStep.WaitingForNewGameInput
               : GameStep.PlayHandsRight;
           break;
