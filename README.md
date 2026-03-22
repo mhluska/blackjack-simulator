@@ -70,15 +70,15 @@ const settings = {
   // 'basic-strategy-i18-fab4': play perfect basic strategy plus illustrious 18 + fab 4
   playerStrategy: 'basic-strategy-i18-fab4',
 
-  playerBetSpread: [1000, 2000, 4000, 8000, 16000],
+  playerBetSpread: [1000, 1000, 4000, 7000, 10000],
   playerSpots: [1, 1, 1, 1, 1],
   playerTablePosition: 1,
   playerBankroll: 1000 * 10 ** 7,
-  playerWongOutTrueCount: null,
+  playerWongOutTrueCount: -Infinity,
 
   // Table rules
   allowDoubleAfterSplit: true,
-  allowLateSurrender: true,
+  allowLateSurrender: false,
   allowResplitAces: false,
   blackjackPayout: '3:2',
   deckCount: 2,
@@ -101,7 +101,6 @@ Result contains the following data:
   amountEarned: number;
   amountWagered: number;
   bankrollMean: number;
-  bankrollRqd: number;
   bankrollVariance: number;
   handsLost: number;
   handsPlayed: number;
@@ -183,7 +182,7 @@ game.on(Event.Shuffle, () => {
 game.on(Event.CreateRecord, (entityName, data) => {
   fetch(`/api/v1/${entityName}`, {
     method: 'POST',
-    body: JSON.serialize(data),
+    body: JSON.stringify(data),
     headers: {
       Accept: 'application/json',
       'Content-Type': 'application/json'
