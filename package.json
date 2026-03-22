@@ -7,7 +7,7 @@
   "description": "Core game logic for a Blackjack basic strategy and card counting trainer",
   "main": "dist/main.js",
   "bin": {
-    "blackjack-simulator": "bin/cli.js"
+    "blackjack-simulator": "bin/cli.mjs"
   },
   "scripts": {
     "browser": "webpack serve --open",
