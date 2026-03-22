@@ -149,10 +149,7 @@ export default class HiLoDeviationChecker {
     let hint;
     const { correctMove, index } = deviation;
 
-    if (
-      correctMove === Move.AskInsurance &&
-      input !== Move.AskInsurance
-    ) {
+    if (correctMove === Move.AskInsurance && input !== Move.AskInsurance) {
       hint = 'buy insurance';
     }
 

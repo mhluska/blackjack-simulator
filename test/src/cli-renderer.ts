@@ -3,13 +3,7 @@ import * as chai from 'chai';
 import Game from '../../src/game';
 import CLIRenderer from '../../src/cli-renderer';
 import Card from '../../src/card';
-import {
-  Suit,
-  Rank,
-  GameStep,
-  Move,
-  HandWinner,
-} from '../../src/types';
+import { Suit, Rank, GameStep, Move, HandWinner } from '../../src/types';
 
 const expect = chai.expect;
 
@@ -31,10 +25,10 @@ function setupPushGame() {
 
   // Set up a scenario where both player and dealer have 20 (push).
   // Deal order: player card 1, dealer upcard, player card 2, dealer hole card.
-  setCard(0, Rank.Ten);   // Player first card: Ten (10)
-  setCard(1, Rank.King);  // Dealer upcard: King (10)
+  setCard(0, Rank.Ten); // Player first card: Ten (10)
+  setCard(1, Rank.King); // Dealer upcard: King (10)
   setCard(2, Rank.Queen); // Player second card: Queen (10)
-  setCard(3, Rank.Jack);  // Dealer hole card: Jack (10)
+  setCard(3, Rank.Jack); // Dealer hole card: Jack (10)
 
   return game;
 }

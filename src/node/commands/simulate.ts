@@ -270,7 +270,9 @@ export default function (
   const unknownKeys = Object.keys(options).filter((k) => !validKeys.has(k));
   if (unknownKeys.length > 0) {
     console.error(
-      `Unknown option${unknownKeys.length > 1 ? 's' : ''}: ${unknownKeys.map((k) => `--${kebabCase(k)}`).join(', ')}`
+      `Unknown option${unknownKeys.length > 1 ? 's' : ''}: ${unknownKeys
+        .map((k) => `--${kebabCase(k)}`)
+        .join(', ')}`
     );
     console.error('Run with --help to see available options.');
     return;
