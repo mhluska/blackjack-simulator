@@ -17,6 +17,7 @@ export default [
       ...tseslint.configs.recommended.rules,
       ...prettierConfig.rules,
       'prettier/prettier': ['error', { singleQuote: true }],
+      '@typescript-eslint/no-non-null-assertion': 'error',
     },
   },
   {
