@@ -13,7 +13,7 @@ import Simulator, {
   bankrollRequired,
 } from '../../simulator';
 
-import { CliSettings, printUsageOptions } from '../utils';
+import { CliSettings, kebabCase, printUsageOptions } from '../utils';
 import {
   entries,
   keys,
@@ -259,6 +259,22 @@ function getCoresResults(
 export default function (
   options: Partial<CliSimulatorSettings & CliSettings>
 ): void {
+  const validKeys = new Set([
+    ...keys(SETTINGS_DEFAULTS).map((k) => k.toString()),
+    'help',
+    'h',
+    'raw',
+  ]);
+
+  const unknownKeys = Object.keys(options).filter((k) => !validKeys.has(k));
+  if (unknownKeys.length > 0) {
+    console.error(
+      `Unknown option${unknownKeys.length > 1 ? 's' : ''}: ${unknownKeys.map((k) => `--${kebabCase(k)}`).join(', ')}`
+    );
+    console.error('Run with --help to see available options.');
+    return;
+  }
+
   if (options.help || options.h) {
     console.log('Usage: simulator simulate [options]');
     console.log();
