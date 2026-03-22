@@ -1,5 +1,13 @@
 # Changelog
 
+## 0.35.3
+
+- Cache chart lookups in strategy checkers (~8% simulation speedup)
+- Promote `no-non-null-assertion` lint rule to error
+- Remove Babel, migrate to native TypeScript compilation
+- Migrate ESLint to flat config (v10)
+- Update all dev dependencies to latest
+
 ## 0.35.2
 
 - Update publish workflow to Node 20
