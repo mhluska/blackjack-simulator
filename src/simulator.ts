@@ -379,7 +379,7 @@ export default class Simulator {
 
     let bankrollMean = 0;
     let bankrollVariance = 0;
-    let bankrollValues = 1;
+    let bankrollValues = 0;
 
     let handsWon = 0;
     let handsLost = 0;
