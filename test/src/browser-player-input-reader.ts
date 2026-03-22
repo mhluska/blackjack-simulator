@@ -1,18 +1,18 @@
-import * as chai from 'chai';
-import * as sinonChai from 'sinon-chai';
-import * as sinon from 'sinon';
+import { expect, use } from 'chai';
+import sinonChai from 'sinon-chai';
+import sinon from 'sinon';
 
 import { Move } from '../../src/types';
 
-const expect = chai.expect;
-chai.use(sinonChai);
+use(sinonChai);
 
 // Set up minimal DOM globals before importing the browser module.
 // The browser player-input-reader expects `document.body` and `HTMLElement`.
 class MockHTMLElement {
   dataset: { [key: string]: string } = {};
 }
-(global as any).HTMLElement = MockHTMLElement;
+(global as unknown as { HTMLElement: typeof MockHTMLElement }).HTMLElement =
+  MockHTMLElement;
 
 const listeners: Map<string, Set<EventListener>> = new Map();
 
@@ -33,7 +33,9 @@ const mockBody = {
 };
 
 // Set up the global `document` before importing the module under test.
-(global as any).document = { body: mockBody };
+(global as unknown as { document: { body: typeof mockBody } }).document = {
+  body: mockBody,
+};
 
 import DOMPlayerInputReader from '../../src/browser/player-input-reader';
 
@@ -56,7 +58,7 @@ describe('DOMPlayerInputReader', function () {
         // Verify both listeners were added.
         expect(mockBody.addEventListener).to.have.been.calledTwice;
         expect(mockBody.addEventListener.firstCall.args[0]).to.equal(
-          'keypress'
+          'keypress',
         );
         expect(mockBody.addEventListener.secondCall.args[0]).to.equal('click');
 
@@ -72,11 +74,11 @@ describe('DOMPlayerInputReader', function () {
         // Both listeners should have been removed.
         expect(mockBody.removeEventListener).to.have.been.calledWith(
           'click',
-          sinon.match.func
+          sinon.match.func,
         );
         expect(mockBody.removeEventListener).to.have.been.calledWith(
           'keypress',
-          keypressHandler
+          keypressHandler,
         );
       });
     });
@@ -100,11 +102,11 @@ describe('DOMPlayerInputReader', function () {
         // Both listeners should have been removed.
         expect(mockBody.removeEventListener).to.have.been.calledWith(
           'click',
-          clickHandler
+          clickHandler,
         );
         expect(mockBody.removeEventListener).to.have.been.calledWith(
           'keypress',
-          keypressHandler
+          keypressHandler,
         );
       });
     });

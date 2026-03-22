@@ -1,8 +1,6 @@
-import * as chai from 'chai';
+import { expect } from 'chai';
 
 import { GameMode, parseGameMode } from '../../src/types';
-
-const expect = chai.expect;
 
 describe('parseGameMode', function () {
   it('returns GameMode.Default for "default"', function () {

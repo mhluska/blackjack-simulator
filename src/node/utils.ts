@@ -18,14 +18,12 @@ function isPlainObject(object: unknown): object is Record<string, unknown> {
 
 export function printUsageOptions<T extends SimpleObject>(
   defaultSettings: T,
-  options: Partial<
-    {
-      [key in keyof T]: {
-        hint?: string;
-        formatter?: (value: T[key]) => string;
-      };
-    }
-  > = {}
+  options: Partial<{
+    [key in keyof T]: {
+      hint?: string;
+      formatter?: (value: T[key]) => string;
+    };
+  }> = {},
 ): void {
   keys(defaultSettings).forEach((key) => {
     const value = defaultSettings[key];

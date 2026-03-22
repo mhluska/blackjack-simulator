@@ -1,7 +1,10 @@
 #!/usr/bin/env node
 
-const fs = require('fs');
-const path = require('path');
+import fs from 'fs';
+import path from 'path';
+import { fileURLToPath } from 'url';
+
+const __dirname = path.dirname(fileURLToPath(import.meta.url));
 
 // See https://stackoverflow.com/a/52551910/659910
 function camelize(str) {
@@ -45,7 +48,7 @@ function parseArgValue(value) {
       .split(',')
       .filter(Boolean)
       .map((number) =>
-        isDollarValue(number) ? parseDollar(number) : parseInt(number)
+        isDollarValue(number) ? parseDollar(number) : parseInt(number),
       );
   }
 
@@ -84,10 +87,10 @@ function parseArgs(args) {
 if (process.argv.includes('--version') || process.argv.includes('-v')) {
   console.log(
     JSON.parse(
-      fs.readFileSync(path.join(__dirname, '..', 'package.json'), 'utf8')
-    ).version
+      fs.readFileSync(path.join(__dirname, '..', 'package.json'), 'utf8'),
+    ).version,
   );
-  return;
+  process.exit(0);
 }
 
 const commandNames = ['simulate', 'game'];
@@ -98,12 +101,12 @@ if (!commandNames.includes(process.argv[2])) {
   console.log('Commands:');
   console.log(commandNames.map((c) => `  ${c}`).join('\n'));
 
-  return;
+  process.exit(0);
 }
 
 const options = parseArgs(process.argv.slice(3));
 
-// eslint-disable-next-line @typescript-eslint/no-var-requires
-const command = require(`../dist/${process.argv[2]}`).default;
+const mod = await import(`../dist/${process.argv[2]}.js`);
+const command = mod.default?.default ?? mod.default;
 
 command(options);

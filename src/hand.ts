@@ -141,7 +141,7 @@ export default class Hand extends GameObject {
   serialize({ showHidden = false } = {}): string {
     return this.cards
       .map((card) =>
-        card.showingFace || showHidden ? rankToString(card.rank) : '?'
+        card.showingFace || showHidden ? rankToString(card.rank) : '?',
       )
       .join(' ');
   }

@@ -11,7 +11,7 @@ export enum Event {
 }
 
 export default class EventEmitter<
-  TMap extends EventMapBase = Record<number, unknown[]>
+  TMap extends EventMapBase = Record<number, unknown[]>,
 > {
   static disableEvents: boolean;
 
@@ -23,7 +23,7 @@ export default class EventEmitter<
 
   on<E extends keyof TMap & number>(
     event: E,
-    listener: (...args: TMap[E]) => void
+    listener: (...args: TMap[E]) => void,
   ): void {
     if (EventEmitter.disableEvents) {
       return;
@@ -43,7 +43,7 @@ export default class EventEmitter<
 
   removeListener<E extends keyof TMap & number>(
     event: E,
-    listener: (...args: TMap[E]) => void
+    listener: (...args: TMap[E]) => void,
   ): void {
     if (EventEmitter.disableEvents) {
       return;

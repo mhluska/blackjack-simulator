@@ -1,11 +1,9 @@
-import * as chai from 'chai';
+import { expect } from 'chai';
 import * as fs from 'fs';
 import * as path from 'path';
 import * as os from 'os';
 
 import FileStorage from '../../src/file-storage';
-
-const expect = chai.expect;
 
 describe('FileStorage', function () {
   let tempDir: string;

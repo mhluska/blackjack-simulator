@@ -80,7 +80,7 @@ export default class HiLoDeviationChecker {
   static _getDeviation(
     deviations: Deviations,
     playerTotal: playerTotal,
-    dealersCard: dealerCard
+    dealersCard: dealerCard,
   ): Deviation | undefined {
     return deviations.get(playerTotal)?.get(dealersCard);
   }
@@ -88,7 +88,7 @@ export default class HiLoDeviationChecker {
   static _suggest(
     game: Game,
     hand: Hand,
-    suggestFab4 = true
+    suggestFab4 = true,
   ): Deviation | undefined {
     const trueCount = game.shoe.hiLoTrueCount;
 
@@ -104,8 +104,8 @@ export default class HiLoDeviationChecker {
 
     const deviation =
       hand.allowSurrender && suggestFab4
-        ? this._getDeviation(fab4Deviations, playerTotal, dealersCard) ??
-          this._getDeviation(illustrious18Deviations, playerTotal, dealersCard)
+        ? (this._getDeviation(fab4Deviations, playerTotal, dealersCard) ??
+          this._getDeviation(illustrious18Deviations, playerTotal, dealersCard))
         : this._getDeviation(illustrious18Deviations, playerTotal, dealersCard);
 
     if (
@@ -125,7 +125,7 @@ export default class HiLoDeviationChecker {
     return this._suggest(
       game,
       hand,
-      hand.player.strategy === PlayerStrategy.BasicStrategyI18Fab4
+      hand.player.strategy === PlayerStrategy.BasicStrategyI18Fab4,
     )?.correctMove;
   }
 
@@ -134,7 +134,7 @@ export default class HiLoDeviationChecker {
   static check(
     game: Game,
     hand: Hand,
-    input: Move
+    input: Move,
   ): CheckDeviationResult | undefined {
     if (
       !gameSettings.checkDeviations &&

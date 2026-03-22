@@ -1,13 +1,19 @@
-/* eslint-disable @typescript-eslint/no-var-requires */
+import path from 'path';
+import { fileURLToPath } from 'url';
+import { merge } from 'webpack-merge';
 
-const path = require('path');
-const merge = require('webpack-merge');
+const __dirname = path.dirname(fileURLToPath(import.meta.url));
 
 const common = {
   mode: process.env.NODE_ENV || 'production',
+  experiments: {
+    outputModule: true,
+  },
   output: {
     path: path.resolve(__dirname, 'dist'),
-    libraryTarget: 'umd',
+    library: {
+      type: 'module',
+    },
   },
   module: {
     rules: [
@@ -41,7 +47,6 @@ const serverConfig = merge(common, {
 const serverMinConfig = merge(serverConfig, {
   output: {
     filename: '[name].min.js',
-    libraryExport: 'default',
   },
   optimization: {
     minimize: true,
@@ -52,21 +57,19 @@ const clientConfig = merge(common, {
   entry: './src/index.ts',
   output: {
     filename: '[name].js',
-    library: 'BlackjackSimulator',
   },
   devServer: {
-    contentBase: './dist',
+    static: './dist',
   },
 });
 
 const clientMinConfig = merge(common, {
   output: {
     filename: '[name].min.js',
-    library: 'BlackjackSimulator',
   },
   optimization: {
     minimize: true,
   },
 });
 
-module.exports = [serverConfig, serverMinConfig, clientConfig, clientMinConfig];
+export default [serverConfig, serverMinConfig, clientConfig, clientMinConfig];

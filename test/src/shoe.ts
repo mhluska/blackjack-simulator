@@ -1,11 +1,9 @@
-import * as chai from 'chai';
+import { expect } from 'chai';
 
 import Shoe from '../../src/shoe';
 import Card from '../../src/card';
 
 import { CardFactory } from '../factories';
-
-const expect = chai.expect;
 
 describe('Shoe', function () {
   let shoe: Shoe;

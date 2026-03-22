@@ -1,9 +1,7 @@
-import * as chai from 'chai';
+import { expect } from 'chai';
 
 import Player from '../../src/player';
 import { PlayerStrategy } from '../../src/types';
-
-const expect = chai.expect;
 
 describe('Player', () => {
   describe('#useChips()', () => {
@@ -32,7 +30,7 @@ describe('Player', () => {
       // Bug check: 8 < 5 => false (no throw, balance goes negative)
       // Fixed check: 8 < 10 => true (throws correctly)
       expect(() => player.useChips(10, { hand })).to.throw(
-        'Insufficient player balance'
+        'Insufficient player balance',
       );
     });
 

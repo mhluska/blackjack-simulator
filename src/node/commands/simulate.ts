@@ -24,14 +24,16 @@ import {
 } from '../../types';
 import Utils from '../../utils';
 
-interface CliSimulatorSettings
-  extends Omit<SimulatorSettings, 'playerStrategy' | 'blackjackPayout'> {
+interface CliSimulatorSettings extends Omit<
+  SimulatorSettings,
+  'playerStrategy' | 'blackjackPayout'
+> {
   playerStrategy: string;
   blackjackPayout: string;
 }
 
 function parseOptions(
-  options: Partial<CliSimulatorSettings & CliSettings>
+  options: Partial<CliSimulatorSettings & CliSettings>,
 ): Partial<SimulatorSettings> {
   return Utils.compact({
     ...options,
@@ -46,10 +48,10 @@ function parseOptions(
 
 function printEntries(
   result: FormattedResult,
-  displayOrder: (keyof FormattedResult)[]
+  displayOrder: (keyof FormattedResult)[],
 ) {
   const longestLabelLength = Math.max(
-    ...keys(result).map((key) => key.toString().length)
+    ...keys(result).map((key) => key.toString().length),
   );
 
   const print = (key: string, value: string | number) => {
@@ -84,7 +86,7 @@ function printIntro(result: FormattedSimulatorIntro, handsCount: number) {
 
   const handsWord = handsCount === 1 ? 'hand' : 'hands';
   process.stdout.write(
-    `Simulating ${Utils.abbreviateNumber(handsCount)} ${handsWord}...`
+    `Simulating ${Utils.abbreviateNumber(handsCount)} ${handsWord}...`,
   );
 }
 
@@ -103,7 +105,7 @@ function printResult(result: FormattedSimulatorResult) {
 }
 
 function createResultFormatter(
-  raw: CliSettings['raw']
+  raw: CliSettings['raw'],
 ): (result: AugmentedSimulatorResult) => FormattedSimulatorResult {
   return (result: AugmentedSimulatorResult): FormattedSimulatorResult => {
     if (raw) {
@@ -156,7 +158,7 @@ function augmentResult(result: SimulatorResult): AugmentedSimulatorResult {
     bankrollRqd: bankrollRequired(
       riskOfRuin,
       bankrollVariance,
-      amountEarned / handsPlayed
+      amountEarned / handsPlayed,
     ),
     expectedValue: amountEarned / hoursPlayed,
     houseEdge: -result.amountEarned / result.amountWagered,
@@ -209,14 +211,10 @@ function isSimulatorResult(value: unknown): value is SimulatorResult {
 }
 
 function getCoresResults(
-  options: Partial<CliSimulatorSettings & CliSettings>
+  options: Partial<CliSimulatorSettings & CliSettings>,
 ): Promise<SimulatorResult[]> {
-  const {
-    handsIndex,
-    handsPerCore,
-    remainingHands,
-    cores,
-  } = adjustHandsCliArg();
+  const { handsIndex, handsPerCore, remainingHands, cores } =
+    adjustHandsCliArg();
   const results: SimulatorResult[] = [];
 
   // Avoid spawning child processes if only one core is available.
@@ -227,9 +225,8 @@ function getCoresResults(
 
   return new Promise((resolve) => {
     for (let i = 0; i < cores; i += 1) {
-      process.argv[handsIndex + 1] = (i === 0
-        ? handsPerCore + remainingHands
-        : handsPerCore
+      process.argv[handsIndex + 1] = (
+        i === 0 ? handsPerCore + remainingHands : handsPerCore
       ).toString();
 
       const child = fork(process.argv[1], [
@@ -257,7 +254,7 @@ function getCoresResults(
 // using our custom `entries()` function which is also not compatible with
 // AssemblyScript.
 export default function (
-  options: Partial<CliSimulatorSettings & CliSettings>
+  options: Partial<CliSimulatorSettings & CliSettings>,
 ): void {
   const validKeys = new Set([
     ...keys(SETTINGS_DEFAULTS).map((k) => k.toString()),
@@ -272,7 +269,7 @@ export default function (
     console.error(
       `Unknown option${unknownKeys.length > 1 ? 's' : ''}: ${unknownKeys
         .map((k) => `--${kebabCase(k)}`)
-        .join(', ')}`
+        .join(', ')}`,
     );
     console.error('Run with --help to see available options.');
     return;
@@ -300,7 +297,7 @@ export default function (
               Utils.formatCents(item, {
                 stripCommas: true,
                 stripZeroCents: true,
-              })
+              }),
             )
             .join(','),
       },

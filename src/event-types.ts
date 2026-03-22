@@ -29,7 +29,7 @@ export type ChangeValue =
 
 // Type guard for narrowing ChangeValue to PlayerAttributes.
 export function isPlayerAttributes(
-  value: ChangeValue
+  value: ChangeValue,
 ): value is PlayerAttributes {
   return (
     typeof value === 'object' &&
@@ -45,7 +45,7 @@ function isRecord(value: unknown): value is Record<string, unknown> {
 }
 
 export function hasAttributes(
-  value: unknown
+  value: unknown,
 ): value is { attributes: () => ChangeValue } {
   return (
     isRecord(value) &&

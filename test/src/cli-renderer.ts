@@ -1,11 +1,9 @@
-import * as chai from 'chai';
+import { expect } from 'chai';
 
 import Game from '../../src/game';
 import CLIRenderer from '../../src/cli-renderer';
 import Card from '../../src/card';
 import { Suit, Rank, GameStep, Move, HandWinner } from '../../src/types';
-
-const expect = chai.expect;
 
 function setupPushGame() {
   const game = new Game({
@@ -19,7 +17,7 @@ function setupPushGame() {
     game.shoe.cards[length - index - 1] = new Card(
       Suit.Hearts,
       rank,
-      game.shoe
+      game.shoe,
     );
   };
 
@@ -69,7 +67,7 @@ describe('CLIRenderer', function () {
         // Now the game should be in WaitingForNewGameInput.
         expect(game.state.step).to.equal(GameStep.WaitingForNewGameInput);
         expect(game.player.handWinner.values().next().value).to.equal(
-          HandWinner.Push
+          HandWinner.Push,
         );
       });
 

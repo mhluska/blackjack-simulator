@@ -99,7 +99,7 @@ export default class Player extends GameObject {
         handWinnerToString(HandWinner.Player),
         hand.serialize(),
         `(${hand.cardTotal})`,
-        moveToString(correctMove)
+        moveToString(correctMove),
       );
     }
 
@@ -129,7 +129,7 @@ export default class Player extends GameObject {
 
   takeCard(
     card: Card,
-    { hand, prepend = false }: { hand?: Hand; prepend?: boolean } = {}
+    { hand, prepend = false }: { hand?: Hand; prepend?: boolean } = {},
   ): void {
     const targetHand = hand ?? this._hands[0];
     targetHand.takeCard(card, { prepend });
@@ -140,7 +140,7 @@ export default class Player extends GameObject {
         this.id,
         'draws card',
         targetHand.serialize({ showHidden: true }),
-        `(${targetHand.cardTotal})`
+        `(${targetHand.cardTotal})`,
       );
     }
 
@@ -184,7 +184,7 @@ export default class Player extends GameObject {
     if (this.balance < betAmount) {
       // TODO: Format cents.
       throw new Error(
-        `Insufficient player balance: ${this.balance} < ${betAmount}`
+        `Insufficient player balance: ${this.balance} < ${betAmount}`,
       );
     }
 
@@ -198,7 +198,7 @@ export default class Player extends GameObject {
         'from player',
         this.id,
         'balance:',
-        this.balance
+        this.balance,
       );
     }
   }
@@ -232,7 +232,7 @@ export default class Player extends GameObject {
         this.id,
         'winner:',
         winner,
-        hand.blackjack ? 'blackjack' : ''
+        hand.blackjack ? 'blackjack' : '',
       );
     }
 
@@ -242,7 +242,7 @@ export default class Player extends GameObject {
         : [1, 1];
 
       this.addChips(
-        hand.betAmount + hand.betAmount * (ratioNumerator / ratioDenominator)
+        hand.betAmount + hand.betAmount * (ratioNumerator / ratioDenominator),
       );
     } else if (winner === HandWinner.Push) {
       this.addChips(hand.betAmount);

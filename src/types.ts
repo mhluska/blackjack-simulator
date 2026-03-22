@@ -134,13 +134,17 @@ export function keys<T extends Record<string, unknown>>(o: T): (keyof T)[] {
 
 // See https://github.com/microsoft/TypeScript/pull/12253#issuecomment-479851685
 export function entries<T extends Record<string, unknown>>(
-  o: T
+  o: T,
 ): [keyof T, T[keyof T]][] {
   return Object.entries(o) as [keyof T, T[keyof T]][];
 }
 
-export function enumValues<T>(object: T): T[keyof T][] {
-  return Object.values(object).filter((value) => typeof value === 'number');
+export function enumValues<T extends Record<string, unknown>>(
+  object: T,
+): T[keyof T][] {
+  return Object.values(object).filter(
+    (value) => typeof value === 'number',
+  ) as T[keyof T][];
 }
 
 // export const values = <_, T>(enum: T) => { Object.values(enum).filter(value => typeof value === 'number') }
@@ -233,7 +237,7 @@ export function chartMoveToCorrectMove(chartMove: ChartMove): Move {
 
 // TODO: Consolidate types so we can remove this converter functions?
 export function actionDataKeyToCorrectMove(
-  actionDataKey: string
+  actionDataKey: string,
 ): Move | undefined {
   if (!actionDataKey) {
     return;
@@ -377,7 +381,7 @@ export function playerStrategyToString(playerStrategy: PlayerStrategy): string {
 }
 
 export function parsePlayerStrategy(
-  playerStrategy: string | undefined
+  playerStrategy: string | undefined,
 ): PlayerStrategy | undefined {
   if (!playerStrategy) {
     return;
@@ -423,7 +427,7 @@ export function moveToString(move: Move): string {
 
 // TODO: Check if AssemblyScript supports string enums. If so, can remove this.
 export function blackjackPayoutToString(
-  blackjackPayout: BlackjackPayout
+  blackjackPayout: BlackjackPayout,
 ): string {
   switch (blackjackPayout) {
     case BlackjackPayout.ThreeToTwo:
@@ -436,7 +440,7 @@ export function blackjackPayoutToString(
 }
 
 export function parseBlackjackPayout(
-  blackjackPayout: string | undefined
+  blackjackPayout: string | undefined,
 ): BlackjackPayout | undefined {
   if (!blackjackPayout) {
     return;
@@ -488,7 +492,7 @@ export function parseGameMode(mode: string | undefined): GameMode | undefined {
 }
 
 function convertSubChartToChartMove(
-  subchart: string[][] | undefined
+  subchart: string[][] | undefined,
 ): ChartMove[][] {
   if (!subchart) {
     throw new Error('Subchart not found');
@@ -498,7 +502,7 @@ function convertSubChartToChartMove(
 }
 
 export function convertToChartMove(
-  chart: Map<ChartType, string[][]>
+  chart: Map<ChartType, string[][]>,
 ): BasicStrategyChart {
   return new Map([
     [ChartType.Hard, convertSubChartToChartMove(chart.get(ChartType.Hard))],

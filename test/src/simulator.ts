@@ -1,8 +1,6 @@
-import * as chai from 'chai';
+import { expect } from 'chai';
 
 import Simulator from '../../src/simulator';
-
-const expect = chai.expect;
 
 describe('Simulator', function () {
   let simulator: Simulator;
@@ -25,7 +23,7 @@ describe('Simulator', function () {
       'handsWon',
       'hoursPlayed',
       'riskOfRuin',
-      'timeElapsed'
+      'timeElapsed',
     );
   });
 

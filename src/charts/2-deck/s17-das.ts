@@ -60,7 +60,7 @@ export const chart: BasicStrategyChart = convertToChartMove(
     ['S',  'S',  'S',  'S',  'S',  'S',  'S',  'S',  'S',  'S' ],
     ['P',  'P',  'P',  'P',  'P',  'P',  'P',  'P',  'P',  'P' ],
   ]],
-  ])
+  ]),
 );
 
 export const uncommon: UncommonChart = new Map([

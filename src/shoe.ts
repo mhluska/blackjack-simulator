@@ -158,7 +158,7 @@ export default class Shoe extends GameObject {
   setupDeviationScenario(
     playerTotal: number,
     dealerTotal: number,
-    deviation: Deviation
+    deviation: Deviation,
   ): void {
     let total =
       deviation.correctMove === Move.AskInsurance
@@ -174,7 +174,7 @@ export default class Shoe extends GameObject {
 
     const [rank1, rank2] = this._playerTotalToTwoCardRank(
       total,
-      pair ? ChartType.Splits : ChartType.Hard
+      pair ? ChartType.Splits : ChartType.Hard,
     );
 
     this._moveCardsToFront(rank1, rank2, dealerTotal);
@@ -232,28 +232,28 @@ export default class Shoe extends GameObject {
   _moveCardsToFront(
     playerRank1: Rank,
     playerRank2: Rank,
-    dealerUpcard?: number
+    dealerUpcard?: number,
   ): void {
     // Move the first two cards to the 0th and 2nd spot so they are dealt to the
     // player at the start of the game.
     Utils.arrayMove(
       this.cards,
       this.cards.findIndex((card) => card.rank === playerRank1),
-      this.cards.length - 1
+      this.cards.length - 1,
     );
 
     if (dealerUpcard) {
       Utils.arrayMove(
         this.cards,
         this.cards.findIndex((card) => card.value === dealerUpcard),
-        this.cards.length - 1 - 1
+        this.cards.length - 1 - 1,
       );
     }
 
     Utils.arrayMove(
       this.cards,
       this.cards.findIndex((card) => card.rank === playerRank2),
-      this.cards.length - 1 - 2
+      this.cards.length - 1 - 2,
     );
   }
 
@@ -264,7 +264,7 @@ export default class Shoe extends GameObject {
 
   _playerTotalToTwoCardValues(
     total: number,
-    chartType: ChartType
+    chartType: ChartType,
   ): [number, number] {
     switch (chartType) {
       case ChartType.Hard: {
@@ -288,11 +288,11 @@ export default class Shoe extends GameObject {
 
   _setupUncommonMode(): void {
     const [chartType, chart] = Utils.arraySample(
-      Array.from(BasicStrategyChecker.uncommonHands(settings).entries())
+      Array.from(BasicStrategyChecker.uncommonHands(settings).entries()),
     );
 
     const [playerTotal, dealerUpcards] = Utils.arraySample(
-      Array.from(chart.entries())
+      Array.from(chart.entries()),
     );
 
     // TODO: Remove this once we have uncommon values defined for all charts.
@@ -303,7 +303,7 @@ export default class Shoe extends GameObject {
     const dealerUpcard = Utils.arraySample(dealerUpcards);
     const [rank1, rank2] = this._playerTotalToTwoCardRank(
       playerTotal,
-      chartType
+      chartType,
     );
 
     this._moveCardsToFront(rank1, rank2, dealerUpcard);
@@ -311,7 +311,7 @@ export default class Shoe extends GameObject {
 
   _setupDeviationsMode(): void {
     const illustrious18DeviationsArray = Array.from(
-      illustrious18Deviations.entries()
+      illustrious18Deviations.entries(),
     );
     const fab4DeviationsArray = settings.allowLateSurrender
       ? Array.from(fab4Deviations.entries())
