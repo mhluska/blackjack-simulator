@@ -23,7 +23,7 @@ const mockBody = {
       if (!listeners.has(event)) {
         listeners.set(event, new Set());
       }
-      listeners.get(event)!.add(handler);
+      listeners.get(event)?.add(handler);
     }),
   removeEventListener: sinon
     .stub()
