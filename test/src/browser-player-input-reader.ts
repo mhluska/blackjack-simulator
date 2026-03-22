@@ -17,15 +17,19 @@ class MockHTMLElement {
 const listeners: Map<string, Set<EventListener>> = new Map();
 
 const mockBody = {
-  addEventListener: sinon.stub().callsFake((event: string, handler: EventListener) => {
-    if (!listeners.has(event)) {
-      listeners.set(event, new Set());
-    }
-    listeners.get(event)!.add(handler);
-  }),
-  removeEventListener: sinon.stub().callsFake((event: string, handler: EventListener) => {
-    listeners.get(event)?.delete(handler);
-  }),
+  addEventListener: sinon
+    .stub()
+    .callsFake((event: string, handler: EventListener) => {
+      if (!listeners.has(event)) {
+        listeners.set(event, new Set());
+      }
+      listeners.get(event)!.add(handler);
+    }),
+  removeEventListener: sinon
+    .stub()
+    .callsFake((event: string, handler: EventListener) => {
+      listeners.get(event)?.delete(handler);
+    }),
 };
 
 // Set up the global `document` before importing the module under test.
@@ -51,7 +55,9 @@ describe('DOMPlayerInputReader', function () {
 
         // Verify both listeners were added.
         expect(mockBody.addEventListener).to.have.been.calledTwice;
-        expect(mockBody.addEventListener.firstCall.args[0]).to.equal('keypress');
+        expect(mockBody.addEventListener.firstCall.args[0]).to.equal(
+          'keypress'
+        );
         expect(mockBody.addEventListener.secondCall.args[0]).to.equal('click');
 
         // Get the keypress handler that was registered.
@@ -64,8 +70,14 @@ describe('DOMPlayerInputReader', function () {
         expect(callback).to.have.been.calledOnceWith(Move.Hit);
 
         // Both listeners should have been removed.
-        expect(mockBody.removeEventListener).to.have.been.calledWith('click', sinon.match.func);
-        expect(mockBody.removeEventListener).to.have.been.calledWith('keypress', keypressHandler);
+        expect(mockBody.removeEventListener).to.have.been.calledWith(
+          'click',
+          sinon.match.func
+        );
+        expect(mockBody.removeEventListener).to.have.been.calledWith(
+          'keypress',
+          keypressHandler
+        );
       });
     });
 
@@ -86,8 +98,14 @@ describe('DOMPlayerInputReader', function () {
         expect(callback).to.have.been.calledOnceWith(Move.Stand);
 
         // Both listeners should have been removed.
-        expect(mockBody.removeEventListener).to.have.been.calledWith('click', clickHandler);
-        expect(mockBody.removeEventListener).to.have.been.calledWith('keypress', keypressHandler);
+        expect(mockBody.removeEventListener).to.have.been.calledWith(
+          'click',
+          clickHandler
+        );
+        expect(mockBody.removeEventListener).to.have.been.calledWith(
+          'keypress',
+          keypressHandler
+        );
       });
     });
   });

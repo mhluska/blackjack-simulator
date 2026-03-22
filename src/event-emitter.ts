@@ -11,7 +11,7 @@ export enum Event {
 }
 
 export default class EventEmitter<
-  TMap extends EventMapBase = Record<number, unknown[]>,
+  TMap extends EventMapBase = Record<number, unknown[]>
 > {
   static disableEvents: boolean;
 

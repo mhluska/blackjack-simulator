@@ -500,45 +500,48 @@ describe('Game', function () {
       });
     });
 
-    context('when dealer has blackjack with ace up and autoDeclineInsurance is false', function () {
-      let playerBalanceBefore: number;
+    context(
+      'when dealer has blackjack with ace up and autoDeclineInsurance is false',
+      function () {
+        let playerBalanceBefore: number;
 
-      before(function () {
-        game = setupGame({
-          settings: {
-            autoDeclineInsurance: false,
-          },
-          dealerCards: [Rank.Ace, Rank.Ten],
-          playerCards: [Rank.Five, Rank.Five],
+        before(function () {
+          game = setupGame({
+            settings: {
+              autoDeclineInsurance: false,
+            },
+            dealerCards: [Rank.Ace, Rank.Ten],
+            playerCards: [Rank.Five, Rank.Five],
+          });
+
+          playerBalanceBefore = game.player.balance;
+
+          // Step to deal initial cards.
+          game.step();
         });
 
-        playerBalanceBefore = game.player.balance;
+        it('should prompt for insurance input', function () {
+          expect(game.state.step).to.equal(GameStep.WaitingForInsuranceInput);
+        });
 
-        // Step to deal initial cards.
-        game.step();
-      });
+        it('should end the round after insurance is declined', function () {
+          game.step(Move.NoInsurance);
+          expect(game.state.step).to.equal(GameStep.WaitingForNewGameInput);
+        });
 
-      it('should prompt for insurance input', function () {
-        expect(game.state.step).to.equal(GameStep.WaitingForInsuranceInput);
-      });
+        it('should mark all hands as dealer wins', function () {
+          expect(game.player.handWinner.values().next().value).to.equal(
+            HandWinner.Dealer
+          );
+        });
 
-      it('should end the round after insurance is declined', function () {
-        game.step(Move.NoInsurance);
-        expect(game.state.step).to.equal(GameStep.WaitingForNewGameInput);
-      });
-
-      it('should mark all hands as dealer wins', function () {
-        expect(game.player.handWinner.values().next().value).to.equal(
-          HandWinner.Dealer
-        );
-      });
-
-      it('should only deduct the initial bet from the player', function () {
-        expect(playerBalanceBefore - game.player.balance).to.equal(
-          game.betAmount
-        );
-      });
-    });
+        it('should only deduct the initial bet from the player', function () {
+          expect(playerBalanceBefore - game.player.balance).to.equal(
+            game.betAmount
+          );
+        });
+      }
+    );
 
     context('when the player splits aces without more aces', function () {
       before(function () {
@@ -661,71 +664,77 @@ describe('Game', function () {
       });
     });
 
-    context('when dealer has 10-up blackjack and player also has blackjack', function () {
-      let playerBalanceBefore: number;
+    context(
+      'when dealer has 10-up blackjack and player also has blackjack',
+      function () {
+        let playerBalanceBefore: number;
 
-      before(function () {
-        game = setupGame({
-          // Dealer: Jack up, Ace hole = blackjack
-          // Player: Ace, King = blackjack
-          dealerCards: [Rank.Jack, Rank.Ace],
-          playerCards: [Rank.Ace, Rank.King],
+        before(function () {
+          game = setupGame({
+            // Dealer: Jack up, Ace hole = blackjack
+            // Player: Ace, King = blackjack
+            dealerCards: [Rank.Jack, Rank.Ace],
+            playerCards: [Rank.Ace, Rank.King],
+          });
+
+          playerBalanceBefore = game.player.balance;
+
+          runGame(game, {
+            input: [
+              {
+                [GameStep.Start]: Move.Hit,
+              },
+            ],
+          });
         });
 
-        playerBalanceBefore = game.player.balance;
+        it('should be a push (not dealer win)', function () {
+          expect(game.player.handWinner.values().next().value).to.equal(
+            HandWinner.Push
+          );
+        });
 
-        runGame(game, {
-          input: [
-            {
-              [GameStep.Start]: Move.Hit,
+        it('should return the full bet to the player', function () {
+          expect(game.player.balance).to.equal(playerBalanceBefore);
+        });
+      }
+    );
+
+    context(
+      'when dealer has Ace-up blackjack and player also has blackjack',
+      function () {
+        let playerBalanceBefore: number;
+
+        before(function () {
+          game = setupGame({
+            settings: {
+              autoDeclineInsurance: false,
             },
-          ],
-        });
-      });
+            // Dealer: Ace up, Ten hole = blackjack
+            // Player: Ace, Jack = blackjack
+            dealerCards: [Rank.Ace, Rank.Ten],
+            playerCards: [Rank.Ace, Rank.Jack],
+          });
 
-      it('should be a push (not dealer win)', function () {
-        expect(game.player.handWinner.values().next().value).to.equal(
-          HandWinner.Push
-        );
-      });
+          playerBalanceBefore = game.player.balance;
 
-      it('should return the full bet to the player', function () {
-        expect(game.player.balance).to.equal(playerBalanceBefore);
-      });
-    });
-
-    context('when dealer has Ace-up blackjack and player also has blackjack', function () {
-      let playerBalanceBefore: number;
-
-      before(function () {
-        game = setupGame({
-          settings: {
-            autoDeclineInsurance: false,
-          },
-          // Dealer: Ace up, Ten hole = blackjack
-          // Player: Ace, Jack = blackjack
-          dealerCards: [Rank.Ace, Rank.Ten],
-          playerCards: [Rank.Ace, Rank.Jack],
+          // Step to deal initial cards (will prompt for insurance since dealer has Ace up).
+          game.step();
+          // Decline insurance.
+          game.step(Move.NoInsurance);
         });
 
-        playerBalanceBefore = game.player.balance;
+        it('should be a push (not dealer win)', function () {
+          expect(game.player.handWinner.values().next().value).to.equal(
+            HandWinner.Push
+          );
+        });
 
-        // Step to deal initial cards (will prompt for insurance since dealer has Ace up).
-        game.step();
-        // Decline insurance.
-        game.step(Move.NoInsurance);
-      });
-
-      it('should be a push (not dealer win)', function () {
-        expect(game.player.handWinner.values().next().value).to.equal(
-          HandWinner.Push
-        );
-      });
-
-      it('should return the full bet to the player', function () {
-        expect(game.player.balance).to.equal(playerBalanceBefore);
-      });
-    });
+        it('should return the full bet to the player', function () {
+          expect(game.player.balance).to.equal(playerBalanceBefore);
+        });
+      }
+    );
 
     context('when an NPC splits aces and receives non-ace cards', function () {
       let npcPlayer: InstanceType<typeof Game>['players'][number];
@@ -758,12 +767,12 @@ describe('Game', function () {
         // Draw 6: NPC first hand card after split
         // Draw 7: NPC new hand card after split
 
-        setCard(0, Rank.Ace);   // NPC first card: Ace
-        setCard(1, Rank.Ten);   // User first card: Ten
-        setCard(2, Rank.Six);   // Dealer upcard: Six
-        setCard(3, Rank.Ace);   // NPC second card: Ace
-        setCard(4, Rank.Ten);   // User second card: Ten
-        setCard(5, Rank.Two);   // Dealer hole card: Two
+        setCard(0, Rank.Ace); // NPC first card: Ace
+        setCard(1, Rank.Ten); // User first card: Ten
+        setCard(2, Rank.Six); // Dealer upcard: Six
+        setCard(3, Rank.Ace); // NPC second card: Ace
+        setCard(4, Rank.Ten); // User second card: Ten
+        setCard(5, Rank.Two); // Dealer hole card: Two
         setCard(6, Rank.Seven); // NPC first hand after split: Seven
         setCard(7, Rank.Eight); // NPC new hand after split: Eight
 

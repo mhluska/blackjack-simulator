@@ -1,4 +1,11 @@
-import { SimpleObject, Suit, Rank, Comparator, enumValues, entries } from './types';
+import {
+  SimpleObject,
+  Suit,
+  Rank,
+  Comparator,
+  enumValues,
+  entries,
+} from './types';
 
 type Range<T> = { start: number; end: number; value: T };
 

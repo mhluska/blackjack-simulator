@@ -12,7 +12,7 @@
 
 ## Features
 
-- [Simulator mode](https://mhluska.github.io/simulations) for computing EV given some table conditions (10M hands / second)
+- Simulator mode for computing EV given any table conditions (10M hands / second)
 - [Game mode](https://blackjacktrainer.app) for practicing basic strategy and card counting with hints
 - No package dependencies
 - Runs in any JS environment (CLI, browser, React Native app etc)
