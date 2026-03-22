@@ -1,9 +1,7 @@
-import * as chai from 'chai';
+import { expect } from 'chai';
 
 import Utils from '../../src/utils';
 import { Comparator } from '../../src/types';
-
-const expect = chai.expect;
 
 describe('Utils.compareRange', function () {
   it('returns true when number >= index for ">=" comparator', function () {

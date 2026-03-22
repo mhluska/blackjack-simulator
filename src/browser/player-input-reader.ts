@@ -20,7 +20,7 @@ export default class DOMPlayerInputReader implements PlayerInputReader {
       }
 
       const action = actionDataKeyToCorrectMove(
-        event.target?.dataset.action ?? ''
+        event.target?.dataset.action ?? '',
       );
 
       if (action) {

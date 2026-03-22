@@ -125,7 +125,7 @@ export default class Game extends EventEmitter<EventMap> {
         handsMax: settings.maxHandsAllowed,
         debug: settings.debug,
         strategy: PlayerStrategy.Dealer,
-      })
+      }),
     );
 
     this.players = Array.from(
@@ -143,8 +143,8 @@ export default class Game extends EventEmitter<EventMap> {
               (index === settings.playerTablePosition - 1
                 ? PlayerStrategy.UserInput
                 : PlayerStrategy.BasicStrategy),
-          })
-        )
+          }),
+        ),
     );
 
     // We reverse the players array for convenience since reverse iteration in
@@ -178,7 +178,7 @@ export default class Game extends EventEmitter<EventMap> {
 
     const hasKey = <T extends SimpleObject>(
       obj: T,
-      k: string | number | symbol
+      k: string | number | symbol,
     ): k is keyof T => k in obj;
 
     this.state = settings.disableEvents
@@ -207,13 +207,13 @@ export default class Game extends EventEmitter<EventMap> {
 
   allPlayerHandsBusted(): boolean {
     return this.players.every((player) =>
-      player.hands.every((hand) => hand.busted || hand.blackjack)
+      player.hands.every((hand) => hand.busted || hand.blackjack),
     );
   }
 
   chainEmitChange<T extends EventEmitter<EventMap>>(object: T): T {
     object.on(Event.Change, (name, value) =>
-      this.emit(Event.Change, name, value)
+      this.emit(Event.Change, name, value),
     );
     return object;
   }
@@ -221,7 +221,7 @@ export default class Game extends EventEmitter<EventMap> {
   getCheckerResult(
     hiLoResult: CheckDeviationResult | undefined,
     basicStrategyResult: CheckResult,
-    input: Move
+    input: Move,
   ): CheckDeviationResult | CheckResult {
     // A basic strategy split takes priority over any deviation.
     // For example pair 6s vs 2 should be a split even though I18 says to hit.
@@ -245,7 +245,7 @@ export default class Game extends EventEmitter<EventMap> {
     const checkerResult = this.getCheckerResult(
       hiLoResult,
       basicStrategyResult,
-      input
+      input,
     );
 
     if (checkerResult.hint) {
@@ -274,7 +274,7 @@ export default class Game extends EventEmitter<EventMap> {
     if (
       !input ||
       ![Move.Hit, Move.Stand, Move.Double, Move.Split, Move.Surrender].includes(
-        input
+        input,
       )
     ) {
       return false;
@@ -402,7 +402,7 @@ export default class Game extends EventEmitter<EventMap> {
       ) {
         // TODO: Make NPCs bet more realistically than minimum bet.
         const hand = player.addHand(
-          player === this.player ? this.betAmount : settings.minimumBet
+          player === this.player ? this.betAmount : settings.minimumBet,
         );
 
         // Draw card for each player face up (upcard).
@@ -496,7 +496,7 @@ export default class Game extends EventEmitter<EventMap> {
           // TODO: Make insurance amount configurable. Currently uses half the
           // bet size as insurance to recover full bet amount.
           player.addChips(
-            player === this.player ? this.betAmount : settings.minimumBet
+            player === this.player ? this.betAmount : settings.minimumBet,
           );
         }
       });
@@ -522,7 +522,7 @@ export default class Game extends EventEmitter<EventMap> {
     player: Player,
     hand: Hand,
     betAmount: number,
-    input: Move
+    input: Move,
   ): boolean {
     if (this.setblackjackWinner(player, hand)) {
       return true;
@@ -607,7 +607,7 @@ export default class Game extends EventEmitter<EventMap> {
             player,
             hand,
             player === this.player ? this.betAmount : settings.minimumBet,
-            player.getNPCInput(this, hand)
+            player.getNPCInput(this, hand),
           );
         }
       });
@@ -619,7 +619,7 @@ export default class Game extends EventEmitter<EventMap> {
       this.player,
       this.focusedHand,
       this.betAmount,
-      input
+      input,
     );
 
     if (handFinished) {

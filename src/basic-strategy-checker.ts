@@ -57,7 +57,7 @@ export default class BasicStrategyChecker {
     const playerTotal = Utils.clamp(
       hand.allowSplit ? hand.cards[0].value : hand.cardTotal,
       chartMin,
-      chartMax
+      chartMax,
     );
 
     const chart = cachedSubCharts[chartType];

@@ -19,6 +19,6 @@ export default new Factory<Card>()
       suit,
       rank,
       showingFace,
-    })
+    }),
   )
   .attr('value', ['rank'], cardRankToValue);

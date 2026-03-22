@@ -1,16 +1,14 @@
-import * as chai from 'chai';
+import { expect } from 'chai';
 
 import Hand from '../../src/hand';
 import { Rank } from '../../src/types';
 
 import { PlayerFactory, CardFactory } from '../factories';
 
-const expect = chai.expect;
-
 function setupHand(...cardRanks: Rank[]): Hand {
   return new Hand(
     PlayerFactory.build(),
-    cardRanks.map((rank) => CardFactory.build({ rank }))
+    cardRanks.map((rank) => CardFactory.build({ rank })),
   );
 }
 
@@ -56,7 +54,7 @@ describe('Hand', () => {
     it('should count correctly when the player is dealt hard 21 (T, 9, 2)', () => {
       const hand = testCardTotals(
         [Rank.Ten, Rank.Nine, Rank.Two],
-        [10, 19, 21]
+        [10, 19, 21],
       );
       expect(hand.isHard).to.be.true;
     });
@@ -64,7 +62,7 @@ describe('Hand', () => {
     it('should count correctly when the player is dealt soft 21 (3, A, A, 3, 3)', () => {
       const hand = testCardTotals(
         [Rank.Three, Rank.Ace, Rank.Ace, Rank.Three, Rank.Three],
-        [3, 14, 15, 18, 21]
+        [3, 14, 15, 18, 21],
       );
       expect(hand.isSoft).to.be.true;
     });
@@ -73,28 +71,9 @@ describe('Hand', () => {
       const hand = testCardTotals(
         Array.from({ length: 21 }, () => Rank.Ace),
         [
-          11,
-          12,
-          13,
-          14,
-          15,
-          16,
-          17,
-          18,
-          19,
-          20,
-          21,
-          12,
-          13,
-          14,
-          15,
-          16,
-          17,
-          18,
-          19,
-          20,
-          21,
-        ]
+          11, 12, 13, 14, 15, 16, 17, 18, 19, 20, 21, 12, 13, 14, 15, 16, 17,
+          18, 19, 20, 21,
+        ],
       );
       expect(hand.isHard).to.be.true;
     });

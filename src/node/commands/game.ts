@@ -14,14 +14,16 @@ import {
 import Utils from '../../utils';
 import { CliSettings, printUsageOptions } from '../utils';
 
-interface CliGameSettings
-  extends Omit<GameSettings, 'mode' | 'blackjackPayout'> {
+interface CliGameSettings extends Omit<
+  GameSettings,
+  'mode' | 'blackjackPayout'
+> {
   mode: string;
   blackjackPayout: string;
 }
 
 function parseEnums(
-  options: Partial<CliGameSettings & CliSettings>
+  options: Partial<CliGameSettings & CliSettings>,
 ): Partial<GameSettings> {
   return Utils.compact({
     ...options,
@@ -35,7 +37,7 @@ function parseEnums(
 function stepGame(
   game: Game,
   playerInputReader: PlayerInputReader,
-  input: Move | undefined
+  input: Move | undefined,
 ) {
   const step = game.step(input);
 
@@ -53,7 +55,7 @@ function stepGame(
 }
 
 export default async function (
-  options: Partial<CliGameSettings & CliSettings>
+  options: Partial<CliGameSettings & CliSettings>,
 ): Promise<void> {
   if (options.help || options.h) {
     console.log('Usage: simulator game [options]');

@@ -22,8 +22,8 @@ export default class Deck extends GameObject {
 
     enumValues(Suit).forEach((suit) =>
       enumValues(Rank).forEach((rank) =>
-        cards.push(new Card(suit, rank, this.shoe))
-      )
+        cards.push(new Card(suit, rank, this.shoe)),
+      ),
     );
 
     Utils.arrayShuffle(cards);

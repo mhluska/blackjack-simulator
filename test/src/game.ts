@@ -1,6 +1,6 @@
-import * as chai from 'chai';
-import * as sinonChai from 'sinon-chai';
-import * as sinon from 'sinon';
+import { expect, use } from 'chai';
+import sinonChai from 'sinon-chai';
+import sinon from 'sinon';
 
 import BasicStrategyChecker from '../../src/basic-strategy-checker';
 import HiLoDeviationChecker, {
@@ -21,8 +21,7 @@ import {
   cardRankToValue,
 } from '../../src/types';
 
-const expect = chai.expect;
-chai.use(sinonChai);
+use(sinonChai);
 
 type GameSetupOptions = {
   settings: Partial<GameSettings>;
@@ -58,7 +57,7 @@ function setupGame(options: Partial<GameSetupOptions> = {}) {
 
     if (!deviation) {
       throw new Error(
-        `No deviation found for ${playerTotal} vs ${dealerTotal}`
+        `No deviation found for ${playerTotal} vs ${dealerTotal}`,
       );
     }
     game.shoe.setupDeviationScenario(playerTotal, dealerTotal, deviation);
@@ -72,7 +71,7 @@ function setupGame(options: Partial<GameSetupOptions> = {}) {
       game.shoe.cards[length - index - 1] = new Card(
         Suit.Hearts,
         rank,
-        game.shoe
+        game.shoe,
       );
     };
 
@@ -97,7 +96,7 @@ function runGame(
   }: {
     repeatPlayerInput?: boolean;
     input?: Partial<{ [key in GameStep]: Move }>[];
-  } = {}
+  } = {},
 ) {
   game.betAmount = 10 * 100;
 
@@ -198,7 +197,7 @@ describe('Game', function () {
 
       it('should increase the player balance', function () {
         expect(game.player.balance).to.equal(
-          playerBalanceBefore + game.betAmount * (3 / 2)
+          playerBalanceBefore + game.betAmount * (3 / 2),
         );
       });
 
@@ -258,7 +257,7 @@ describe('Game', function () {
         it('should allow late surrender', function () {
           expect(game.state.step).to.equal(GameStep.Start);
           expect(game.player.handWinner.values().next().value).to.equal(
-            HandWinner.Dealer
+            HandWinner.Dealer,
           );
         });
       });
@@ -531,16 +530,16 @@ describe('Game', function () {
 
         it('should mark all hands as dealer wins', function () {
           expect(game.player.handWinner.values().next().value).to.equal(
-            HandWinner.Dealer
+            HandWinner.Dealer,
           );
         });
 
         it('should only deduct the initial bet from the player', function () {
           expect(playerBalanceBefore - game.player.balance).to.equal(
-            game.betAmount
+            game.betAmount,
           );
         });
-      }
+      },
     );
 
     context('when the player splits aces without more aces', function () {
@@ -690,14 +689,14 @@ describe('Game', function () {
 
         it('should be a push (not dealer win)', function () {
           expect(game.player.handWinner.values().next().value).to.equal(
-            HandWinner.Push
+            HandWinner.Push,
           );
         });
 
         it('should return the full bet to the player', function () {
           expect(game.player.balance).to.equal(playerBalanceBefore);
         });
-      }
+      },
     );
 
     context(
@@ -726,14 +725,14 @@ describe('Game', function () {
 
         it('should be a push (not dealer win)', function () {
           expect(game.player.handWinner.values().next().value).to.equal(
-            HandWinner.Push
+            HandWinner.Push,
           );
         });
 
         it('should return the full bet to the player', function () {
           expect(game.player.balance).to.equal(playerBalanceBefore);
         });
-      }
+      },
     );
 
     context('when an NPC splits aces and receives non-ace cards', function () {
@@ -753,7 +752,7 @@ describe('Game', function () {
           game.shoe.cards[length - index - 1] = new Card(
             Suit.Hearts,
             rank,
-            game.shoe
+            game.shoe,
           );
         };
 

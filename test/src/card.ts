@@ -1,11 +1,9 @@
-import * as chai from 'chai';
-import * as sinon from 'sinon';
+import { expect } from 'chai';
+import sinon from 'sinon';
 
 import { hiLoValue } from '../../src/card';
 import Game from '../../src/game';
 import { Rank, cardRankToValue } from '../../src/types';
-
-const expect = chai.expect;
 
 describe('cardRankToValue', function () {
   it('throws for invalid rank values', function () {

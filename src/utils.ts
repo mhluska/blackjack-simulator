@@ -116,7 +116,7 @@ export default class Utils {
     {
       stripZeroCents = false,
       stripCommas = false,
-    }: { stripZeroCents?: boolean; stripCommas?: boolean } = {}
+    }: { stripZeroCents?: boolean; stripCommas?: boolean } = {},
   ): string {
     let value = new Intl.NumberFormat('en-US', {
       style: 'currency',
@@ -183,7 +183,7 @@ export default class Utils {
   static rangeToString<T>(
     range: Range<T>,
     isOnly: boolean,
-    isLast: boolean
+    isLast: boolean,
   ): string {
     if (isOnly) {
       return `${range.start}+`;
@@ -199,7 +199,7 @@ export default class Utils {
 
   static arrayToRangeString<T>(
     array: T[],
-    formatter = (value: T): string => String(value)
+    formatter = (value: T): string => String(value),
   ): string {
     const ranges = Utils.arrayToRanges(array);
 
@@ -209,8 +209,8 @@ export default class Utils {
           `TC ${Utils.rangeToString(
             range,
             ranges.length === 1,
-            index === ranges.length - 1
-          )}: ${formatter(range.value)}`
+            index === ranges.length - 1,
+          )}: ${formatter(range.value)}`,
       )
       .join(', ');
   }
@@ -227,7 +227,7 @@ export default class Utils {
 
   static mapValues<InputObject extends SimpleObject, MapReturnType>(
     obj: InputObject,
-    map: (value: InputObject[keyof InputObject]) => MapReturnType
+    map: (value: InputObject[keyof InputObject]) => MapReturnType,
   ): { [P in keyof InputObject]: MapReturnType } {
     const result = {} as { [P in keyof InputObject]: MapReturnType };
 

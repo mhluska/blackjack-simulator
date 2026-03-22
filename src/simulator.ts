@@ -72,7 +72,7 @@ export interface FormattedSimulatorResult extends FormattedResult {
 
 function getChipUnit(minimumBet: number): number {
   const chipSizes = [5000, 1000, 500, 100, 25, 5, 1].map(
-    (chipSize) => chipSize * 100
+    (chipSize) => chipSize * 100,
   );
 
   for (const chipSize of chipSizes) {
@@ -146,8 +146,8 @@ function defaultSettings({
           unit +
             spreadStep *
               Math.max(0, hiLoTrueCount - 1) *
-              spotCountBetMultiplier(playerSpotsSetting[hiLoTrueCount])
-        )
+              spotCountBetMultiplier(playerSpotsSetting[hiLoTrueCount]),
+        ),
     ),
     playerSpots: playerSpotsSetting,
 
@@ -182,7 +182,7 @@ export const SETTINGS_DEFAULTS = defaultSettings();
 export function bankrollRequired(
   riskOfRuin: number,
   variancePerHand: number,
-  expectationPerHand: number
+  expectationPerHand: number,
 ): number {
   return variancePerHand === 0
     ? 0
@@ -255,10 +255,10 @@ export function mergeResults(results: SimulatorResult[]): SimulatorResult {
     Utils.arraySum(results.map((r) => r.handsPlayed * r.bankrollMean)) /
     totalHandsPlayed;
   const betweenGroupVariance = Utils.arraySum(
-    results.map((r) => r.handsPlayed * (r.bankrollMean - average) ** 2)
+    results.map((r) => r.handsPlayed * (r.bankrollMean - average) ** 2),
   );
   const withinGroupVariance = Utils.arraySum(
-    results.map((r) => r.handsPlayed * r.bankrollVariance)
+    results.map((r) => r.handsPlayed * r.bankrollVariance),
   );
   const bankrollVariance =
     (betweenGroupVariance + withinGroupVariance) / totalHandsPlayed;
@@ -276,7 +276,7 @@ export function mergeResults(results: SimulatorResult[]): SimulatorResult {
       handsWon: previousValue.handsWon + currentValue.handsWon,
       timeElapsed: Math.max(
         previousValue.timeElapsed,
-        currentValue.timeElapsed
+        currentValue.timeElapsed,
       ),
     }),
     {
@@ -294,7 +294,7 @@ export function mergeResults(results: SimulatorResult[]): SimulatorResult {
       handsPushed: 0,
       handsWon: 0,
       timeElapsed: 0,
-    }
+    },
   );
 }
 
@@ -309,7 +309,7 @@ export default class Simulator {
         minimumBet: settings.minimumBet,
         playerSpots: settings.playerSpots,
       }),
-      settings
+      settings,
     );
 
     this.game = new Game({
@@ -342,7 +342,7 @@ export default class Simulator {
       betSpread: settings.raw
         ? this.settings.playerBetSpread.join()
         : Utils.arrayToRangeString(this.settings.playerBetSpread, (amount) =>
-            Utils.formatCents(amount, { stripZeroCents: true })
+            Utils.formatCents(amount, { stripZeroCents: true }),
           ),
       spotsPlayed: settings.raw
         ? this.settings.playerSpots.join()

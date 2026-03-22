@@ -16,7 +16,7 @@ export default class FileStorage implements Storage {
     fs.mkdirSync(this.databaseDir, { recursive: true });
     fs.appendFileSync(
       path.join(this.databaseDir, `${recordName}.txt`),
-      `${JSON.stringify(data)}\n`
+      `${JSON.stringify(data)}\n`,
     );
   }
 }
