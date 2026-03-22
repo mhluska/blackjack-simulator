@@ -12,16 +12,17 @@ import {
   GameStep,
 } from './types';
 
-function chartMinMax(chartType: ChartType) {
-  switch (chartType) {
-    case ChartType.Hard:
-      return [7, 18];
-    case ChartType.Soft:
-      return [13, 20];
-    case ChartType.Splits:
-      return [2, 11];
-  }
+const CHART_MIN_MAX: Record<ChartType, [number, number]> = {
+  [ChartType.Hard]: [7, 18],
+  [ChartType.Soft]: [13, 20],
+  [ChartType.Splits]: [2, 11],
+};
+
+function chartMinMax(chartType: ChartType): [number, number] {
+  return CHART_MIN_MAX[chartType];
 }
+
+let cachedSubCharts: Record<ChartType, ChartMove[][]> | undefined;
 
 export default class BasicStrategyChecker {
   static uncommonHands(settings: GameSettings): UncommonChart {
@@ -33,7 +34,23 @@ export default class BasicStrategyChecker {
       return Move.NoInsurance;
     }
 
-    const { chart: chartGroup } = selectCharts(gameSettings);
+    if (!cachedSubCharts) {
+      const { chart: chartGroup } = selectCharts(gameSettings);
+      const hard = chartGroup.get(ChartType.Hard);
+      const soft = chartGroup.get(ChartType.Soft);
+      const splits = chartGroup.get(ChartType.Splits);
+
+      if (!hard || !soft || !splits) {
+        throw new Error('Subchart not found');
+      }
+
+      cachedSubCharts = {
+        [ChartType.Hard]: hard,
+        [ChartType.Soft]: soft,
+        [ChartType.Splits]: splits,
+      };
+    }
+
     const chartType = this._chartType(hand);
     const [chartMin, chartMax] = chartMinMax(chartType);
 
@@ -43,10 +60,7 @@ export default class BasicStrategyChecker {
       chartMax
     );
 
-    const chart = chartGroup.get(chartType);
-    if (!chart) {
-      throw new Error('Subchart not found');
-    }
+    const chart = cachedSubCharts[chartType];
 
     const dealerHints = chart[playerTotal - chartMin];
     const dealersCard = game.dealer.upcard.value;

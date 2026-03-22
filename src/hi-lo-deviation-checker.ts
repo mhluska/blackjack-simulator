@@ -88,7 +88,7 @@ export default class HiLoDeviationChecker {
   static _suggest(
     game: Game,
     hand: Hand,
-    { suggestFab4 = true }: { suggestFab4?: boolean } = {}
+    suggestFab4 = true
   ): Deviation | undefined {
     const trueCount = game.shoe.hiLoTrueCount;
 
@@ -122,9 +122,11 @@ export default class HiLoDeviationChecker {
   }
 
   static suggest(game: Game, hand: Hand): Move | undefined {
-    return this._suggest(game, hand, {
-      suggestFab4: hand.player.strategy === PlayerStrategy.BasicStrategyI18Fab4,
-    })?.correctMove;
+    return this._suggest(
+      game,
+      hand,
+      hand.player.strategy === PlayerStrategy.BasicStrategyI18Fab4
+    )?.correctMove;
   }
 
   // Returns undefined if a deviation was not present. Otherwise returns a
