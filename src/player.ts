@@ -109,6 +109,12 @@ export default class Player extends GameObject {
   addHand(betAmount = 0, cards: Card[] = []): Hand {
     this.handsCount += 1;
 
+    if (this.handsCount > this._hands.length) {
+      const hand = new Hand(this);
+      hand.on(Event.Change, () => this.emitChange());
+      this._hands.push(hand);
+    }
+
     const hand = this._hands[this.handsCount - 1];
     hand.takeCards(cards);
 

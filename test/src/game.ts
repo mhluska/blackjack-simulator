@@ -559,6 +559,26 @@ describe('Game', function () {
       });
     });
 
+    context('when addHand exceeds pre-allocated hands array', function () {
+      it('should not crash', function () {
+        game = setupGame({
+          settings: {
+            maxHandsAllowed: 4,
+          },
+          dealerCards: [Rank.Six],
+          playerCards: [Rank.Eight, Rank.Eight],
+        });
+
+        // Simulate repeatedly adding hands beyond the pre-allocated limit.
+        // The pre-allocated array has maxHandsAllowed * 4 = 16 entries.
+        // This should not crash even if handsCount exceeds that.
+        const player = game.player;
+        for (let i = player.handsCount; i < 20; i += 1) {
+          expect(() => player.addHand()).to.not.throw();
+        }
+      });
+    });
+
     context('when a typical hand is played', function () {
       before(function () {
         sinon.spy(BasicStrategyChecker, 'check');
