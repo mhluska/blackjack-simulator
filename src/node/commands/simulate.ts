@@ -264,6 +264,7 @@ export default function (
     'help',
     'h',
     'raw',
+    'child',
   ]);
 
   const unknownKeys = Object.keys(options).filter((k) => !validKeys.has(k));
