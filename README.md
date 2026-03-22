@@ -12,11 +12,20 @@
 
 ## Features
 
-- Simulator mode for computing EV given any table conditions (10M hands / second)
+- Simulator mode for computing EV given any table conditions
 - [Game mode](https://blackjacktrainer.app) for practicing basic strategy and card counting with hints
 - No package dependencies
 - Runs in any JS environment (CLI, browser, React Native app etc)
 - Multi-core support in Node
+
+## Performance
+
+Tested on Apple M2 Max (12 cores), Node v24.3, simulating 100M hands with default settings (2-deck H17, I18 + Fab 4 deviations, bet spread):
+
+| | Hands/sec | Time (100M hands) |
+|---|---|---|
+| Single core | ~1.9M | ~53s |
+| Multi core (12) | ~15M | ~7s |
 
 ## Usage
 

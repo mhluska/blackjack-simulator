@@ -22,8 +22,7 @@ function chartMinMax(chartType: ChartType): [number, number] {
   return CHART_MIN_MAX[chartType];
 }
 
-let cachedCharts: ReturnType<typeof selectCharts> | null = null;
-let cachedSubCharts: Record<ChartType, ChartMove[][]> | null = null;
+let cachedSubCharts: Record<ChartType, ChartMove[][]> | undefined;
 
 export default class BasicStrategyChecker {
   static uncommonHands(settings: GameSettings): UncommonChart {
@@ -35,12 +34,20 @@ export default class BasicStrategyChecker {
       return Move.NoInsurance;
     }
 
-    if (!cachedCharts) {
-      cachedCharts = selectCharts(gameSettings);
+    if (!cachedSubCharts) {
+      const { chart: chartGroup } = selectCharts(gameSettings);
+      const hard = chartGroup.get(ChartType.Hard);
+      const soft = chartGroup.get(ChartType.Soft);
+      const splits = chartGroup.get(ChartType.Splits);
+
+      if (!hard || !soft || !splits) {
+        throw new Error('Subchart not found');
+      }
+
       cachedSubCharts = {
-        [ChartType.Hard]: cachedCharts.chart.get(ChartType.Hard)!,
-        [ChartType.Soft]: cachedCharts.chart.get(ChartType.Soft)!,
-        [ChartType.Splits]: cachedCharts.chart.get(ChartType.Splits)!,
+        [ChartType.Hard]: hard,
+        [ChartType.Soft]: soft,
+        [ChartType.Splits]: splits,
       };
     }
 
@@ -53,7 +60,7 @@ export default class BasicStrategyChecker {
       chartMax
     );
 
-    const chart = cachedSubCharts![chartType];
+    const chart = cachedSubCharts[chartType];
 
     const dealerHints = chart[playerTotal - chartMin];
     const dealersCard = game.dealer.upcard.value;
