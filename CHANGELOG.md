@@ -1,5 +1,9 @@
 # Changelog
 
+## 0.35.4
+
+- Remove type:module from package.json to fix webpack 4 consumers
+
 ## 0.35.3
 
 - Cache chart lookups in strategy checkers (~8% simulation speedup)
