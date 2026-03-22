@@ -325,6 +325,37 @@ describe('Game', function () {
       });
     });
 
+    context('when dealt 8,8 vs Ace with DAS and late surrender', function () {
+      before(function () {
+        game = setupGame({
+          settings: {
+            deckCount: 6,
+            hitSoft17: true,
+            allowDoubleAfterSplit: true,
+            allowLateSurrender: true,
+          },
+          dealerCards: [Rank.Ace, Rank.Seven],
+          playerCards: [Rank.Eight, Rank.Eight],
+        });
+
+        runGame(game, {
+          input: [
+            {
+              [GameStep.WaitingForInsuranceInput]: Move.NoInsurance,
+            },
+            {
+              [GameStep.WaitingForPlayInput]: Move.Surrender,
+            },
+          ],
+        });
+      });
+
+      it('should suggest surrender over split', function () {
+        expect(game.state.sessionMovesTotal).to.equal(1);
+        expect(game.state.sessionMovesCorrect).to.equal(1);
+      });
+    });
+
     context('when surrender is allowed', function () {
       before(function () {
         game = setupGame({

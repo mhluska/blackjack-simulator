@@ -83,9 +83,7 @@ export default class BasicStrategyChecker {
     }
 
     if (correctMove === ChartMove.SurrenderOrSplit) {
-      return hand.allowSurrender && !gameSettings.allowDoubleAfterSplit
-        ? Move.Surrender
-        : Move.Split;
+      return hand.allowSurrender ? Move.Surrender : Move.Split;
     }
 
     if (
