@@ -18,15 +18,6 @@
 - Runs in any JS environment (CLI, browser, React Native app etc)
 - Multi-core support in Node
 
-## Performance
-
-Tested on Apple M2 Max (12 cores), Node v24.3, simulating 100M hands with default settings (2-deck H17, I18 + Fab 4 deviations, bet spread):
-
-| | Hands/sec | Time (100M hands) |
-|---|---|---|
-| Single core | ~1.9M | ~53s |
-| Multi core (12) | ~15M | ~7s |
-
 ## Usage
 
 ### Simulator mode
@@ -262,3 +253,13 @@ somewhere for user interaction:
   );
 }
 ```
+
+## Performance
+
+Tested on Apple M2 Max, Node v24.3, default settings (2-deck H17, I18 + Fab 4 deviations, bet spread).
+
+| Cores | Hands | Time | Hands/sec |
+|---|---|---|---|
+| 1 | 100M | ~53s | ~1.9M |
+| 4 | 1B | ~134s | ~7.5M |
+| 12 | 1B | ~65s | ~15M |
