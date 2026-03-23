@@ -1,6 +1,6 @@
 {
   "name": "@blackjacktrainer/blackjack-simulator",
-  "version": "0.35.4",
+  "version": "0.35.5",
   "engines": {
     "node": ">=20"
   },
