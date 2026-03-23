@@ -130,6 +130,33 @@ describe('Game', function () {
     game = setupGame();
   });
 
+  describe('#settings', function () {
+    it('should expose current game settings as an instance property', function () {
+      const customGame = new Game({
+        playerCount: 1,
+        playerTablePosition: 1,
+        deckCount: 6,
+        hitSoft17: false,
+        maxHandsAllowed: 2,
+      });
+
+      expect(customGame.settings).to.be.an('object');
+      expect(customGame.settings.deckCount).to.equal(6);
+      expect(customGame.settings.hitSoft17).to.equal(false);
+      expect(customGame.settings.maxHandsAllowed).to.equal(2);
+    });
+
+    it('should reflect updates from updateSettings', function () {
+      const customGame = new Game({
+        playerCount: 1,
+        playerTablePosition: 1,
+      });
+
+      customGame.updateSettings({ deckCount: 8 });
+      expect(customGame.settings.deckCount).to.equal(8);
+    });
+  });
+
   describe('#run()', function () {
     context('when the shoe needs to be reset', function () {
       let cardsBefore: number;

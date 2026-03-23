@@ -110,6 +110,10 @@ export default class Game extends EventEmitter<EventMap> {
     return this.player.getHand(this.state.focusedHandIndex);
   }
 
+  get settings(): GameSettings {
+    return settings;
+  }
+
   updateSettings(gameSettings: Partial<GameSettings>): GameSettings {
     return Utils.merge(settings, gameSettings);
   }
