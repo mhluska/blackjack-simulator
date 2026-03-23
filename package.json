@@ -16,6 +16,7 @@
     "test": "NODE_OPTIONS='--import tsx' mocha ./test/src/**/*.ts",
     "test:types": "tsc --noEmit --project .",
     "lint": "eslint --fix ./src ./test",
+    "bench": "node --import tsx test/bench.ts",
     "build": "webpack",
     "prepare": "husky && npm run build"
   },

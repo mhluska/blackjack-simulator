@@ -210,9 +210,15 @@ export default class Game extends EventEmitter<EventMap> {
   }
 
   allPlayerHandsBusted(): boolean {
-    return this.players.every((player) =>
-      player.hands.every((hand) => hand.busted || hand.blackjack),
-    );
+    for (const player of this.players) {
+      for (let i = 0; i < player.handsCount; i += 1) {
+        const hand = player.getHand(i);
+        if (!hand.busted && !hand.blackjack) {
+          return false;
+        }
+      }
+    }
+    return true;
   }
 
   chainEmitChange<T extends EventEmitter<EventMap>>(object: T): T {
@@ -410,7 +416,7 @@ export default class Game extends EventEmitter<EventMap> {
         );
 
         // Draw card for each player face up (upcard).
-        player.takeCard(this.shoe.drawCard(), { hand });
+        player.takeCard(this.shoe.drawCard(), hand);
       }
     }
 
@@ -421,14 +427,16 @@ export default class Game extends EventEmitter<EventMap> {
     // Draw card for each player face up again (upcard).
     for (const player of this.players) {
       player.eachHand((hand) => {
-        player.takeCard(this.shoe.drawCard(), { hand });
+        player.takeCard(this.shoe.drawCard(), hand);
       });
     }
 
     // Draw card for dealer face down (hole card).
-    this.dealer.takeCard(this.shoe.drawCard({ showingFace: false }), {
-      prepend: true,
-    });
+    this.dealer.takeCard(
+      this.shoe.drawCard({ showingFace: false }),
+      undefined,
+      true,
+    );
 
     // Dealer peeks at the hole card if the upcard is 10 to check blackjack.
     if (this.dealer.upcard.value === 10 && this.dealer.holeCard.value === 11) {
@@ -542,7 +550,7 @@ export default class Game extends EventEmitter<EventMap> {
       }
 
       if (input === Move.Hit) {
-        player.takeCard(this.shoe.drawCard(), { hand });
+        player.takeCard(this.shoe.drawCard(), hand);
       }
 
       if (input === Move.Stand) {
@@ -551,7 +559,7 @@ export default class Game extends EventEmitter<EventMap> {
 
       if (input === Move.Double) {
         player.useChips(betAmount, { hand });
-        player.takeCard(this.shoe.drawCard(), { hand });
+        player.takeCard(this.shoe.drawCard(), hand);
       }
 
       if (input === Move.Split && hand.allowSplit) {
@@ -561,8 +569,8 @@ export default class Game extends EventEmitter<EventMap> {
         hand.splitCount += 1;
         newHand.splitCount = hand.splitCount;
 
-        player.takeCard(this.shoe.drawCard(), { hand });
-        player.takeCard(this.shoe.drawCard(), { hand: newHand });
+        player.takeCard(this.shoe.drawCard(), hand);
+        player.takeCard(this.shoe.drawCard(), newHand);
 
         if (hand.hasAces) {
           return true;

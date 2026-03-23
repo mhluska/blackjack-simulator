@@ -63,7 +63,7 @@ export default class Hand extends GameObject {
     this.emitChange();
   }
 
-  takeCard(card: Card, { prepend = false } = {}): void {
+  takeCard(card: Card, prepend = false): void {
     card.on(Event.Change, this.emitChange);
 
     if (prepend) {
