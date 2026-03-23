@@ -1,5 +1,9 @@
 # Changelog
 
+## 0.35.5
+
+- Expose settings as a Game instance property (fixes dead ESM re-export in UMD bundle)
+
 ## 0.35.3
 
 - Cache chart lookups in strategy checkers (~8% simulation speedup)
