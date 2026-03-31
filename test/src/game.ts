@@ -19,6 +19,7 @@ import {
   HandWinner,
   GameMode,
   cardRankToValue,
+  CheckDeviationResult,
 } from '../../src/types';
 
 use(sinonChai);
@@ -758,6 +759,123 @@ describe('Game', function () {
 
         it('should return the full bet to the player', function () {
           expect(game.player.balance).to.equal(playerBalanceBefore);
+        });
+      },
+    );
+
+    context('when player has hard 9 vs 2 at true count exactly 1', function () {
+      let deviationResult: CheckDeviationResult | undefined;
+
+      before(function () {
+        game = setupGame({
+          settings: {
+            deckCount: 6,
+            checkDeviations: true,
+          },
+          dealerCards: [Rank.Two],
+          playerCards: [Rank.Four, Rank.Five],
+        });
+
+        // Deal initial cards through to WaitingForPlayInput.
+        while (game.state.step !== GameStep.WaitingForPlayInput) {
+          game.step();
+        }
+
+        // Set running count so TC = exactly 1.
+        // TC = runningCount / decksRemaining
+        game.shoe.hiLoRunningCount = game.shoe.decksRemaining;
+
+        deviationResult = HiLoDeviationChecker.check(
+          game,
+          game.focusedHand,
+          Move.Double,
+        );
+      });
+
+      it('should not suggest a deviation (double is correct at TC >= 1)', function () {
+        // At TC = 1, the deviation (hit when TC < 1) should NOT fire.
+        // So check() should return undefined, meaning no deviation applies,
+        // and the basic strategy fallback determines correctness.
+        expect(game.shoe.hiLoTrueCount).to.equal(1);
+        expect(deviationResult).to.satisfy(
+          (r: CheckDeviationResult | undefined) =>
+            r === undefined || r.result === true,
+        );
+      });
+    });
+
+    context('when player has hard 9 vs 2 at true count 0', function () {
+      let deviationResult: CheckDeviationResult | undefined;
+
+      before(function () {
+        game = setupGame({
+          settings: {
+            deckCount: 6,
+            checkDeviations: true,
+          },
+          dealerCards: [Rank.Two],
+          playerCards: [Rank.Four, Rank.Five],
+        });
+
+        while (game.state.step !== GameStep.WaitingForPlayInput) {
+          game.step();
+        }
+
+        // Set running count so TC = 0.
+        game.shoe.hiLoRunningCount = 0;
+
+        deviationResult = HiLoDeviationChecker.check(
+          game,
+          game.focusedHand,
+          Move.Double,
+        );
+      });
+
+      it('should suggest hit as a deviation (hit when TC < 1)', function () {
+        expect(game.shoe.hiLoTrueCount).to.be.below(1);
+        expect(deviationResult).to.be.an('object');
+        expect((deviationResult as CheckDeviationResult).result).to.be.false;
+        expect((deviationResult as CheckDeviationResult).code).to.equal(
+          Move.Hit,
+        );
+      });
+    });
+
+    context(
+      'when player has hard 11 vs A at true count exactly 1',
+      function () {
+        let deviationResult: CheckDeviationResult | undefined;
+
+        before(function () {
+          game = setupGame({
+            settings: {
+              deckCount: 6,
+              checkDeviations: true,
+              autoDeclineInsurance: true,
+            },
+            dealerCards: [Rank.Ace],
+            playerCards: [Rank.Five, Rank.Six],
+          });
+
+          while (game.state.step !== GameStep.WaitingForPlayInput) {
+            game.step();
+          }
+
+          game.shoe.hiLoRunningCount = game.shoe.decksRemaining;
+
+          deviationResult = HiLoDeviationChecker.check(
+            game,
+            game.focusedHand,
+            Move.Double,
+          );
+        });
+
+        it('should not suggest a deviation (double is correct at TC >= 1)', function () {
+          expect(game.shoe.hiLoTrueCount).to.equal(1);
+          expect(deviationResult).to.satisfy(
+            (r: CheckDeviationResult | undefined) =>
+              r === undefined || r.result === true,
+          );
         });
       },
     );
