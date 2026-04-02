@@ -763,323 +763,507 @@ describe('Game', function () {
       },
     );
 
-    context('when player has hard 9 vs 2 at true count exactly 1', function () {
-      let deviationResult: CheckDeviationResult | undefined;
+    // Deviation boundary tests for every '<' deviation.
+    // Each tests two scenarios:
+    //   (a) At TC = index exactly: deviation should NOT fire (opposite action is correct)
+    //   (b) At TC = index - 0.5 (fractional): deviation SHOULD fire (hit is correct)
+    //
+    // Helper: setTrueCount sets hiLoRunningCount so that TC = target.
+    // TC = runningCount / decksRemaining, so runningCount = TC * decksRemaining.
 
+    function setTrueCount(game: Game, tc: number): void {
+      game.shoe.hiLoRunningCount = game.shoe.decksRemaining * tc;
+    }
+
+    function dealToPlayInput(game: Game): void {
+      while (game.state.step !== GameStep.WaitingForPlayInput) {
+        game.step();
+      }
+    }
+
+    // --- I18: 9 vs 2, hit < 1 ---
+
+    context('I18 9v2: at TC = 1, double should be correct', function () {
+      let result: CheckDeviationResult | undefined;
       before(function () {
         game = setupGame({
-          settings: {
-            deckCount: 6,
-            checkDeviations: true,
-          },
+          settings: { deckCount: 6, checkDeviations: true },
           dealerCards: [Rank.Two],
           playerCards: [Rank.Four, Rank.Five],
         });
-
-        // Deal initial cards through to WaitingForPlayInput.
-        while (game.state.step !== GameStep.WaitingForPlayInput) {
-          game.step();
-        }
-
-        // Set running count so TC = exactly 1.
-        // TC = runningCount / decksRemaining
-        game.shoe.hiLoRunningCount = game.shoe.decksRemaining;
-
-        deviationResult = HiLoDeviationChecker.check(
+        dealToPlayInput(game);
+        setTrueCount(game, 1);
+        result = HiLoDeviationChecker.check(
           game,
           game.focusedHand,
           Move.Double,
         );
       });
-
-      it('should not suggest a deviation (double is correct at TC >= 1)', function () {
-        // At TC = 1, the deviation (hit when TC < 1) should NOT fire.
-        // So check() should return undefined, meaning no deviation applies,
-        // and the basic strategy fallback determines correctness.
-        expect(game.shoe.hiLoTrueCount).to.equal(1);
-        expect(deviationResult).to.satisfy(
+      it('should not fire hit deviation', function () {
+        expect(result).to.satisfy(
           (r: CheckDeviationResult | undefined) =>
             r === undefined || r.result === true,
         );
       });
     });
 
-    context('when player has hard 9 vs 2 at true count 0', function () {
-      let deviationResult: CheckDeviationResult | undefined;
-
+    context('I18 9v2: at TC = 0.5, hit deviation should fire', function () {
+      let result: CheckDeviationResult | undefined;
       before(function () {
         game = setupGame({
-          settings: {
-            deckCount: 6,
-            checkDeviations: true,
-          },
+          settings: { deckCount: 6, checkDeviations: true },
           dealerCards: [Rank.Two],
           playerCards: [Rank.Four, Rank.Five],
         });
-
-        while (game.state.step !== GameStep.WaitingForPlayInput) {
-          game.step();
-        }
-
-        // Set running count so TC = 0.
-        game.shoe.hiLoRunningCount = 0;
-
-        deviationResult = HiLoDeviationChecker.check(
+        dealToPlayInput(game);
+        setTrueCount(game, 0.5);
+        result = HiLoDeviationChecker.check(
           game,
           game.focusedHand,
           Move.Double,
         );
       });
+      it('should suggest hit', function () {
+        expect(result).to.be.an('object');
+        expect((result as CheckDeviationResult).result).to.be.false;
+        expect((result as CheckDeviationResult).code).to.equal(Move.Hit);
+      });
+    });
 
-      it('should suggest hit as a deviation (hit when TC < 1)', function () {
-        expect(game.shoe.hiLoTrueCount).to.be.below(1);
-        expect(deviationResult).to.be.an('object');
-        expect((deviationResult as CheckDeviationResult).result).to.be.false;
-        expect((deviationResult as CheckDeviationResult).code).to.equal(
-          Move.Hit,
+    // --- I18: 11 vs A, hit < 1 ---
+
+    context('I18 11vA: at TC = 1, double should be correct', function () {
+      let result: CheckDeviationResult | undefined;
+      before(function () {
+        game = setupGame({
+          settings: {
+            deckCount: 6,
+            checkDeviations: true,
+            autoDeclineInsurance: true,
+          },
+          dealerCards: [Rank.Ace],
+          playerCards: [Rank.Five, Rank.Six],
+        });
+        dealToPlayInput(game);
+        setTrueCount(game, 1);
+        result = HiLoDeviationChecker.check(
+          game,
+          game.focusedHand,
+          Move.Double,
+        );
+      });
+      it('should not fire hit deviation', function () {
+        expect(result).to.satisfy(
+          (r: CheckDeviationResult | undefined) =>
+            r === undefined || r.result === true,
         );
       });
     });
 
-    context(
-      'when player has hard 11 vs A at true count exactly 1',
-      function () {
-        let deviationResult: CheckDeviationResult | undefined;
-
-        before(function () {
-          game = setupGame({
-            settings: {
-              deckCount: 6,
-              checkDeviations: true,
-              autoDeclineInsurance: true,
-            },
-            dealerCards: [Rank.Ace],
-            playerCards: [Rank.Five, Rank.Six],
-          });
-
-          while (game.state.step !== GameStep.WaitingForPlayInput) {
-            game.step();
-          }
-
-          game.shoe.hiLoRunningCount = game.shoe.decksRemaining;
-
-          deviationResult = HiLoDeviationChecker.check(
-            game,
-            game.focusedHand,
-            Move.Double,
-          );
+    context('I18 11vA: at TC = 0.5, hit deviation should fire', function () {
+      let result: CheckDeviationResult | undefined;
+      before(function () {
+        game = setupGame({
+          settings: {
+            deckCount: 6,
+            checkDeviations: true,
+            autoDeclineInsurance: true,
+          },
+          dealerCards: [Rank.Ace],
+          playerCards: [Rank.Five, Rank.Six],
         });
+        dealToPlayInput(game);
+        setTrueCount(game, 0.5);
+        result = HiLoDeviationChecker.check(
+          game,
+          game.focusedHand,
+          Move.Double,
+        );
+      });
+      it('should suggest hit', function () {
+        expect(result).to.be.an('object');
+        expect((result as CheckDeviationResult).result).to.be.false;
+        expect((result as CheckDeviationResult).code).to.equal(Move.Hit);
+      });
+    });
 
-        it('should not suggest a deviation (double is correct at TC >= 1)', function () {
-          expect(game.shoe.hiLoTrueCount).to.equal(1);
-          expect(deviationResult).to.satisfy(
-            (r: CheckDeviationResult | undefined) =>
-              r === undefined || r.result === true,
-          );
+    // --- I18: 12 vs 4, hit < 0 ---
+
+    context('I18 12v4: at TC = 0, stand should be correct', function () {
+      let result: CheckDeviationResult | undefined;
+      before(function () {
+        game = setupGame({
+          settings: { deckCount: 6, checkDeviations: true },
+          dealerCards: [Rank.Four],
+          playerCards: [Rank.Five, Rank.Seven],
         });
-      },
-    );
+        dealToPlayInput(game);
+        setTrueCount(game, 0);
+        result = HiLoDeviationChecker.check(game, game.focusedHand, Move.Stand);
+      });
+      it('should not fire hit deviation', function () {
+        expect(result).to.satisfy(
+          (r: CheckDeviationResult | undefined) =>
+            r === undefined || r.result === true,
+        );
+      });
+    });
 
-    // Fab 4 deviation boundary tests: surrender at TC >= index, hit at TC < index.
-    // At TC = index exactly, surrender should be correct (deviation should NOT
-    // fire with its "hit" suggestion).
-
-    context(
-      'when player has 15 vs 10 at true count exactly 0 (Fab 4)',
-      function () {
-        let deviationResult: CheckDeviationResult | undefined;
-
-        before(function () {
-          game = setupGame({
-            settings: {
-              deckCount: 6,
-              checkDeviations: true,
-              allowLateSurrender: true,
-            },
-            dealerCards: [Rank.Ten, Rank.Seven],
-            playerCards: [Rank.Five, Rank.Ten],
-          });
-
-          while (game.state.step !== GameStep.WaitingForPlayInput) {
-            game.step();
-          }
-
-          game.shoe.hiLoRunningCount = 0;
-
-          deviationResult = HiLoDeviationChecker.check(
-            game,
-            game.focusedHand,
-            Move.Surrender,
-          );
+    context('I18 12v4: at TC = -0.5, hit deviation should fire', function () {
+      let result: CheckDeviationResult | undefined;
+      before(function () {
+        game = setupGame({
+          settings: { deckCount: 6, checkDeviations: true },
+          dealerCards: [Rank.Four],
+          playerCards: [Rank.Five, Rank.Seven],
         });
+        dealToPlayInput(game);
+        setTrueCount(game, -0.5);
+        result = HiLoDeviationChecker.check(game, game.focusedHand, Move.Stand);
+      });
+      it('should suggest hit', function () {
+        expect(result).to.be.an('object');
+        expect((result as CheckDeviationResult).result).to.be.false;
+        expect((result as CheckDeviationResult).code).to.equal(Move.Hit);
+      });
+    });
 
-        it('should not suggest hit (surrender is correct at TC >= 0)', function () {
-          expect(game.shoe.hiLoTrueCount).to.equal(0);
-          expect(deviationResult).to.satisfy(
-            (r: CheckDeviationResult | undefined) =>
-              r === undefined || r.result === true,
-          );
+    // --- I18: 12 vs 5, hit < -2 ---
+
+    context('I18 12v5: at TC = -2, stand should be correct', function () {
+      let result: CheckDeviationResult | undefined;
+      before(function () {
+        game = setupGame({
+          settings: { deckCount: 6, checkDeviations: true },
+          dealerCards: [Rank.Five],
+          playerCards: [Rank.Four, Rank.Eight],
         });
-      },
-    );
+        dealToPlayInput(game);
+        setTrueCount(game, -2);
+        result = HiLoDeviationChecker.check(game, game.focusedHand, Move.Stand);
+      });
+      it('should not fire hit deviation', function () {
+        expect(result).to.satisfy(
+          (r: CheckDeviationResult | undefined) =>
+            r === undefined || r.result === true,
+        );
+      });
+    });
 
-    context(
-      'when player has 15 vs 9 at true count exactly 2 (Fab 4)',
-      function () {
-        let deviationResult: CheckDeviationResult | undefined;
-
-        before(function () {
-          game = setupGame({
-            settings: {
-              deckCount: 6,
-              checkDeviations: true,
-              allowLateSurrender: true,
-            },
-            dealerCards: [Rank.Nine],
-            playerCards: [Rank.Five, Rank.Ten],
-          });
-
-          while (game.state.step !== GameStep.WaitingForPlayInput) {
-            game.step();
-          }
-
-          game.shoe.hiLoRunningCount = game.shoe.decksRemaining * 2;
-
-          deviationResult = HiLoDeviationChecker.check(
-            game,
-            game.focusedHand,
-            Move.Surrender,
-          );
+    context('I18 12v5: at TC = -2.5, hit deviation should fire', function () {
+      let result: CheckDeviationResult | undefined;
+      before(function () {
+        game = setupGame({
+          settings: { deckCount: 6, checkDeviations: true },
+          dealerCards: [Rank.Five],
+          playerCards: [Rank.Four, Rank.Eight],
         });
+        dealToPlayInput(game);
+        setTrueCount(game, -2.5);
+        result = HiLoDeviationChecker.check(game, game.focusedHand, Move.Stand);
+      });
+      it('should suggest hit', function () {
+        expect(result).to.be.an('object');
+        expect((result as CheckDeviationResult).result).to.be.false;
+        expect((result as CheckDeviationResult).code).to.equal(Move.Hit);
+      });
+    });
 
-        it('should not suggest hit (surrender is correct at TC >= 2)', function () {
-          expect(game.shoe.hiLoTrueCount).to.equal(2);
-          expect(deviationResult).to.satisfy(
-            (r: CheckDeviationResult | undefined) =>
-              r === undefined || r.result === true,
-          );
+    // --- I18: 12 vs 6, hit < -1 ---
+
+    context('I18 12v6: at TC = -1, stand should be correct', function () {
+      let result: CheckDeviationResult | undefined;
+      before(function () {
+        game = setupGame({
+          settings: { deckCount: 6, checkDeviations: true },
+          dealerCards: [Rank.Six],
+          playerCards: [Rank.Four, Rank.Eight],
         });
-      },
-    );
+        dealToPlayInput(game);
+        setTrueCount(game, -1);
+        result = HiLoDeviationChecker.check(game, game.focusedHand, Move.Stand);
+      });
+      it('should not fire hit deviation', function () {
+        expect(result).to.satisfy(
+          (r: CheckDeviationResult | undefined) =>
+            r === undefined || r.result === true,
+        );
+      });
+    });
 
-    context(
-      'when player has 15 vs A at true count exactly 1 (Fab 4)',
-      function () {
-        let deviationResult: CheckDeviationResult | undefined;
-
-        before(function () {
-          game = setupGame({
-            settings: {
-              deckCount: 6,
-              checkDeviations: true,
-              allowLateSurrender: true,
-              autoDeclineInsurance: true,
-            },
-            dealerCards: [Rank.Ace],
-            playerCards: [Rank.Five, Rank.Ten],
-          });
-
-          while (game.state.step !== GameStep.WaitingForPlayInput) {
-            game.step();
-          }
-
-          game.shoe.hiLoRunningCount = game.shoe.decksRemaining;
-
-          deviationResult = HiLoDeviationChecker.check(
-            game,
-            game.focusedHand,
-            Move.Surrender,
-          );
+    context('I18 12v6: at TC = -1.5, hit deviation should fire', function () {
+      let result: CheckDeviationResult | undefined;
+      before(function () {
+        game = setupGame({
+          settings: { deckCount: 6, checkDeviations: true },
+          dealerCards: [Rank.Six],
+          playerCards: [Rank.Four, Rank.Eight],
         });
+        dealToPlayInput(game);
+        setTrueCount(game, -1.5);
+        result = HiLoDeviationChecker.check(game, game.focusedHand, Move.Stand);
+      });
+      it('should suggest hit', function () {
+        expect(result).to.be.an('object');
+        expect((result as CheckDeviationResult).result).to.be.false;
+        expect((result as CheckDeviationResult).code).to.equal(Move.Hit);
+      });
+    });
 
-        it('should not suggest hit (surrender is correct at TC >= 1)', function () {
-          expect(game.shoe.hiLoTrueCount).to.equal(1);
-          expect(deviationResult).to.satisfy(
-            (r: CheckDeviationResult | undefined) =>
-              r === undefined || r.result === true,
-          );
+    // --- I18: 13 vs 2, hit < -1 ---
+
+    context('I18 13v2: at TC = -1, stand should be correct', function () {
+      let result: CheckDeviationResult | undefined;
+      before(function () {
+        game = setupGame({
+          settings: { deckCount: 6, checkDeviations: true },
+          dealerCards: [Rank.Two],
+          playerCards: [Rank.Six, Rank.Seven],
         });
-      },
-    );
+        dealToPlayInput(game);
+        setTrueCount(game, -1);
+        result = HiLoDeviationChecker.check(game, game.focusedHand, Move.Stand);
+      });
+      it('should not fire hit deviation', function () {
+        expect(result).to.satisfy(
+          (r: CheckDeviationResult | undefined) =>
+            r === undefined || r.result === true,
+        );
+      });
+    });
 
-    // Illustrious 18 negative deviation boundary tests: stand at TC >= index,
-    // hit at TC < index. At TC = index exactly, stand should be correct.
-
-    context(
-      'when player has 12 vs 4 at true count exactly 0 (I18)',
-      function () {
-        let deviationResult: CheckDeviationResult | undefined;
-
-        before(function () {
-          game = setupGame({
-            settings: {
-              deckCount: 6,
-              checkDeviations: true,
-            },
-            dealerCards: [Rank.Four],
-            playerCards: [Rank.Five, Rank.Seven],
-          });
-
-          while (game.state.step !== GameStep.WaitingForPlayInput) {
-            game.step();
-          }
-
-          game.shoe.hiLoRunningCount = 0;
-
-          deviationResult = HiLoDeviationChecker.check(
-            game,
-            game.focusedHand,
-            Move.Stand,
-          );
+    context('I18 13v2: at TC = -1.5, hit deviation should fire', function () {
+      let result: CheckDeviationResult | undefined;
+      before(function () {
+        game = setupGame({
+          settings: { deckCount: 6, checkDeviations: true },
+          dealerCards: [Rank.Two],
+          playerCards: [Rank.Six, Rank.Seven],
         });
+        dealToPlayInput(game);
+        setTrueCount(game, -1.5);
+        result = HiLoDeviationChecker.check(game, game.focusedHand, Move.Stand);
+      });
+      it('should suggest hit', function () {
+        expect(result).to.be.an('object');
+        expect((result as CheckDeviationResult).result).to.be.false;
+        expect((result as CheckDeviationResult).code).to.equal(Move.Hit);
+      });
+    });
 
-        it('should not suggest hit (stand is correct at TC >= 0)', function () {
-          expect(game.shoe.hiLoTrueCount).to.equal(0);
-          expect(deviationResult).to.satisfy(
-            (r: CheckDeviationResult | undefined) =>
-              r === undefined || r.result === true,
-          );
+    // --- I18: 13 vs 3, hit < -2 ---
+
+    context('I18 13v3: at TC = -2, stand should be correct', function () {
+      let result: CheckDeviationResult | undefined;
+      before(function () {
+        game = setupGame({
+          settings: { deckCount: 6, checkDeviations: true },
+          dealerCards: [Rank.Three],
+          playerCards: [Rank.Six, Rank.Seven],
         });
-      },
-    );
+        dealToPlayInput(game);
+        setTrueCount(game, -2);
+        result = HiLoDeviationChecker.check(game, game.focusedHand, Move.Stand);
+      });
+      it('should not fire hit deviation', function () {
+        expect(result).to.satisfy(
+          (r: CheckDeviationResult | undefined) =>
+            r === undefined || r.result === true,
+        );
+      });
+    });
 
-    context(
-      'when player has 13 vs 2 at true count exactly -1 (I18)',
-      function () {
-        let deviationResult: CheckDeviationResult | undefined;
-
-        before(function () {
-          game = setupGame({
-            settings: {
-              deckCount: 6,
-              checkDeviations: true,
-            },
-            dealerCards: [Rank.Two],
-            playerCards: [Rank.Six, Rank.Seven],
-          });
-
-          while (game.state.step !== GameStep.WaitingForPlayInput) {
-            game.step();
-          }
-
-          game.shoe.hiLoRunningCount = game.shoe.decksRemaining * -1;
-
-          deviationResult = HiLoDeviationChecker.check(
-            game,
-            game.focusedHand,
-            Move.Stand,
-          );
+    context('I18 13v3: at TC = -2.5, hit deviation should fire', function () {
+      let result: CheckDeviationResult | undefined;
+      before(function () {
+        game = setupGame({
+          settings: { deckCount: 6, checkDeviations: true },
+          dealerCards: [Rank.Three],
+          playerCards: [Rank.Six, Rank.Seven],
         });
+        dealToPlayInput(game);
+        setTrueCount(game, -2.5);
+        result = HiLoDeviationChecker.check(game, game.focusedHand, Move.Stand);
+      });
+      it('should suggest hit', function () {
+        expect(result).to.be.an('object');
+        expect((result as CheckDeviationResult).result).to.be.false;
+        expect((result as CheckDeviationResult).code).to.equal(Move.Hit);
+      });
+    });
 
-        it('should not suggest hit (stand is correct at TC >= -1)', function () {
-          expect(game.shoe.hiLoTrueCount).to.equal(-1);
-          expect(deviationResult).to.satisfy(
-            (r: CheckDeviationResult | undefined) =>
-              r === undefined || r.result === true,
-          );
+    // --- Fab 4: 15 vs 10, hit < 0 (surrender at TC >= 0) ---
+
+    context('Fab4 15v10: at TC = 0, surrender should be correct', function () {
+      let result: CheckDeviationResult | undefined;
+      before(function () {
+        game = setupGame({
+          settings: {
+            deckCount: 6,
+            checkDeviations: true,
+            allowLateSurrender: true,
+          },
+          dealerCards: [Rank.Ten, Rank.Seven],
+          playerCards: [Rank.Five, Rank.Ten],
         });
-      },
-    );
+        dealToPlayInput(game);
+        setTrueCount(game, 0);
+        result = HiLoDeviationChecker.check(
+          game,
+          game.focusedHand,
+          Move.Surrender,
+        );
+      });
+      it('should not fire hit deviation', function () {
+        expect(result).to.satisfy(
+          (r: CheckDeviationResult | undefined) =>
+            r === undefined || r.result === true,
+        );
+      });
+    });
+
+    context('Fab4 15v10: at TC = -0.5, hit deviation should fire', function () {
+      let result: CheckDeviationResult | undefined;
+      before(function () {
+        game = setupGame({
+          settings: {
+            deckCount: 6,
+            checkDeviations: true,
+            allowLateSurrender: true,
+          },
+          dealerCards: [Rank.Ten, Rank.Seven],
+          playerCards: [Rank.Five, Rank.Ten],
+        });
+        dealToPlayInput(game);
+        setTrueCount(game, -0.5);
+        result = HiLoDeviationChecker.check(
+          game,
+          game.focusedHand,
+          Move.Surrender,
+        );
+      });
+      it('should suggest hit', function () {
+        expect(result).to.be.an('object');
+        expect((result as CheckDeviationResult).result).to.be.false;
+        expect((result as CheckDeviationResult).code).to.equal(Move.Hit);
+      });
+    });
+
+    // --- Fab 4: 15 vs 9, hit < 2 (surrender at TC >= 2) ---
+
+    context('Fab4 15v9: at TC = 2, surrender should be correct', function () {
+      let result: CheckDeviationResult | undefined;
+      before(function () {
+        game = setupGame({
+          settings: {
+            deckCount: 6,
+            checkDeviations: true,
+            allowLateSurrender: true,
+          },
+          dealerCards: [Rank.Nine],
+          playerCards: [Rank.Five, Rank.Ten],
+        });
+        dealToPlayInput(game);
+        setTrueCount(game, 2);
+        result = HiLoDeviationChecker.check(
+          game,
+          game.focusedHand,
+          Move.Surrender,
+        );
+      });
+      it('should not fire hit deviation', function () {
+        expect(result).to.satisfy(
+          (r: CheckDeviationResult | undefined) =>
+            r === undefined || r.result === true,
+        );
+      });
+    });
+
+    context('Fab4 15v9: at TC = 1.5, hit deviation should fire', function () {
+      let result: CheckDeviationResult | undefined;
+      before(function () {
+        game = setupGame({
+          settings: {
+            deckCount: 6,
+            checkDeviations: true,
+            allowLateSurrender: true,
+          },
+          dealerCards: [Rank.Nine],
+          playerCards: [Rank.Five, Rank.Ten],
+        });
+        dealToPlayInput(game);
+        setTrueCount(game, 1.5);
+        result = HiLoDeviationChecker.check(
+          game,
+          game.focusedHand,
+          Move.Surrender,
+        );
+      });
+      it('should suggest hit', function () {
+        expect(result).to.be.an('object');
+        expect((result as CheckDeviationResult).result).to.be.false;
+        expect((result as CheckDeviationResult).code).to.equal(Move.Hit);
+      });
+    });
+
+    // --- Fab 4: 15 vs A, hit < 1 (surrender at TC >= 1) ---
+
+    context('Fab4 15vA: at TC = 1, surrender should be correct', function () {
+      let result: CheckDeviationResult | undefined;
+      before(function () {
+        game = setupGame({
+          settings: {
+            deckCount: 6,
+            checkDeviations: true,
+            allowLateSurrender: true,
+            autoDeclineInsurance: true,
+          },
+          dealerCards: [Rank.Ace],
+          playerCards: [Rank.Five, Rank.Ten],
+        });
+        dealToPlayInput(game);
+        setTrueCount(game, 1);
+        result = HiLoDeviationChecker.check(
+          game,
+          game.focusedHand,
+          Move.Surrender,
+        );
+      });
+      it('should not fire hit deviation', function () {
+        expect(result).to.satisfy(
+          (r: CheckDeviationResult | undefined) =>
+            r === undefined || r.result === true,
+        );
+      });
+    });
+
+    context('Fab4 15vA: at TC = 0.5, hit deviation should fire', function () {
+      let result: CheckDeviationResult | undefined;
+      before(function () {
+        game = setupGame({
+          settings: {
+            deckCount: 6,
+            checkDeviations: true,
+            allowLateSurrender: true,
+            autoDeclineInsurance: true,
+          },
+          dealerCards: [Rank.Ace],
+          playerCards: [Rank.Five, Rank.Ten],
+        });
+        dealToPlayInput(game);
+        setTrueCount(game, 0.5);
+        result = HiLoDeviationChecker.check(
+          game,
+          game.focusedHand,
+          Move.Surrender,
+        );
+      });
+      it('should suggest hit', function () {
+        expect(result).to.be.an('object');
+        expect((result as CheckDeviationResult).result).to.be.false;
+        expect((result as CheckDeviationResult).code).to.equal(Move.Hit);
+      });
+    });
 
     context('when an NPC splits aces and receives non-ace cards', function () {
       let npcPlayer: InstanceType<typeof Game>['players'][number];

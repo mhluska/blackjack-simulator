@@ -21,7 +21,7 @@ export const illustrious18Deviations: Deviations = new Map<playerTotal, Map<deal
   ]),
   ],
   [9,  new Map([
-    [2,  { correctMove: Move.Hit,    index: ['<=',  0] }],
+    [2,  { correctMove: Move.Hit,    index: ['<',   1] }],
     [7,  { correctMove: Move.Double, index: ['>=',  3] }],
   ]),
   ],
@@ -31,20 +31,20 @@ export const illustrious18Deviations: Deviations = new Map<playerTotal, Map<deal
   ]),
   ],
   [11, new Map([
-    [11, { correctMove: Move.Hit,    index: ['<=',  0] }],
+    [11, { correctMove: Move.Hit,    index: ['<',   1] }],
   ])
   ],
   [12, new Map([
     [2,  { correctMove: Move.Stand,  index: ['>=',  3] }],
     [3,  { correctMove: Move.Stand,  index: ['>=',  2] }],
-    [4,  { correctMove: Move.Hit,    index: ['<=', -1] }],
-    [5,  { correctMove: Move.Hit,    index: ['<=', -3] }],
-    [6,  { correctMove: Move.Hit,    index: ['<=', -2] }],
+    [4,  { correctMove: Move.Hit,    index: ['<',   0] }],
+    [5,  { correctMove: Move.Hit,    index: ['<',  -2] }],
+    [6,  { correctMove: Move.Hit,    index: ['<',  -1] }],
   ]),
   ],
   [13, new Map([
-    [2,  { correctMove: Move.Hit,    index: ['<=', -2] }],
-    [3,  { correctMove: Move.Hit,    index: ['<=', -3] }],
+    [2,  { correctMove: Move.Hit,    index: ['<',  -1] }],
+    [3,  { correctMove: Move.Hit,    index: ['<',  -2] }],
   ]),
   ],
   [15, new Map([
@@ -70,9 +70,9 @@ export const fab4Deviations: Deviations = new Map<playerTotal, Map<dealerCard, D
   ]),
   ],
   [15,  new Map([
-    [9,  { correctMove: Move.Hit, index: ['<=', 1], fab4: true }],
-    [10, { correctMove: Move.Hit, index: ['<=', -1], fab4: true }],
-    [11, { correctMove: Move.Hit, index: ['<=', 0], fab4: true }],
+    [9,  { correctMove: Move.Hit, index: ['<',  2], fab4: true }],
+    [10, { correctMove: Move.Hit, index: ['<',  0], fab4: true }],
+    [11, { correctMove: Move.Hit, index: ['<',  1], fab4: true }],
   ])],
 ]);
 
