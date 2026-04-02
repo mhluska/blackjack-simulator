@@ -95,7 +95,7 @@ export enum GameMode {
 export type playerTotal = number;
 export type dealerCard = number;
 
-export type Comparator = '<=' | '>=';
+export type Comparator = '<' | '>=';
 type Index = number;
 
 export type Deviation = {
