@@ -896,7 +896,7 @@ describe('Game', function () {
               checkDeviations: true,
               allowLateSurrender: true,
             },
-            dealerCards: [Rank.Ten],
+            dealerCards: [Rank.Ten, Rank.Seven],
             playerCards: [Rank.Five, Rank.Ten],
           });
 
