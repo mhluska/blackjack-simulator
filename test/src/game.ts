@@ -880,6 +880,207 @@ describe('Game', function () {
       },
     );
 
+    // Fab 4 deviation boundary tests: surrender at TC >= index, hit at TC < index.
+    // At TC = index exactly, surrender should be correct (deviation should NOT
+    // fire with its "hit" suggestion).
+
+    context(
+      'when player has 15 vs 10 at true count exactly 0 (Fab 4)',
+      function () {
+        let deviationResult: CheckDeviationResult | undefined;
+
+        before(function () {
+          game = setupGame({
+            settings: {
+              deckCount: 6,
+              checkDeviations: true,
+              allowLateSurrender: true,
+            },
+            dealerCards: [Rank.Ten],
+            playerCards: [Rank.Five, Rank.Ten],
+          });
+
+          while (game.state.step !== GameStep.WaitingForPlayInput) {
+            game.step();
+          }
+
+          game.shoe.hiLoRunningCount = 0;
+
+          deviationResult = HiLoDeviationChecker.check(
+            game,
+            game.focusedHand,
+            Move.Surrender,
+          );
+        });
+
+        it('should not suggest hit (surrender is correct at TC >= 0)', function () {
+          expect(game.shoe.hiLoTrueCount).to.equal(0);
+          expect(deviationResult).to.satisfy(
+            (r: CheckDeviationResult | undefined) =>
+              r === undefined || r.result === true,
+          );
+        });
+      },
+    );
+
+    context(
+      'when player has 15 vs 9 at true count exactly 2 (Fab 4)',
+      function () {
+        let deviationResult: CheckDeviationResult | undefined;
+
+        before(function () {
+          game = setupGame({
+            settings: {
+              deckCount: 6,
+              checkDeviations: true,
+              allowLateSurrender: true,
+            },
+            dealerCards: [Rank.Nine],
+            playerCards: [Rank.Five, Rank.Ten],
+          });
+
+          while (game.state.step !== GameStep.WaitingForPlayInput) {
+            game.step();
+          }
+
+          game.shoe.hiLoRunningCount = game.shoe.decksRemaining * 2;
+
+          deviationResult = HiLoDeviationChecker.check(
+            game,
+            game.focusedHand,
+            Move.Surrender,
+          );
+        });
+
+        it('should not suggest hit (surrender is correct at TC >= 2)', function () {
+          expect(game.shoe.hiLoTrueCount).to.equal(2);
+          expect(deviationResult).to.satisfy(
+            (r: CheckDeviationResult | undefined) =>
+              r === undefined || r.result === true,
+          );
+        });
+      },
+    );
+
+    context(
+      'when player has 15 vs A at true count exactly 1 (Fab 4)',
+      function () {
+        let deviationResult: CheckDeviationResult | undefined;
+
+        before(function () {
+          game = setupGame({
+            settings: {
+              deckCount: 6,
+              checkDeviations: true,
+              allowLateSurrender: true,
+              autoDeclineInsurance: true,
+            },
+            dealerCards: [Rank.Ace],
+            playerCards: [Rank.Five, Rank.Ten],
+          });
+
+          while (game.state.step !== GameStep.WaitingForPlayInput) {
+            game.step();
+          }
+
+          game.shoe.hiLoRunningCount = game.shoe.decksRemaining;
+
+          deviationResult = HiLoDeviationChecker.check(
+            game,
+            game.focusedHand,
+            Move.Surrender,
+          );
+        });
+
+        it('should not suggest hit (surrender is correct at TC >= 1)', function () {
+          expect(game.shoe.hiLoTrueCount).to.equal(1);
+          expect(deviationResult).to.satisfy(
+            (r: CheckDeviationResult | undefined) =>
+              r === undefined || r.result === true,
+          );
+        });
+      },
+    );
+
+    // Illustrious 18 negative deviation boundary tests: stand at TC >= index,
+    // hit at TC < index. At TC = index exactly, stand should be correct.
+
+    context(
+      'when player has 12 vs 4 at true count exactly 0 (I18)',
+      function () {
+        let deviationResult: CheckDeviationResult | undefined;
+
+        before(function () {
+          game = setupGame({
+            settings: {
+              deckCount: 6,
+              checkDeviations: true,
+            },
+            dealerCards: [Rank.Four],
+            playerCards: [Rank.Five, Rank.Seven],
+          });
+
+          while (game.state.step !== GameStep.WaitingForPlayInput) {
+            game.step();
+          }
+
+          game.shoe.hiLoRunningCount = 0;
+
+          deviationResult = HiLoDeviationChecker.check(
+            game,
+            game.focusedHand,
+            Move.Stand,
+          );
+        });
+
+        it('should not suggest hit (stand is correct at TC >= 0)', function () {
+          expect(game.shoe.hiLoTrueCount).to.equal(0);
+          expect(deviationResult).to.satisfy(
+            (r: CheckDeviationResult | undefined) =>
+              r === undefined || r.result === true,
+          );
+        });
+      },
+    );
+
+    context(
+      'when player has 13 vs 2 at true count exactly -1 (I18)',
+      function () {
+        let deviationResult: CheckDeviationResult | undefined;
+
+        before(function () {
+          game = setupGame({
+            settings: {
+              deckCount: 6,
+              checkDeviations: true,
+            },
+            dealerCards: [Rank.Two],
+            playerCards: [Rank.Six, Rank.Seven],
+          });
+
+          while (game.state.step !== GameStep.WaitingForPlayInput) {
+            game.step();
+          }
+
+          game.shoe.hiLoRunningCount = game.shoe.decksRemaining * -1;
+
+          deviationResult = HiLoDeviationChecker.check(
+            game,
+            game.focusedHand,
+            Move.Stand,
+          );
+        });
+
+        it('should not suggest hit (stand is correct at TC >= -1)', function () {
+          expect(game.shoe.hiLoTrueCount).to.equal(-1);
+          expect(deviationResult).to.satisfy(
+            (r: CheckDeviationResult | undefined) =>
+              r === undefined || r.result === true,
+          );
+        });
+      },
+    );
+
     context('when an NPC splits aces and receives non-ace cards', function () {
       let npcPlayer: InstanceType<typeof Game>['players'][number];
 
