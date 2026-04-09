@@ -740,6 +740,47 @@ describe('Game', function () {
       },
     );
 
+    context(
+      'when dealer has blackjack with ace up, dealer.blackjack should be true when handWinner emits',
+      function () {
+        let dealerBlackjackAtEmit: boolean;
+
+        before(function () {
+          dealerBlackjackAtEmit = false;
+
+          game = setupGame({
+            settings: {
+              autoDeclineInsurance: false,
+            },
+            dealerCards: [Rank.Ace, Rank.Ten],
+            playerCards: [Rank.Five, Rank.Five],
+          });
+
+          game.on(Event.Change, (name: unknown, value: unknown) => {
+            if (
+              name === 'player' &&
+              isPlayerAttributes(value) &&
+              value.handWinner[value.hands[0].id] === 'dealer'
+            ) {
+              // Capture dealer blackjack state at the moment handWinner is emitted.
+              dealerBlackjackAtEmit = game.dealer.firstHand.blackjack;
+            }
+          });
+
+          game.step();
+          game.step(Move.NoInsurance);
+        });
+
+        after(function () {
+          game.removeAllListeners(Event.Change);
+        });
+
+        it('should have dealer.blackjack true when handWinner change fires', function () {
+          expect(dealerBlackjackAtEmit).to.be.true;
+        });
+      },
+    );
+
     context('when the player splits aces without more aces', function () {
       before(function () {
         game = setupGame({
