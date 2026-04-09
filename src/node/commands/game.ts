@@ -57,7 +57,7 @@ function stepGame(
 export default async function (
   options: Partial<CliGameSettings & CliSettings>,
 ): Promise<void> {
-  if (options.help || options.h) {
+  if (options.help === true || options.h === true) {
     console.log('Usage: simulator game [options]');
     console.log();
     console.log('Options:');

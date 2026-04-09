@@ -336,23 +336,28 @@ export default class Simulator {
         penetration: gameSettings.penetration,
         playerCount: gameSettings.playerCount,
       }),
-      penetration: settings.raw
-        ? gameSettings.penetration.toString()
-        : Utils.formatPercent(gameSettings.penetration),
-      betSpread: settings.raw
-        ? this.settings.playerBetSpread.join()
-        : Utils.arrayToRangeString(this.settings.playerBetSpread, (amount) =>
-            Utils.formatCents(amount, { stripZeroCents: true }),
-          ),
-      spotsPlayed: settings.raw
-        ? this.settings.playerSpots.join()
-        : Utils.arrayToRangeString(this.settings.playerSpots),
-      strategy: settings.raw
-        ? playerStrategyToString(this.settings.playerStrategy)
-        : formatPlayerStrategy(this.settings.playerStrategy),
-      wongOut: settings.raw
-        ? this.settings.playerWongOutTrueCount.toString()
-        : formatWongOutTrueCount(this.settings.playerWongOutTrueCount),
+      penetration:
+        settings.raw === true
+          ? gameSettings.penetration.toString()
+          : Utils.formatPercent(gameSettings.penetration),
+      betSpread:
+        settings.raw === true
+          ? this.settings.playerBetSpread.join()
+          : Utils.arrayToRangeString(this.settings.playerBetSpread, (amount) =>
+              Utils.formatCents(amount, { stripZeroCents: true }),
+            ),
+      spotsPlayed:
+        settings.raw === true
+          ? this.settings.playerSpots.join()
+          : Utils.arrayToRangeString(this.settings.playerSpots),
+      strategy:
+        settings.raw === true
+          ? playerStrategyToString(this.settings.playerStrategy)
+          : formatPlayerStrategy(this.settings.playerStrategy),
+      wongOut:
+        settings.raw === true
+          ? this.settings.playerWongOutTrueCount.toString()
+          : formatWongOutTrueCount(this.settings.playerWongOutTrueCount),
     };
   }
 

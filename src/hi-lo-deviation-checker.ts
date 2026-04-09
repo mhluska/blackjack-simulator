@@ -92,7 +92,7 @@ export default class HiLoDeviationChecker {
   ): Deviation | undefined {
     const trueCount = game.shoe.hiLoTrueCount;
 
-    if (!game.dealer.upcard || hand.isSoft) {
+    if (game.dealer.upcard == null || hand.isSoft) {
       return;
     }
 
@@ -171,11 +171,11 @@ export default class HiLoDeviationChecker {
       hint = 'split';
     }
 
-    if (!hint) {
+    if (hint === undefined) {
       return { result: true, code: null, hint: null, deviation };
     }
 
-    const deviationType = deviation.fab4 ? 'Fab 4' : 'Illustrious 18';
+    const deviationType = deviation.fab4 === true ? 'Fab 4' : 'Illustrious 18';
     const hintMessage = `${deviationType} deviation: last play should have been ${hint} for true counts ${index[0]} ${index[1]}`;
 
     return {

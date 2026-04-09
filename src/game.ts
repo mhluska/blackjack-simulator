@@ -236,7 +236,9 @@ export default class Game extends EventEmitter<EventMap> {
     // A basic strategy surrender takes priority over non-Fab4 deviations.
     // For example 15v10 should be a surrender even though I18 says to hit.
     if (input === Move.Surrender && basicStrategyResult.result) {
-      return hiLoResult?.deviation.fab4 ? hiLoResult : basicStrategyResult;
+      return hiLoResult?.deviation.fab4 === true
+        ? hiLoResult
+        : basicStrategyResult;
     }
 
     return hiLoResult || basicStrategyResult;
@@ -252,7 +254,7 @@ export default class Game extends EventEmitter<EventMap> {
       input,
     );
 
-    if (checkerResult.hint) {
+    if (checkerResult.hint != null) {
       this.state.playCorrection = checkerResult.hint;
     } else {
       this.state.sessionMovesCorrect += 1;
@@ -276,7 +278,7 @@ export default class Game extends EventEmitter<EventMap> {
     }
 
     if (
-      !input ||
+      input === undefined ||
       ![Move.Hit, Move.Stand, Move.Double, Move.Split, Move.Surrender].includes(
         input,
       )
@@ -304,7 +306,10 @@ export default class Game extends EventEmitter<EventMap> {
       return true;
     }
 
-    return !!input && [Move.AskInsurance, Move.NoInsurance].includes(input);
+    return (
+      input !== undefined &&
+      [Move.AskInsurance, Move.NoInsurance].includes(input)
+    );
   }
 
   step(input?: Move): GameStep {
@@ -357,7 +362,7 @@ export default class Game extends EventEmitter<EventMap> {
           break;
 
         case GameStep.WaitingForNewGameInput:
-          if (this.player.isUser && !input) {
+          if (this.player.isUser && input === undefined) {
             break;
           }
           this.removeCards();
@@ -463,7 +468,7 @@ export default class Game extends EventEmitter<EventMap> {
     for (const player of players) {
       player.eachHand((hand) => {
         const input =
-          player.isUser && userInput
+          player.isUser && userInput != null
             ? userInput
             : player.getNPCInput(this, hand);
 
@@ -669,7 +674,7 @@ export default class Game extends EventEmitter<EventMap> {
 
     for (const player of this.players) {
       player.eachHand((hand) => {
-        if (player.handWinner.get(hand.id)) {
+        if (player.handWinner.get(hand.id) !== undefined) {
           return;
         }
 

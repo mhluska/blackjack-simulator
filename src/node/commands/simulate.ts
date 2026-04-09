@@ -182,9 +182,10 @@ function adjustHandsCliArg() {
       : parseInt(process.argv[handsIndex + 1]);
 
   const maxCores = cpus().length;
-  const cpuCount = process.env.CORES
-    ? Math.min(parseInt(process.env.CORES), maxCores)
-    : maxCores;
+  const cpuCount =
+    process.env.CORES != null
+      ? Math.min(parseInt(process.env.CORES), maxCores)
+      : maxCores;
 
   if (totalHands < cpuCount) {
     return {
@@ -275,7 +276,7 @@ export default function (
     return;
   }
 
-  if (options.help || options.h) {
+  if (options.help === true || options.h === true) {
     console.log('Usage: simulator simulate [options]');
     console.log();
     console.log('Options:');

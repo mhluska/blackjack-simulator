@@ -7,7 +7,7 @@ import { Suit, Rank, GameStep, Move, HandWinner } from '../../src/types';
 
 function setupPushGame() {
   const game = new Game({
-    debug: !!process.env.DEBUG,
+    debug: process.env.DEBUG != null && process.env.DEBUG !== '',
     playerTablePosition: 1,
     playerCount: 1,
   });
