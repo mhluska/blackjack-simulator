@@ -383,7 +383,7 @@ export function playerStrategyToString(playerStrategy: PlayerStrategy): string {
 export function parsePlayerStrategy(
   playerStrategy: string | undefined,
 ): PlayerStrategy | undefined {
-  if (!playerStrategy) {
+  if (playerStrategy === undefined) {
     return;
   }
 
@@ -442,7 +442,7 @@ export function blackjackPayoutToString(
 export function parseBlackjackPayout(
   blackjackPayout: string | undefined,
 ): BlackjackPayout | undefined {
-  if (!blackjackPayout) {
+  if (blackjackPayout === undefined) {
     return;
   }
 
@@ -473,7 +473,7 @@ export function gameModeToString(mode: GameMode): string {
 }
 
 export function parseGameMode(mode: string | undefined): GameMode | undefined {
-  if (!mode) {
+  if (mode === undefined) {
     return;
   }
 

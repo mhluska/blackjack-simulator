@@ -84,7 +84,7 @@ export default class Player extends GameObject {
       this.strategy === PlayerStrategy.BasicStrategyI18Fab4
     ) {
       correctMove =
-        HiLoDeviationChecker.suggest(game, hand) ||
+        HiLoDeviationChecker.suggest(game, hand) ??
         BasicStrategyChecker.suggest(game, hand);
     } else {
       correctMove = BasicStrategyChecker.suggest(game, hand);
@@ -177,7 +177,7 @@ export default class Player extends GameObject {
       hand = this._hands[0];
     }
 
-    if (!hand) {
+    if (hand === undefined) {
       throw new Error(`Player ${this.id} has no hand to add chips to`);
     }
 

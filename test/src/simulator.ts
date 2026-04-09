@@ -6,7 +6,10 @@ describe('Simulator', function () {
   let simulator: Simulator;
 
   before(function () {
-    simulator = new Simulator({ debug: !!process.env.DEBUG, hands: 10 ** 3 });
+    simulator = new Simulator({
+      debug: process.env.DEBUG != null && process.env.DEBUG !== '',
+      hands: 10 ** 3,
+    });
   });
 
   it('runs', function () {
@@ -30,7 +33,7 @@ describe('Simulator', function () {
   it('computes bankrollVariance correctly for known inputs', function () {
     // Run a short simulation and verify the variance matches a naive calculation.
     const sim = new Simulator({
-      debug: !!process.env.DEBUG,
+      debug: process.env.DEBUG != null && process.env.DEBUG !== '',
       hands: 100,
       // Flat bet, single spot, no spread — simplest case.
       playerBetSpread: [10 * 100],

@@ -116,7 +116,7 @@ export default class BasicStrategyChecker {
 
   static check(game: Game, hand: Hand, input: Move): CheckResult {
     const correctMove = this.suggest(game, hand);
-    if (!correctMove) {
+    if (correctMove == null) {
       return { result: true, code: null, hint: null };
     }
 
@@ -147,7 +147,7 @@ export default class BasicStrategyChecker {
       hint = 'surrender';
     }
 
-    if (!hint) {
+    if (hint === undefined) {
       return { result: true, code: null, hint: null };
     }
 

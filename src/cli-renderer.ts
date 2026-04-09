@@ -81,7 +81,7 @@ export default class CLIRenderer implements Renderer {
   }
 
   _questionLine(): string {
-    if (!this.game.state.step || !this.game.focusedHand) {
+    if (this.game.state.step == null) {
       return '';
     }
 

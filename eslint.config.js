@@ -8,6 +8,9 @@ export default [
     files: ['**/*.ts'],
     languageOptions: {
       parser: tsparser,
+      parserOptions: {
+        project: './tsconfig.eslint.json',
+      },
     },
     plugins: {
       '@typescript-eslint': tseslint,
@@ -18,6 +21,8 @@ export default [
       ...prettierConfig.rules,
       'prettier/prettier': ['error', { singleQuote: true }],
       '@typescript-eslint/no-non-null-assertion': 'error',
+      '@typescript-eslint/strict-boolean-expressions': 'error',
+      'eqeqeq': ['error', 'smart'],
     },
   },
   {

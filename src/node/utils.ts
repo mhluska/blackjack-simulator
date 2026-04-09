@@ -36,7 +36,11 @@ export function printUsageOptions<T extends SimpleObject>(
 
     if (value !== null && typeof value !== 'undefined') {
       let formattedValue = options[key]?.formatter?.(value);
-      if (formattedValue && formattedValue.includes('$')) {
+      if (
+        formattedValue !== undefined &&
+        formattedValue !== '' &&
+        formattedValue.includes('$')
+      ) {
         formattedValue = `'${formattedValue}'`;
       }
 
@@ -44,7 +48,7 @@ export function printUsageOptions<T extends SimpleObject>(
     }
 
     const hint = options[key]?.hint;
-    if (hint) {
+    if (hint !== undefined && hint !== '') {
       items.push(hint);
     }
 

@@ -242,7 +242,7 @@ export default class Shoe extends GameObject {
       this.cards.length - 1,
     );
 
-    if (dealerUpcard) {
+    if (dealerUpcard !== undefined) {
       Utils.arrayMove(
         this.cards,
         this.cards.findIndex((card) => card.value === dealerUpcard),

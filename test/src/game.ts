@@ -34,7 +34,7 @@ type GameSetupOptions = {
 function setupGame(options: Partial<GameSetupOptions> = {}) {
   const defaults: GameSetupOptions = {
     settings: {
-      debug: !!process.env.DEBUG,
+      debug: process.env.DEBUG != null && process.env.DEBUG !== '',
       playerTablePosition: 1,
       playerCount: 1,
     },
@@ -107,16 +107,16 @@ function runGame(
     let playerInput: Move | undefined;
 
     const inputChoices = input[callCount];
-    if (inputChoices) {
+    if (inputChoices !== undefined) {
       playerInput = inputChoices[game.state.step];
-      if (!playerInput && game.state.step >= 3) {
+      if (playerInput === undefined && game.state.step >= 3) {
         throw new Error(`No action provided for game step ${game.state.step}`);
       }
     } else if (!repeatPlayerInput) {
       break;
     }
 
-    if (!repeatPlayerInput && playerInput) {
+    if (!repeatPlayerInput && playerInput !== undefined) {
       callCount += 1;
     }
 
@@ -1272,7 +1272,7 @@ describe('Game', function () {
         // Set up a 2-player game: user at position 1, NPC at position 2.
         // The NPC is in playersRight and plays before the user.
         game = new Game({
-          debug: !!process.env.DEBUG,
+          debug: process.env.DEBUG != null && process.env.DEBUG !== '',
           playerTablePosition: 1,
           playerCount: 2,
         });

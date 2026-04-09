@@ -5,7 +5,7 @@ export default class DOMPlayerInputReader implements PlayerInputReader {
   readInput(callback: (action: Move) => void): void {
     const keypressHandler = (event: KeyboardEvent) => {
       const action = actionDataKeyToCorrectMove(event.key);
-      if (action) {
+      if (action !== undefined) {
         document.body.removeEventListener('keypress', keypressHandler);
         document.body.removeEventListener('click', clickHandler);
         callback(action);
@@ -23,7 +23,7 @@ export default class DOMPlayerInputReader implements PlayerInputReader {
         event.target?.dataset.action ?? '',
       );
 
-      if (action) {
+      if (action !== undefined) {
         document.body.removeEventListener('keypress', keypressHandler);
         document.body.removeEventListener('click', clickHandler);
         callback(action);
