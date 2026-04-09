@@ -334,13 +334,16 @@ export default class Game extends EventEmitter<EventMap> {
           }
 
           this.askInsurance(input, this.player, ...this.playersLeft);
-          this.payoutInsurance(input);
 
           if (this.dealer.holeCard.value === 10) {
+            // Flip hole card before payout so the dealer's blackjack state
+            // is set when setHandWinner emits the change event.
             this.dealer.firstHand.incrementTotalsForCard(this.dealer.cards[0]);
             this.dealer.cards[0].flip();
+            this.payoutInsurance(input);
             step = GameStep.WaitingForNewGameInput;
           } else {
+            this.payoutInsurance(input);
             step = GameStep.PlayHandsRight;
           }
 
