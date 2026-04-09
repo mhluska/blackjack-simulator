@@ -571,6 +571,107 @@ describe('Game', function () {
     );
 
     context(
+      'when player accepts insurance at TC < 3 with checkDeviations on',
+      function () {
+        before(function () {
+          game = setupGame({
+            settings: {
+              deckCount: 6,
+              autoDeclineInsurance: false,
+              checkDeviations: true,
+            },
+            dealerCards: [Rank.Ace, Rank.Seven],
+            playerCards: [Rank.Five, Rank.Five],
+          });
+
+          // Deal — prompts for insurance.
+          game.step();
+
+          // Set TC to 0 (well below 3).
+          game.shoe.hiLoRunningCount = 0;
+
+          // Accept insurance (wrong at TC < 3).
+          game.step(Move.AskInsurance);
+        });
+
+        it('should show a deviation correction', function () {
+          expect(game.state.playCorrection).to.include('insurance');
+        });
+
+        it('should count as an incorrect move', function () {
+          expect(game.state.sessionMovesTotal).to.equal(1);
+          expect(game.state.sessionMovesCorrect).to.equal(0);
+        });
+      },
+    );
+
+    context(
+      'when player declines insurance at TC >= 3 with checkDeviations on',
+      function () {
+        before(function () {
+          game = setupGame({
+            settings: {
+              deckCount: 6,
+              autoDeclineInsurance: false,
+              checkDeviations: true,
+            },
+            dealerCards: [Rank.Ace, Rank.Seven],
+            playerCards: [Rank.Five, Rank.Five],
+          });
+
+          game.step();
+
+          // Set TC to 3.
+          game.shoe.hiLoRunningCount = game.shoe.decksRemaining * 3;
+
+          // Decline insurance (wrong at TC >= 3).
+          game.step(Move.NoInsurance);
+        });
+
+        it('should show a deviation correction', function () {
+          expect(game.state.playCorrection).to.include('insurance');
+        });
+
+        it('should count as an incorrect move', function () {
+          expect(game.state.sessionMovesTotal).to.equal(1);
+          expect(game.state.sessionMovesCorrect).to.equal(0);
+        });
+      },
+    );
+
+    context(
+      'when player correctly declines insurance at TC < 3 with checkDeviations on',
+      function () {
+        before(function () {
+          game = setupGame({
+            settings: {
+              deckCount: 6,
+              autoDeclineInsurance: false,
+              checkDeviations: true,
+            },
+            dealerCards: [Rank.Ace, Rank.Seven],
+            playerCards: [Rank.Five, Rank.Five],
+          });
+
+          game.step();
+          game.shoe.hiLoRunningCount = 0;
+
+          // Decline insurance (correct at TC < 3).
+          game.step(Move.NoInsurance);
+        });
+
+        it('should not show a deviation correction', function () {
+          expect(game.state.playCorrection).to.equal('');
+        });
+
+        it('should count as a correct move', function () {
+          expect(game.state.sessionMovesTotal).to.equal(1);
+          expect(game.state.sessionMovesCorrect).to.equal(1);
+        });
+      },
+    );
+
+    context(
       'when dealer has blackjack with ace up and player accepts insurance',
       function () {
         let playerBalanceBefore: number;

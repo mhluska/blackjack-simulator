@@ -129,6 +129,45 @@ export default class HiLoDeviationChecker {
     )?.correctMove;
   }
 
+  // Insurance is purely a counting play (basic strategy always says decline).
+  // The deviation checker owns both directions: buy at TC >= 3, decline below.
+  static _checkInsurance(
+    deviation: Deviation | undefined,
+    input: Move,
+  ): CheckDeviationResult {
+    const noInsuranceDeviation: Deviation = {
+      correctMove: Move.NoInsurance,
+      index: ['<', 3],
+    };
+
+    if (deviation !== undefined) {
+      if (input === Move.AskInsurance) {
+        return { result: true, code: null, hint: null, deviation };
+      }
+      return {
+        result: false,
+        code: Move.AskInsurance,
+        hint: `Illustrious 18 deviation: last play should have been buy insurance for true counts ${deviation.index[0]} ${deviation.index[1]}`,
+        deviation,
+      };
+    }
+
+    if (input === Move.AskInsurance) {
+      return {
+        result: false,
+        code: Move.NoInsurance,
+        hint: `Illustrious 18 deviation: should not buy insurance for true counts ${noInsuranceDeviation.index[0]} ${noInsuranceDeviation.index[1]}`,
+        deviation: noInsuranceDeviation,
+      };
+    }
+    return {
+      result: true,
+      code: null,
+      hint: null,
+      deviation: noInsuranceDeviation,
+    };
+  }
+
   // Returns undefined if a deviation was not present. Otherwise returns a
   // `CheckDeviationResult` object.
   static check(
@@ -144,6 +183,11 @@ export default class HiLoDeviationChecker {
     }
 
     const deviation = this._suggest(game, hand);
+
+    if (game.state.step === GameStep.WaitingForInsuranceInput) {
+      return this._checkInsurance(deviation, input);
+    }
+
     if (!deviation) {
       return;
     }
