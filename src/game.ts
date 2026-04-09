@@ -326,6 +326,13 @@ export default class Game extends EventEmitter<EventMap> {
             break;
           }
 
+          if (
+            settings.checkDeviations === true ||
+            settings.mode === GameMode.Deviations
+          ) {
+            this.validateInput(input, this.focusedHand);
+          }
+
           this.askInsurance(input, this.player, ...this.playersLeft);
           this.payoutInsurance(input);
 
