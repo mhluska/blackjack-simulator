@@ -328,10 +328,15 @@ export default class Game extends EventEmitter<EventMap> {
 
           this.askInsurance(input, this.player, ...this.playersLeft);
           this.payoutInsurance(input);
-          step =
-            this.dealer.holeCard.value === 10
-              ? GameStep.WaitingForNewGameInput
-              : GameStep.PlayHandsRight;
+
+          if (this.dealer.holeCard.value === 10) {
+            this.dealer.firstHand.incrementTotalsForCard(this.dealer.cards[0]);
+            this.dealer.cards[0].flip();
+            step = GameStep.WaitingForNewGameInput;
+          } else {
+            step = GameStep.PlayHandsRight;
+          }
+
           break;
 
         case GameStep.PlayHandsRight:
@@ -502,11 +507,11 @@ export default class Game extends EventEmitter<EventMap> {
           : player.getNPCInput(this, hand);
 
         if (input === Move.AskInsurance) {
-          // TODO: Make insurance amount configurable. Currently uses half the
-          // bet size as insurance to recover full bet amount.
-          player.addChips(
-            player === this.player ? this.betAmount : settings.minimumBet,
-          );
+          // Insurance costs half the bet and pays 2:1. Return the stake plus
+          // winnings: (bet / 2) * 3 = bet * 1.5.
+          const bet =
+            player === this.player ? this.betAmount : settings.minimumBet;
+          player.addChips(bet * 1.5);
         }
       });
     }

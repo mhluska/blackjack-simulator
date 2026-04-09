@@ -570,6 +570,75 @@ describe('Game', function () {
       },
     );
 
+    context(
+      'when dealer has blackjack with ace up and player accepts insurance',
+      function () {
+        let playerBalanceBefore: number;
+
+        before(function () {
+          game = setupGame({
+            settings: {
+              autoDeclineInsurance: false,
+            },
+            dealerCards: [Rank.Ace, Rank.Ten],
+            playerCards: [Rank.Five, Rank.Five],
+          });
+
+          playerBalanceBefore = game.player.balance;
+
+          // Deal — prompts for insurance.
+          game.step();
+          // Accept insurance.
+          game.step(Move.AskInsurance);
+        });
+
+        it('should break even (insurance 2:1 payout covers lost bet)', function () {
+          // Bet = 1000, insurance = 500 (half bet).
+          // Dealer has blackjack: bet lost (-1000), insurance pays 2:1 (+1000),
+          // insurance stake returned (+500). Net = 0.
+          expect(game.player.balance).to.equal(playerBalanceBefore);
+        });
+      },
+    );
+
+    context(
+      'when dealer has blackjack with ace up, hole card should be revealed and count updated',
+      function () {
+        let hiLoCountAfterInsurance: number;
+        let holeCardShowingFace: boolean;
+
+        before(function () {
+          game = setupGame({
+            settings: {
+              autoDeclineInsurance: false,
+            },
+            dealerCards: [Rank.Ace, Rank.Ten],
+            playerCards: [Rank.Five, Rank.Five],
+          });
+
+          // Deal initial cards — prompts for insurance.
+          game.step();
+          expect(game.state.step).to.equal(GameStep.WaitingForInsuranceInput);
+
+          // Decline insurance — dealer has blackjack.
+          game.step(Move.NoInsurance);
+
+          hiLoCountAfterInsurance = game.shoe.hiLoRunningCount;
+          holeCardShowingFace = game.dealer.cards[0].showingFace;
+        });
+
+        it('should flip the hole card face up', function () {
+          expect(holeCardShowingFace).to.be.true;
+        });
+
+        it('should include the hole card in the hi-lo running count', function () {
+          // Ace (upcard) = -1, Ten (hole) = -1, Five + Five (player) = +1 +1 = 0 total
+          // If hole card was NOT counted, running count would be missing the -1 for the Ten.
+          expect(hiLoCountAfterInsurance).to.equal(0);
+        });
+      },
+    );
+
     context('when the player splits aces without more aces', function () {
       before(function () {
         game = setupGame({
