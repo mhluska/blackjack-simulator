@@ -1476,6 +1476,36 @@ describe('Game', function () {
       });
     });
 
+    context(
+      'when switching from 2-deck to 6-deck, 6,6 vs 7 should change from split to hit',
+      function () {
+        before(function () {
+          // First game: 2-deck. 6,6 vs 7 with DAS = Split (Ph).
+          game = setupGame({
+            settings: { deckCount: 2, hitSoft17: true },
+            dealerCards: [Rank.Seven],
+            playerCards: [Rank.Six, Rank.Six],
+          });
+          dealToPlayInput(game);
+          game.step(Move.Split);
+          expect(game.state.sessionMovesCorrect).to.equal(1);
+        });
+
+        it('should suggest hit for 6,6 vs 7 in 6-deck', function () {
+          // Second game: 6-deck. 6,6 vs 7 = Hit.
+          game = setupGame({
+            settings: { deckCount: 6, hitSoft17: true },
+            dealerCards: [Rank.Seven],
+            playerCards: [Rank.Six, Rank.Six],
+          });
+          dealToPlayInput(game);
+          game.step(Move.Hit);
+          expect(game.state.sessionMovesCorrect).to.equal(1);
+          expect(game.state.playCorrection).to.equal('');
+        });
+      },
+    );
+
     context('when an NPC splits aces and receives non-ace cards', function () {
       let npcPlayer: InstanceType<typeof Game>['players'][number];
 
