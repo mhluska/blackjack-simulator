@@ -22,7 +22,39 @@ function chartMinMax(chartType: ChartType): [number, number] {
   return CHART_MIN_MAX[chartType];
 }
 
-let cachedSubCharts: Record<ChartType, ChartMove[][]> | undefined;
+type SubCharts = Record<ChartType, ChartMove[][]>;
+
+let cachedSubCharts: SubCharts | undefined;
+let cachedCacheKey: string | undefined;
+
+function chartCacheKey(settings: GameSettings): string {
+  return `${settings.deckCount}:${settings.hitSoft17}`;
+}
+
+function getSubCharts(settings: GameSettings): SubCharts {
+  const key = chartCacheKey(settings);
+  if (cachedSubCharts !== undefined && cachedCacheKey === key) {
+    return cachedSubCharts;
+  }
+
+  const { chart: chartGroup } = selectCharts(settings);
+  const hard = chartGroup.get(ChartType.Hard);
+  const soft = chartGroup.get(ChartType.Soft);
+  const splits = chartGroup.get(ChartType.Splits);
+
+  if (!hard || !soft || !splits) {
+    throw new Error('Subchart not found');
+  }
+
+  cachedSubCharts = {
+    [ChartType.Hard]: hard,
+    [ChartType.Soft]: soft,
+    [ChartType.Splits]: splits,
+  };
+  cachedCacheKey = key;
+
+  return cachedSubCharts;
+}
 
 export default class BasicStrategyChecker {
   static uncommonHands(settings: GameSettings): UncommonChart {
@@ -34,23 +66,7 @@ export default class BasicStrategyChecker {
       return Move.NoInsurance;
     }
 
-    if (!cachedSubCharts) {
-      const { chart: chartGroup } = selectCharts(gameSettings);
-      const hard = chartGroup.get(ChartType.Hard);
-      const soft = chartGroup.get(ChartType.Soft);
-      const splits = chartGroup.get(ChartType.Splits);
-
-      if (!hard || !soft || !splits) {
-        throw new Error('Subchart not found');
-      }
-
-      cachedSubCharts = {
-        [ChartType.Hard]: hard,
-        [ChartType.Soft]: soft,
-        [ChartType.Splits]: splits,
-      };
-    }
-
+    const subCharts = getSubCharts(gameSettings);
     const chartType = this._chartType(hand);
     const [chartMin, chartMax] = chartMinMax(chartType);
 
@@ -60,7 +76,7 @@ export default class BasicStrategyChecker {
       chartMax,
     );
 
-    const chart = cachedSubCharts[chartType];
+    const chart = subCharts[chartType];
 
     const dealerHints = chart[playerTotal - chartMin];
     const dealersCard = game.dealer.upcard.value;
