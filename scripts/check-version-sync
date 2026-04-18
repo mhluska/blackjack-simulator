@@ -1,0 +1,12 @@
+#!/bin/sh
+
+set -e
+
+pkg_version=$(grep '"version"' package.json | head -1 | sed 's/.*: *"\(.*\)".*/\1/')
+lock_version=$(grep '"version"' package-lock.json | head -1 | sed 's/.*: *"\(.*\)".*/\1/')
+
+if [ "$pkg_version" != "$lock_version" ]; then
+  echo "package.json version ($pkg_version) != package-lock.json version ($lock_version)."
+  echo 'Use "npm version patch|minor|major" to bump both files atomically.'
+  exit 1
+fi
