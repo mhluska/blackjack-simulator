@@ -640,6 +640,34 @@ describe('Game', function () {
     );
 
     context(
+      'when player accepts insurance at TC >= 3 with a soft hand',
+      function () {
+        before(function () {
+          game = setupGame({
+            settings: {
+              deckCount: 6,
+              autoDeclineInsurance: false,
+              checkDeviations: true,
+            },
+            dealerCards: [Rank.Ace, Rank.Nine],
+            playerCards: [Rank.Ace, Rank.Two],
+          });
+
+          game.step();
+          game.shoe.hiLoRunningCount = game.shoe.decksRemaining * 3.89;
+
+          game.step(Move.AskInsurance);
+        });
+
+        it('should mark insurance as correct (soft hand should not block insurance deviation)', function () {
+          expect(game.state.sessionMovesCorrect).to.equal(1);
+          expect(game.state.sessionMovesTotal).to.equal(1);
+          expect(game.state.playCorrection).to.equal('');
+        });
+      },
+    );
+
+    context(
       'when player correctly declines insurance at TC < 3 with checkDeviations on',
       function () {
         before(function () {
