@@ -92,14 +92,19 @@ export default class HiLoDeviationChecker {
   ): Deviation | undefined {
     const trueCount = game.shoe.hiLoTrueCount;
 
-    if (game.dealer.upcard == null || hand.isSoft) {
+    if (game.dealer.upcard == null) {
       return;
     }
 
-    const playerTotal =
-      game.state.step === GameStep.WaitingForInsuranceInput
-        ? 0
-        : hand.cardTotal;
+    const isInsurance = game.state.step === GameStep.WaitingForInsuranceInput;
+
+    // Soft hands have no play deviations in the I18, but insurance is
+    // independent of the player's hand.
+    if (hand.isSoft && !isInsurance) {
+      return;
+    }
+
+    const playerTotal = isInsurance ? 0 : hand.cardTotal;
     const dealersCard = game.dealer.upcard.value;
 
     const deviation =
