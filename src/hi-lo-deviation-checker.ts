@@ -21,7 +21,7 @@ export const illustrious18Deviations: Deviations = new Map<playerTotal, Map<deal
   ]),
   ],
   [9,  new Map([
-    [2,  { correctMove: Move.Hit,    index: ['<',   1] }],
+    [2,  { correctMove: Move.Double, index: ['>=',  1] }],
     [7,  { correctMove: Move.Double, index: ['>=',  3] }],
   ]),
   ],
