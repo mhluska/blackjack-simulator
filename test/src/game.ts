@@ -1046,7 +1046,7 @@ describe('Game', function () {
       });
     });
 
-    context('I18 9v2: at TC = 0.5, hit deviation should fire', function () {
+    context('I18 9v2: at TC = 0.5, no deviation should fire', function () {
       let result: CheckDeviationResult | undefined;
       before(function () {
         game = setupGame({
@@ -1062,12 +1062,32 @@ describe('Game', function () {
           Move.Double,
         );
       });
-      it('should suggest hit', function () {
-        expect(result).to.be.an('object');
-        expect((result as CheckDeviationResult).result).to.be.false;
-        expect((result as CheckDeviationResult).code).to.equal(Move.Hit);
+      it('should not fire double deviation', function () {
+        expect(result).to.equal(undefined);
       });
     });
+
+    context(
+      'I18 9v2: at TC = 1, hit should trigger double deviation',
+      function () {
+        let result: CheckDeviationResult | undefined;
+        before(function () {
+          game = setupGame({
+            settings: { deckCount: 6, checkDeviations: true },
+            dealerCards: [Rank.Two],
+            playerCards: [Rank.Four, Rank.Five],
+          });
+          dealToPlayInput(game);
+          setTrueCount(game, 1);
+          result = HiLoDeviationChecker.check(game, game.focusedHand, Move.Hit);
+        });
+        it('should suggest double', function () {
+          expect(result).to.be.an('object');
+          expect((result as CheckDeviationResult).result).to.be.false;
+          expect((result as CheckDeviationResult).code).to.equal(Move.Double);
+        });
+      },
+    );
 
     // --- I18: 11 vs A, hit < 1 ---
 
