@@ -1408,7 +1408,7 @@ describe('Game', function () {
       });
     });
 
-    // --- Fab 4: 15 vs 9, hit < 2 (surrender at TC >= 2) ---
+    // --- Fab 4: 15 vs 9, surrender >= 2 ---
 
     context('Fab4 15v9: at TC = 2, surrender should be correct', function () {
       let result: CheckDeviationResult | undefined;
@@ -1438,7 +1438,35 @@ describe('Game', function () {
       });
     });
 
-    context('Fab4 15v9: at TC = 1.5, hit deviation should fire', function () {
+    context(
+      'Fab4 15v9: at TC = 2, hit should trigger surrender deviation',
+      function () {
+        let result: CheckDeviationResult | undefined;
+        before(function () {
+          game = setupGame({
+            settings: {
+              deckCount: 6,
+              checkDeviations: true,
+              allowLateSurrender: true,
+            },
+            dealerCards: [Rank.Nine],
+            playerCards: [Rank.Five, Rank.Ten],
+          });
+          dealToPlayInput(game);
+          setTrueCount(game, 2);
+          result = HiLoDeviationChecker.check(game, game.focusedHand, Move.Hit);
+        });
+        it('should suggest surrender', function () {
+          expect(result).to.be.an('object');
+          expect((result as CheckDeviationResult).result).to.be.false;
+          expect((result as CheckDeviationResult).code).to.equal(
+            Move.Surrender,
+          );
+        });
+      },
+    );
+
+    context('Fab4 15v9: at TC = 1.5, no deviation should fire', function () {
       let result: CheckDeviationResult | undefined;
       before(function () {
         game = setupGame({
@@ -1458,10 +1486,8 @@ describe('Game', function () {
           Move.Surrender,
         );
       });
-      it('should suggest hit', function () {
-        expect(result).to.be.an('object');
-        expect((result as CheckDeviationResult).result).to.be.false;
-        expect((result as CheckDeviationResult).code).to.equal(Move.Hit);
+      it('should not fire surrender deviation', function () {
+        expect(result).to.equal(undefined);
       });
     });
 
